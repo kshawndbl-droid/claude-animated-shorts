@@ -10,8 +10,9 @@ Proven example: **The Bridge That Fell for a Song**. It is an original 67 s shor
 - Script, voice and sound: `~/bridge-short/`.
 - Style research: `references/`.
 
-The style reference is a channel studied privately (`references/`: STYLE_BIBLE.md, reports/*.md, frames/).
-- Those videos are private study material. Never upload, publish or send them.
+The style reference is a channel studied privately (`references/`: STYLE_BIBLE.md, reports/*.md).
+- Those videos, and any frames or contact sheets taken from them, are private study material. Never upload, publish, commit or send them.
+- Reference frames for side-by-sides live only on the user's machine in `references/frames/` and `references/sheets/`, which are git-ignored. If they are missing, ask the user for frames or compare against the measured values in `reports/*.md`.
 - Never copy their scripts, characters or shots. Story, characters and voice are always OUR OWN.
 - Never say the channel's name in a voice-over or description.
 
@@ -70,7 +71,7 @@ User rules that apply:
    - Lock the picture's time constants before the sound is made. Any later timing change means re-running the sound.
 9. **Look checks.** Run `node scripts/bridge-stills.mjs out/<name>/x_ 100,400 0.5`.
    - Set `BRIDGE_ENTRY=src/sandboxes/<n>/index.tsx` to render a sandbox copy.
-   - Make side-by-sides against reference frames with `python scripts/sbs_sheet.py out.jpg --ours ... --ref ...`.
+   - Make side-by-sides against the user's local reference frames (git-ignored `references/frames/`) with `python scripts/sbs_sheet.py out.jpg --ours ... --ref ...`.
    - Send them to an Opus max verifier: 1-3 images, a ≤200-word verdict.
 10. **Final render.**
     - `npx remotion render src/index.ts <Comp> out/<name>/video.mp4 --codec h264 --crf 16 --scale 1.3333`
