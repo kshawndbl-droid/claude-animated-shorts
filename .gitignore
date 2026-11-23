@@ -1,2 +1,10 @@
 references/frames/
 references/sheets/
+node_modules/
+out/
+.remotion/
+public/bridge/kenney/*.glb
+voice/_tts/
+templates/audio/_cache/
+public/bridge/mix.wav
+__pycache__/
