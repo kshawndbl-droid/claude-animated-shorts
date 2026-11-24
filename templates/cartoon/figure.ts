@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { rng } from "../bridge/paint";
 
 export type Look = {
-  coat: string; pants: string; skin?: string; hat: "cap" | "admiral" | "tall" | "none" | "beret" | "slouch" | "bowler" | "wide"; hatCol?: string;
+  coat: string; pants: string; skin?: string; hat: "cap" | "admiral" | "tall" | "none" | "beret" | "slouch" | "bowler" | "wide" | "shako" | "spike" | "kepi"; hatCol?: string;
   hair?: string; beard?: string; stripes?: boolean; collar?: boolean; sash?: string; scale?: number; belly?: number; plume?: string;
   moustache?: string; medal?: boolean; pockets?: boolean; tie?: string; puttees?: boolean; vest?: string;
 };
@@ -345,6 +345,27 @@ function drawHat(g: Ctx, L: Look, view: View, R: number, OL: number, lag: number
       fillOutlined(g, crown, col, OL, () => { g.fillStyle = shadeOf(col, L.hat === "wide" ? 0.75 : 0.62); g.fillRect(-2, by, 4, R * 0.26); celShade(g, ls, R, R, 0.5); });
       if (L.hat === "slouch" && view === "side") { const up = new Path2D(); up.moveTo(-R * 0.75, by); up.quadraticCurveTo(-R * 1.0, R * 1.3, -R * 0.85, R * 1.5); up.quadraticCurveTo(-R * 0.5, R * 1.0, -R * 0.4, by + 0.03); up.closePath(); fillOutlined(g, up, shadeOf(col, 0.9), OL * 0.9); }
     }
+    g.restore();
+  } else if (L.hat === "shako") {   // tall military shako with a peak and a pompom that bobs (follow-through)
+    g.save(); g.rotate(lag * 0.08);
+    const body = new Path2D(); body.moveTo(-R * 0.78, R * 0.62); body.lineTo(-R * 0.88, R * 1.95); body.lineTo(R * 0.88, R * 1.95); body.lineTo(R * 0.78, R * 0.62); body.closePath();
+    fillOutlined(g, body, col, OL, () => { g.fillStyle = "#e2b847"; g.fillRect(-R, R * 0.62, R * 2, R * 0.14); g.fillRect(-R, R * 1.8, R * 2, R * 0.15); celShade(g, ls, R, R * 1.3, 0.5); });
+    const peak = new Path2D(); peak.ellipse(view === "side" ? R * 0.55 : 0, R * 0.62, view === "side" ? R * 0.6 : R * 0.85, R * 0.12, view === "side" ? -0.15 : 0, 0, 7); fillOutlined(g, peak, "#1c1c22", OL);
+    const pom = new Path2D(); pom.arc(lag * 0.3, R * 2.12 + Math.abs(lag) * 0.1, 0.07, 0, 7); fillOutlined(g, pom, "#ffffff", OL * 0.7);
+    if (view !== "back") { const b = new Path2D(); b.arc(view === "side" ? R * 0.5 : 0, R * 1.3, 0.07, 0, 7); fillOutlined(g, b, "#e2b847", OL * 0.6); }
+    g.restore();
+  } else if (L.hat === "spike") {   // Prussian spiked helmet
+    g.save(); g.rotate(lag * 0.06);
+    const dome = new Path2D(); dome.ellipse(0, R * 0.7, R * 0.95, R * 0.85, 0, Math.PI, 0, true); fillOutlined(g, dome, "#1c1c22", OL, () => celShade(g, ls, R, R, 0.5));
+    const peak = new Path2D(); peak.ellipse(view === "side" ? R * 0.6 : 0, R * 0.68, view === "side" ? R * 0.55 : R * 0.95, R * 0.12, 0, 0, 7); fillOutlined(g, peak, "#1c1c22", OL);
+    const sp = new Path2D(); sp.moveTo(-0.06, R * 1.5); sp.lineTo(0, R * 2.15); sp.lineTo(0.06, R * 1.5); sp.closePath(); fillOutlined(g, sp, "#e2b847", OL * 0.8);
+    if (view !== "back") { const ea = new Path2D(); ea.ellipse(view === "side" ? R * 0.55 : 0, R * 1.05, 0.12, 0.1, 0, 0, 7); fillOutlined(g, ea, "#e2b847", OL * 0.6); }
+    g.restore();
+  } else if (L.hat === "kepi") {    // forage cap, slouched forward
+    g.save(); g.rotate(lag * 0.08);
+    const c = new Path2D(); c.moveTo(-R * 0.85, R * 0.62); c.lineTo(-R * 0.75, R * 1.25); c.quadraticCurveTo(R * 0.2, R * 1.45, R * 0.9, R * 1.05); c.lineTo(R * 0.85, R * 0.62); c.closePath();
+    fillOutlined(g, c, col, OL, () => { g.fillStyle = shadeOf(col, 0.7); g.fillRect(-R, R * 0.62, R * 2, R * 0.12); celShade(g, ls, R, R, 0.5); });
+    const peak = new Path2D(); peak.ellipse(view === "side" ? R * 0.65 : 0, R * 0.6, view === "side" ? R * 0.5 : R * 0.75, R * 0.1, view === "side" ? -0.2 : 0, 0, 7); fillOutlined(g, peak, "#1c1c22", OL);
     g.restore();
   } else if (L.hat === "bowler") {
     const b = new Path2D(); b.ellipse(0, R * 0.68, R * 1.15, R * 0.16, 0, 0, 7);
