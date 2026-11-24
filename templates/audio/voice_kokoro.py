@@ -6,13 +6,19 @@
 # <BRIDGE_ROOT>/voice/voice.wav (48 kHz mono) + words.json (line-level spans split evenly per word).
 # Needs: pip install kokoro-onnx soundfile; model + voices from huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX
 #   (onnx/model.onnx, voices/am_onyx.bin) in $KOKORO_DIR (default ~/tts-models); ffmpeg.
-# Usage: BRIDGE_ROOT=<dir> python voice_kokoro.py lines.json      or: python voice_kokoro.py --say "text" out.wav
+# Mood (user rule 2026-11-24): same voice and post chain for every video, but the delivery follows the story's mood.
+#   MOOD=<name> sets the base pace (see MOODS); a line can also carry its own pace: [start, end, text, {"speed": 1.1}].
+#   Expression comes from the script itself too: Kokoro reacts to "!", "?", commas and "..." in the text.
+# Usage: BRIDGE_ROOT=<dir> MOOD=funny python voice_kokoro.py lines.json   or: MOOD=happy python voice_kokoro.py --say "text" out.wav
 import json, os, subprocess, sys, tempfile
 import numpy as np
 
 VOICE, LANG, SPEED = "am_onyx", "en-us", 0.88
 POST = "asetrate={sr}*0.94,aresample={sr},atempo=1/0.94,aecho=0.8:0.6:40:0.08"
 SR_OUT = 48000
+# pace multipliers on top of SPEED; pitch and echo never change with the mood
+MOODS = {"documentary": 1.00, "happy": 1.10, "funny": 1.08, "mystery": 0.94, "sad": 0.90, "action": 1.16}
+MOOD = os.environ.get("MOOD", "documentary")
 KDIR = os.environ.get("KOKORO_DIR", os.path.expanduser("~/tts-models"))
 
 
@@ -27,7 +33,7 @@ def engine():
 def say(k, text, out_wav, speed=1.0):
     """one line in the locked voice -> out_wav (48 kHz mono). `speed` > 1 only to squeeze a line into its slot."""
     import soundfile as sf
-    a, sr = k.create(text, voice=VOICE, speed=SPEED * speed, lang=LANG)
+    a, sr = k.create(text, voice=VOICE, speed=SPEED * MOODS[MOOD] * speed, lang=LANG)
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as t:
         sf.write(t.name, a, sr)
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", t.name, "-af", POST.format(sr=sr) + f",aresample={SR_OUT}", "-ac", "1", out_wav], check=True)
@@ -45,12 +51,13 @@ def main():
     os.makedirs(os.path.join(root, "voice"), exist_ok=True)
     voice, words = np.zeros(int(T.DUR * SR_OUT)), []
     with tempfile.TemporaryDirectory() as tmp:
-        for a, b, text in lines:
-            p = os.path.join(tmp, "l.wav"); say(k, text, p)
+        for a, b, text, *opt in lines:
+            pace = (opt[0] if opt else {}).get("speed", 1.0)
+            p = os.path.join(tmp, "l.wav"); say(k, text, p, pace)
             x = read_wav(p)[0][0]
             room = (b - a) - 0.27
             if len(x) / SR_OUT > room:  # too long for its slot: re-speak slightly faster
-                say(k, text, p, speed=(len(x) / SR_OUT) / room); x = read_wav(p)[0][0]
+                say(k, text, p, speed=pace * (len(x) / SR_OUT) / room); x = read_wav(p)[0][0]
             i0 = int((a + 0.12) * SR_OUT); n = min(len(x), len(voice) - i0)
             voice[i0:i0 + n] += x[:n]
             ws, t0, d = text.split(), a + 0.12, n / SR_OUT
