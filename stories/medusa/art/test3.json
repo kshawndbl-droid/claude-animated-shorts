@@ -1,6 +1,0 @@
-[
- {"name": "h_medusa", "prompt": "close-up head and shoulders portrait of a young ancient Greek woman, long flowing dark brown wavy hair, high-collared teal robe, gentle sad eyes, three quarter view, plain white background", "w": 512, "h": 640, "seed": 21, "cut": true},
- {"name": "h_gorgon", "prompt": "close-up head and shoulders portrait of Medusa, her hair is a mass of green snakes with open mouths, glowing green eyes, furious expression, high-collared teal robe, three quarter view, plain white background", "w": 512, "h": 640, "seed": 5, "cut": true},
- {"name": "h_athena", "prompt": "close-up head and shoulders portrait of the goddess Athena wearing a bronze Greek helmet with tall red crest, stern face, white robe with gold armor collar, three quarter view, plain white background", "w": 512, "h": 640, "seed": 4, "cut": true},
- {"name": "h_perseus", "prompt": "close-up head and shoulders portrait of Perseus, a brave young ancient Greek hero with short curly black hair, red cloak, determined face, three quarter view, plain white background", "w": 512, "h": 640, "seed": 8, "cut": true}
-]

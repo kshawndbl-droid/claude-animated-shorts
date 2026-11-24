@@ -1,5 +1,5 @@
 # 10-second talking-character test (Blender 5.3, EEVEE): a young Greek hero on a windy cliff by a temple at golden hour
-# tells the camera his "plan" against Medusa. Lip-sync from phoneme timings (talk/<line>.json), eye darts, blinks,
+# tells the camera about the 300 steps he just climbed. Lip-sync from phoneme timings (talk/<line>.json), eye darts, blinks,
 # brows, expressions, head motion and body animation (KayKit CC0 rig) in a living world (sea, drifting clouds,
 # trees and grass in the wind, braziers with flickering fire light, dust in the light, gulls).
 # usage: .venv-bpy/bin/python tools/blender/talk_scene.py -- --out out/blender/talk/f_ [--frames 1,100] [--res 540] [--samples 16]

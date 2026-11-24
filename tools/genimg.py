@@ -1,7 +1,7 @@
 # Free image generation for the cut-out style: LCM Dreamshaper v7 (open weights, MIT model card, built on SD 1.5
 # under CreativeML OpenRAIL-M, commercial use allowed) on CPU, 4-6 steps, plus optional rembg cut-out (Apache-2.0 U2Net).
 # usage: python genimg.py jobs.json outdir
-#   jobs.json: [{"name": "medusa_face", "prompt": "...", "w": 512, "h": 768, "seed": 1, "cut": true, "steps": 6}]
+#   jobs.json: [{"name": "hero_face", "prompt": "...", "w": 512, "h": 768, "seed": 1, "cut": true, "steps": 6}]
 import json
 import os
 import sys
@@ -12,7 +12,7 @@ from diffusers import DiffusionPipeline
 
 STYLE = ", 2d cartoon illustration, adult animated series style, bold thick black outlines, flat cel shading, expressive face, large expressive eyes, clean line art, vibrant flat colors"
 BG = ", detailed painted background art for an animated film, soft depth of field, cinematic lighting, rich colors, no people in foreground"
-NEG = "nsfw, nude, naked, cleavage, bare chest, lingerie, sexy, revealing clothes, blurry, lowres, deformed, extra fingers, bad anatomy, text, watermark, signature, logo, anime, photo"
+NEG = "swastika, nazi symbol, gore, blood, corpse, nsfw, nude, naked, cleavage, bare chest, lingerie, sexy, revealing clothes, blurry, lowres, deformed, extra fingers, bad anatomy, text, watermark, signature, logo, anime, photo"
 
 
 def main():
