@@ -110,7 +110,7 @@ export const Subtitles: React.FC<{ words: Word[]; style: SubStyle; offset?: numb
               const col = on ? style.accent : isKey ? style.key : "#FFFFFF";
               return (
                 <span key={wi} style={{
-                  display: "inline-block", color: col, transform: `scale(${bump}) translateY(${on ? -2 * scale : 0}px)`,
+                  display: "inline-block", color: col, margin: `0 ${((bump - 1) * w.w.length * fs * 0.7) / 2}px`, transform: `scale(${bump}) translateY(${on ? -2 * scale : 0}px)`,
                   WebkitTextStroke: `${fs * 0.13}px #000`, paintOrder: "stroke fill",
                   textShadow: `0 ${fs * 0.06}px ${fs * 0.12}px rgba(0,0,0,0.55)`,
                 }}>{w.w.replace(/\.\.\.$/, "…")}</span>
