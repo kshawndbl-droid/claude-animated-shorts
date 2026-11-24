@@ -67,7 +67,7 @@ const Plate: React.FC<{ src: string; t: number; dur: number; z0: number; z1: num
     return (
       <AbsoluteFill style={{ overflow: "hidden" }}>
         <Img src={staticFile(src)} style={{ position: "absolute", width: 1080, height: 1920, objectFit: "cover", transformOrigin: `${cx}px ${cy}px`,
-          transform: `translate(${dx * u}px, ${dy * u}px) scale(${z})`, filter: `blur(${blur}px) brightness(${bright}) saturate(1.08)` }} />
+          transform: `translate(${dx * u}px, ${dy * u}px) scale(${z})`, filter: `blur(${blur}px) brightness(${bright}) saturate(${CFG.sat})` }} />
       </AbsoluteFill>
     );
   };
@@ -88,14 +88,33 @@ const EXTRA1: Look = { ...LUSTIG, suit: "#5a6a4a", suitDark: "#45523a", pin: und
 const EXTRA2: Look = { ...POISSON, suit: "#4a5a7a", suitDark: "#384560", check: undefined, vest: "#6a7a9a", hat: "bowler", hatCol: "#3a2a22", glasses: false, mustache: "pencil", stout: 0, hair: "#5a3a22", brows: "#5a3a22", trousers: "#3f4c68" };
 
 // ---------------------------------------------------------------- shots
+/** background set: v2 = the first painted plates (kept for reference), v3 = the illustrated plates of the background test */
+type BgCfg = { wide: string; cafe: string; blurWide: number; blurClose: number; blurTwo: number; haze: number; vig: number; shadow: number; grade: boolean;
+  wideCY: number; wideGY: number; wideX0: number; farGY: [number, number]; twoGY: number; twoCY: number; twoZ: number; closeCY: number; closeZ: number; sat: number };
+const V2: BgCfg = { wide: "eiffel/bg_wide.png", cafe: "eiffel/bg_cafe.png", blurWide: 1.2, blurClose: 11, blurTwo: 3.5, haze: 0.16, vig: 0.45, shadow: 0, grade: false,
+  wideCY: 1650, wideGY: 1520, wideX0: 320, farGY: [1450, 1420], twoGY: 1640, twoCY: 1700, twoZ: 1.35, closeCY: 900, closeZ: 1.25, sat: 1.08 };
+export const V3: BgCfg = { ...V2, wide: "eiffel/bg_wide3.png", cafe: "eiffel/bg_cafe3.png", blurWide: 0, blurClose: 3.2, blurTwo: 0.6, haze: 0.05, vig: 0.28, shadow: 1, grade: true, sat: 1.12,
+  wideCY: 1600, wideGY: 1560, wideX0: 330, farGY: [1490, 1478], twoGY: 1725, twoCY: 1725, twoZ: 1.3, closeCY: 1000, closeZ: 1.3 };
+let CFG: BgCfg = V2;
+
+/** soft ground shadow under the feet (part of the set, drawn before the figure): grounds the character on the painted floor */
+const Ground: React.FC<{ x: number; y: number; s: number; k?: number }> = ({ x, y, s, k = 1 }) => CFG.shadow ? (
+  <ellipse cx={x} cy={y + 2 * s} rx={95 * s} ry={20 * s} fill="url(#gshadow)" opacity={0.85 * k} />
+) : null;
+const GroundDefs = () => (
+  <defs>
+    <radialGradient id="gshadow"><stop offset="0" stopColor="rgba(40,22,40,0.55)" /><stop offset="0.6" stopColor="rgba(40,22,40,0.28)" /><stop offset="1" stopColor="rgba(40,22,40,0)" /></radialGradient>
+  </defs>
+);
+
 const S1 = { a: 0, b: 5.1 }, S2 = { a: 5.1, b: 8.75 }, S3 = { a: 8.75, b: 11.6 };
 
 const ShotWide: React.FC<{ t: number }> = ({ t }) => {
-  const dur = S1.b - S1.a, Z0 = 1.02, Z1 = 1.3, CX = 540, CY = 1650;
+  const dur = S1.b - S1.a, Z0 = 1.02, Z1 = 1.3, CX = 540, CY = CFG.wideCY;
   // Lustig strolls left -> right along the near pavement, stops on "small", shrugs, winks on "his"
   const stop = W("small") - 0.25;
   const wk = walker(t, 0.2, stop, 3.0);
-  const s0 = 0.62, x = 320 + wk.dist * s0, gy = 1520;
+  const s0 = 0.62, x = CFG.wideX0 + wk.dist * s0, gy = CFG.wideGY;
   const p = camXY(x, gy, t, dur, Z0, Z1, CX, CY, -40, -60);
   const turned = t > stop;
   const pose: Pose = {
@@ -105,17 +124,21 @@ const ShotWide: React.FC<{ t: number }> = ({ t }) => {
   };
   // two passers-by on the far pavement, walking the other way
   const e1 = walker(t, 0, 6, 6), e2 = walker(t, 0.6, 6, 5);
-  const q1 = camXY(700 - e1.dist * 0.16, 1450, t, dur, Z0, Z1, CX, CY, -40, -60), q2 = camXY(760 - e2.dist * 0.13, 1420, t, dur, Z0, Z1, CX, CY, -40, -60);
+  const q1 = camXY(700 - e1.dist * 0.16, CFG.farGY[0], t, dur, Z0, Z1, CX, CY, -40, -60), q2 = camXY(760 - e2.dist * 0.13, CFG.farGY[1], t, dur, Z0, Z1, CX, CY, -40, -60);
   return (
     <AbsoluteFill>
-      <Plate src="eiffel/bg_wide.png" t={t} dur={dur} z0={Z0} z1={Z1} cx={CX} cy={CY} dx={-40} dy={-60} blur={1.2} />
-      <Haze />
+      <Plate src={CFG.wide} t={t} dur={dur} z0={Z0} z1={Z1} cx={CX} cy={CY} dx={-40} dy={-60} blur={CFG.blurWide} />
+      <Haze top={`rgba(255,190,170,${CFG.haze})`} vig={CFG.vig} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <GroundDefs />
         <Birds t={t} y0={420} n={5} seed={1} />
-        <g style={{ filter: "blur(1.6px)" }}>
+        <Ground x={q1.x} y={q1.y} s={0.16 * q1.z} />
+        <Ground x={q2.x} y={q2.y} s={0.13 * q2.z} />
+        <g style={{ filter: `blur(${CFG.shadow ? 0.6 : 1.6}px)` }}>
           <Figure id="x1" look={EXTRA1} x={q1.x} y={q1.y} s={0.16 * q1.z} flip pose={{ phase: e1.phase, walk: 1, expr: "neutral", facing: 0.5, blink: blinkAt(t, 3) }} />
           <Figure id="x2" look={EXTRA2} x={q2.x} y={q2.y} s={0.13 * q2.z} flip pose={{ phase: e2.phase, walk: 1, expr: "smile", facing: 0.5, blink: blinkAt(t, 4) }} />
         </g>
+        <Ground x={p.x} y={p.y} s={s0 * p.z} />
         <Figure id="lw" look={LUSTIG} x={p.x} y={p.y} s={s0 * p.z} pose={pose} />
         <Motes t={t} n={40} seed={1} />
       </svg>
@@ -142,8 +165,8 @@ const ShotClose: React.FC<{ t: number }> = ({ t }) => {
   };
   return (
     <AbsoluteFill>
-      <Plate src="eiffel/bg_cafe.png" t={t} dur={dur} z0={1.25} z1={1.32} cx={520} cy={900} dx={30} blur={11} bright={0.95} />
-      <Haze vig={0.5} />
+      <Plate src={CFG.cafe} t={t} dur={dur} z0={CFG.closeZ} z1={CFG.closeZ + 0.07} cx={520} cy={CFG.closeCY} dx={30} blur={CFG.blurClose} bright={0.95} />
+      <Haze top={`rgba(255,190,170,${CFG.haze})`} vig={CFG.vig + 0.05} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <Motes t={T} n={26} seed={2} />
         <Figure id="lc" look={LUSTIG} x={x} y={y} s={s} pose={pose} shadow={false} />
@@ -164,8 +187,8 @@ const Sparkle: React.FC<{ x: number; y: number; k: number }> = ({ x, y, k }) => 
 
 const ShotTwo: React.FC<{ t: number }> = ({ t }) => {
   const T = t + S3.a, dur = S3.b - S3.a;
-  const Z0 = 1.0, Z1 = 1.06, CX = 540, CY = 1640;
-  const s0 = 1.45, gy = 1640;
+  const Z0 = 1.0, Z1 = 1.06, CX = 540, CY = CFG.twoGY;
+  const s0 = 1.45, gy = CFG.twoGY;
   // Lustig walks in from the left and stops beside Poisson as the smile flashes
   const stopT = W("could") + 0.08;
   const wk = walker(T, S3.a, stopT, 3.0);
@@ -188,9 +211,12 @@ const ShotTwo: React.FC<{ t: number }> = ({ t }) => {
   const spark = (T - (stopT + 0.05)) / 0.6;
   return (
     <AbsoluteFill>
-      <Plate src="eiffel/bg_cafe.png" t={t} dur={dur} z0={1.35 * Z0} z1={1.35 * Z1} cx={CX} cy={1700} dx={-50} blur={3.5} />
-      <Haze />
+      <Plate src={CFG.cafe} t={t} dur={dur} z0={CFG.twoZ * Z0} z1={CFG.twoZ * Z1} cx={CX} cy={CFG.twoCY} dx={-50} blur={CFG.blurTwo} />
+      <Haze top={`rgba(255,190,170,${CFG.haze})`} vig={CFG.vig} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <GroundDefs />
+        <Ground x={P2.x} y={P2.y} s={s0 * P2.z} />
+        <Ground x={L.x} y={L.y} s={s0 * L.z} />
         <Figure id="pp" look={POISSON} x={P2.x} y={P2.y} s={s0 * P2.z} flip pose={pPose} />
         <Figure id="ll" look={LUSTIG} x={L.x} y={L.y} s={s0 * L.z} pose={lPose} />
         <Sparkle x={L.x + 70 * s0} y={L.y - 300 * s0} k={spark} />
@@ -200,7 +226,8 @@ const ShotTwo: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-export const StyleTest: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }) => {
+export const StyleTest: React.FC<{ withAudio?: boolean; bg?: "v2" | "v3" }> = ({ withAudio = true, bg = "v2" }) => {
+  CFG = bg === "v3" ? V3 : V2;
   const f = useCurrentFrame(), t = f / FPS;
   const shot = t < S1.b ? <ShotWide t={t - S1.a} /> : t < S2.b ? <ShotClose t={t - S2.a} /> : <ShotTwo t={t - S3.a} />;
   // 3-frame dip at each cut keeps the cuts crisp but not harsh
@@ -208,6 +235,7 @@ export const StyleTest: React.FC<{ withAudio?: boolean }> = ({ withAudio = true 
   return (
     <AbsoluteFill style={{ background: "#1a1420" }}>
       {shot}
+      {CFG.grade && <AbsoluteFill style={{ background: "linear-gradient(rgba(255,170,120,0.10), rgba(255,200,150,0.0) 50%, rgba(80,40,90,0.10))", mixBlendMode: "soft-light" }} />}
       {cutK < 1.5 && <AbsoluteFill style={{ background: "#fff", opacity: 0.12 * (1.5 - cutK) }} />}
       <Subtitles words={WORDS} style={sub} />
       {withAudio && <Audio src={staticFile("eiffel/test_mix.wav")} />}
