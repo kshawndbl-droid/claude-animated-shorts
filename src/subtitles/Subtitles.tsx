@@ -108,9 +108,11 @@ export const Subtitles: React.FC<{ words: Word[]; style: SubStyle; offset?: numb
               const pk = spring({ frame: (t - w.s) * fps, fps, config: { damping: 9 + (1 - style.pop) * 14, stiffness: 300, mass: 0.5 } });
               const bump = on ? 1 + 0.07 * style.pop * (1 - Math.abs(1 - pk)) + 0.03 : 1;
               const col = on ? style.accent : isKey ? style.key : "#FFFFFF";
+              // a word never breaks inside itself (e.g. at a hyphen); a single very long word is shrunk to fit the line
+              const fit = Math.min(1, ((1080 - 220) * scale * 0.98) / (w.w.length * fs * 0.74));
               return (
                 <span key={wi} style={{
-                  display: "inline-block", color: col, margin: `0 ${((bump - 1) * w.w.length * fs * 0.7) / 2}px`, transform: `scale(${bump}) translateY(${on ? -2 * scale : 0}px)`,
+                  display: "inline-block", whiteSpace: "nowrap", flexShrink: 0, fontSize: fs * fit, color: col, margin: `0 ${((bump - 1) * w.w.length * fs * 0.7) / 2}px`, transform: `scale(${bump}) translateY(${on ? -2 * scale : 0}px)`,
                   WebkitTextStroke: `${fs * 0.13}px #000`, paintOrder: "stroke fill",
                   textShadow: `0 ${fs * 0.06}px ${fs * 0.12}px rgba(0,0,0,0.55)`,
                 }}>{w.w.replace(/\.\.\.$/, "…")}</span>
