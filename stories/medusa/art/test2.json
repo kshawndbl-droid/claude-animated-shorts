@@ -1,0 +1,6 @@
+[
+ {"name": "g2_a", "prompt": "western cartoon character design, half body, young ancient Greek woman named Medusa with long flowing dark brown wavy hair, modest high-neck teal Greek chiton, gentle expression, thick black ink outlines, flat colors, simple white background", "w": 512, "h": 768, "seed": 21, "cut": true, "steps": 8},
+ {"name": "g2_b", "prompt": "western cartoon character design, half body, Medusa the gorgon, a young woman whose hair is many green snakes with open mouths, glowing green eyes, angry, modest teal Greek chiton, thick black ink outlines, bright even lighting, simple white background", "w": 512, "h": 768, "seed": 5, "cut": true, "steps": 8},
+ {"name": "g2_c", "prompt": "western cartoon character design, half body, Medusa the gorgon, a young woman whose hair is many green snakes with open mouths, glowing green eyes, angry, modest teal Greek chiton, thick black ink outlines, bright even lighting, simple white background", "w": 512, "h": 768, "seed": 9, "cut": true, "steps": 8},
+ {"name": "g2_d", "prompt": "western cartoon character design, half body, the Greek goddess Athena wearing a bronze Corinthian helmet with red crest, stern, white robe and aegis, holding a spear, thick black ink outlines, flat colors, simple white background", "w": 512, "h": 768, "seed": 4, "cut": true, "steps": 8}
+]

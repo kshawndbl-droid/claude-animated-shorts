@@ -1,0 +1,234 @@
+[
+ {
+  "name": "bg_sea",
+  "prompt": "sunny ancient Greek coastline, white marble temple on a cliff above a sparkling blue sea, olive trees, sailing ships, seagulls",
+  "seed": 2,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "bg_temple",
+  "prompt": "interior of a grand ancient Greek temple at night, marble columns, giant golden statue of Athena, oil lamps and braziers, storm outside",
+  "seed": 3,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "bg_olympus",
+  "prompt": "Mount Olympus palace of the gods above golden clouds, marble columns, divine sunlight rays",
+  "seed": 4,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "bg_curse",
+  "prompt": "dark stormy sky over a ruined Greek temple, green lightning, swirling green magic mist",
+  "seed": 5,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "bg_edge",
+  "prompt": "barren rocky island at the edge of the world, dozens of grey stone statues of frozen warriors with shields and spears, dark cave entrance, fog, grim sky",
+  "seed": 6,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "bg_throne",
+  "prompt": "ancient Greek royal throne room full of courtiers and guards with spears, banners, torches, marble floor",
+  "seed": 7,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "bg_sky",
+  "prompt": "above the clouds at sunrise, golden light, Greek temple ruins floating, birds",
+  "seed": 8,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "bg_cave",
+  "prompt": "dark cave lair with green glowing light, bones, stone statues of warriors, snakes on the floor",
+  "seed": 9,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "bg_sunset",
+  "prompt": "peaceful ancient Greek coastline at sunset, calm sea, lonely rocky shore",
+  "seed": 10,
+  "w": 576,
+  "h": 1024,
+  "bg": true
+ },
+ {
+  "name": "fb_medusa",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, a young ancient Greek woman with long flowing dark brown wavy hair, long modest teal Greek robe to the ankles, sandals, walking happily, smiling, plain white background",
+  "seed": 21,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_medusa_scared",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, a young ancient Greek woman with long flowing dark brown wavy hair, long modest teal Greek robe to the ankles, sandals, cowering in fear, hands raised, terrified, plain white background",
+  "seed": 22,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_gorgon",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, Medusa, a woman whose hair is a mass of green snakes, green skin, long modest teal Greek robe to the ankles, walking sadly, head down, plain white background",
+  "seed": 5,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_athena_angry",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, the goddess Athena, bronze Greek helmet with tall red crest, long white robe, gold breastplate, spear, furious, raising her spear high, plain white background",
+  "seed": 4,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_athena_shield",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, the goddess Athena, bronze Greek helmet with tall red crest, long white robe, gold breastplate, spear, proud, holding a round bronze shield, plain white background",
+  "seed": 14,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_perseus",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, Perseus, young ancient Greek hero, short curly black hair, red cloak, bronze armor, short tunic, sandals, confident heroic stance, hand on hip, plain white background",
+  "seed": 8,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_perseus_fly",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, Perseus, young ancient Greek hero, short curly black hair, red cloak, bronze armor, short tunic, sandals, flying through the air with small white wings on his sandals, arms forward, plain white background",
+  "seed": 18,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_perseus_swing",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, Perseus, young ancient Greek hero, short curly black hair, red cloak, bronze armor, short tunic, sandals, swinging a curved bronze sickle sword, head turned away, action pose, plain white background",
+  "seed": 28,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_king",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, King Polydectes, greedy Greek king with gold crown and black beard, long purple royal robe, pointing finger, smug grin, plain white background",
+  "seed": 31,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_hermes",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, Hermes the messenger god, young man with winged helmet and winged sandals, blue cloak, short tunic, holding a curved sickle sword, flying, plain white background",
+  "seed": 12,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "fb_poseidon",
+  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, Poseidon the giant sea god, huge white beard, crown of coral, long sea-green robe, holding a trident, menacing, plain white background",
+  "seed": 17,
+  "w": 512,
+  "h": 896,
+  "cut": true
+ },
+ {
+  "name": "medusa_scared",
+  "prompt": "close-up head and shoulders portrait of a young ancient Greek woman, long flowing dark brown wavy hair, high-collared teal robe, terrified expression, wide eyes, open mouth, three quarter view, plain white background",
+  "seed": 21,
+  "w": 512,
+  "h": 640,
+  "cut": true
+ },
+ {
+  "name": "medusa_cry",
+  "prompt": "close-up head and shoulders portrait of a young ancient Greek woman, long flowing dark brown wavy hair, high-collared teal robe, heartbroken crying, tears, three quarter view, plain white background",
+  "seed": 21,
+  "w": 512,
+  "h": 640,
+  "cut": true
+ },
+ {
+  "name": "gorgon_angry",
+  "prompt": "close-up head and shoulders portrait of Medusa, her hair is a mass of green snakes, green skin, high-collared teal robe, glowing green eyes, furious expression, open mouth, three quarter view, plain white background",
+  "seed": 5,
+  "w": 512,
+  "h": 640,
+  "cut": true
+ },
+ {
+  "name": "gorgon_stare",
+  "prompt": "extreme close-up of the face of Medusa, her hair is a mass of green snakes, green skin, high-collared teal robe, glowing green eyes staring straight at the viewer, intense, three quarter view, plain white background",
+  "seed": 13,
+  "w": 512,
+  "h": 640,
+  "cut": true
+ },
+ {
+  "name": "gorgon_sleep",
+  "prompt": "close-up head and shoulders portrait of Medusa, her hair is a mass of green snakes, green skin, high-collared teal robe, eyes closed, sleeping peacefully, three quarter view, plain white background",
+  "seed": 5,
+  "w": 512,
+  "h": 640,
+  "cut": true
+ },
+ {
+  "name": "king_shock",
+  "prompt": "close-up head and shoulders portrait of King Polydectes, a greedy middle-aged Greek king with a gold crown, black beard, purple robe, terrified shocked expression, mouth wide open, three quarter view, plain white background",
+  "seed": 31,
+  "w": 512,
+  "h": 640,
+  "cut": true
+ },
+ {
+  "name": "perseus_focus",
+  "prompt": "close-up head and shoulders portrait of Perseus, a young ancient Greek hero with short curly black hair, red cloak, focused, eyes turned to the side, sweating, three quarter view, plain white background",
+  "seed": 8,
+  "w": 512,
+  "h": 640,
+  "cut": true
+ },
+ {
+  "name": "pegasus",
+  "prompt": "a majestic white winged horse Pegasus rearing up with huge feathered wings spread, full body, plain white background",
+  "seed": 3,
+  "w": 640,
+  "h": 640,
+  "cut": true
+ },
+ {
+  "name": "shield_face",
+  "prompt": "a round bronze ancient Greek shield with the face of Medusa with snake hair carved in the center, plain white background",
+  "seed": 6,
+  "w": 576,
+  "h": 576,
+  "cut": true
+ }
+]

@@ -1,0 +1,5 @@
+[
+ {"name": "medusa_girl", "prompt": "half body portrait of a beautiful young ancient Greek woman with very long flowing dark wavy hair, teal Greek chiton dress with gold brooch, gentle smile, facing three quarters, plain light grey background", "w": 512, "h": 768, "seed": 7, "cut": true},
+ {"name": "medusa_gorgon", "prompt": "half body portrait of Medusa, a young ancient Greek woman whose hair is a mass of living green snakes, glowing green eyes, fierce sad expression, teal Greek chiton dress, plain light grey background", "w": 512, "h": 768, "seed": 11, "cut": true},
+ {"name": "temple_bg", "prompt": "interior of a grand ancient Greek temple of Athena at night, marble columns, giant statue of Athena, oil lamps, stormy sea visible through the doorway", "w": 576, "h": 1024, "seed": 3, "bg": true}
+]
