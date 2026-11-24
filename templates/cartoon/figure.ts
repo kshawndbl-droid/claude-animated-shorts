@@ -60,7 +60,9 @@ export function settle(p: Actor, poseAt: (t: number) => Pose, t: number, t0 = -1
   return st;
 }
 /** draw at the current transform: metres, y up, origin between the feet; side view faces +x (dir -1 mirrors) */
-export function drawFigure(g: Ctx, p: Actor, st: St, t: number, view: View, dir: number, lightSide: number, OL: number) {
+/** hold: optional prop painter called in the figure's own frame with the hand and elbow points, before the hand is drawn */
+export type Hold = (g: Ctx, hand: [number, number], elbow: [number, number], side: number, far: boolean) => void;
+export function drawFigure(g: Ctx, p: Actor, st: St, t: number, view: View, dir: number, lightSide: number, OL: number, hold?: Hold) {
   const L = p.L, P = p.P;
   g.save(); if (view === "side" && dir < 0) g.scale(-1, 1);
   g.lineJoin = "round"; g.lineCap = "round";
@@ -129,6 +131,7 @@ export function drawFigure(g: Ctx, p: Actor, st: St, t: number, view: View, dir:
   const drawArm = (a: number[], side: number, far: boolean) => {
     const [S, E, H] = armPts(a, side);
     hose(g, S, E, H, 0.13, far ? coatD : coat, OL);
+    if (hold) { g.save(); hold(g, H, E, side, far); g.restore(); }
     // cuff + mitten hand
     disc(g, H, 0.095, far ? shadeOf(skin, 0.85) : skin, OL);
   };
@@ -362,7 +365,7 @@ function drawHat(g: Ctx, L: Look, view: View, R: number, OL: number, lag: number
     const tx = bx - Math.cos(pa) * 0.75, ty = by + Math.sin(pa) * 0.55;
     pl.moveTo(bx, by - 0.04); pl.quadraticCurveTo((bx + tx) / 2 + 0.05, (by + ty) / 2 + 0.25, tx, ty);
     pl.quadraticCurveTo((bx + tx) / 2 - 0.12, (by + ty) / 2 - 0.05, bx, by - 0.04);
-    fillOutlined(g, pl, L.plume ?? "#ffffff", OL * 0.8);
+    if (L.plume !== "none") fillOutlined(g, pl, L.plume ?? "#ffffff", OL * 0.8);
     g.restore();
   }
 }

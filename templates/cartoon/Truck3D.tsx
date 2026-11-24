@@ -9,10 +9,10 @@ import { Cam, W, H } from "./stage";
 export type TruckState = { x: number; z: number; yaw: number; bounce: number; pitch: number; roll: number; wheel: number; visible: boolean };
 
 const grad = (() => { const d = new Uint8Array([90, 170, 255]); const t = new THREE.DataTexture(d, 3, 1, THREE.RedFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })();
-const toon = (c: string) => new THREE.MeshToonMaterial({ color: c, gradientMap: grad });
+export const toon = (c: string) => new THREE.MeshToonMaterial({ color: c, gradientMap: grad });
 const inkM = new THREE.MeshBasicMaterial({ color: "#16121c", side: THREE.BackSide });
 
-function addInk(root: THREE.Object3D, k = 0.045) {
+export function addInk(root: THREE.Object3D, k = 0.045) {
   const list: THREE.Mesh[] = [];
   root.traverse((o) => { const m = o as THREE.Mesh; if (m.isMesh && !m.userData.ink) list.push(m); });
   for (const m of list) {
