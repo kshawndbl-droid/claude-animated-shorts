@@ -95,7 +95,9 @@ const V2: BgCfg = { wide: "eiffel/bg_wide.png", cafe: "eiffel/bg_cafe.png", blur
   wideCY: 1650, wideGY: 1520, wideX0: 320, farGY: [1450, 1420], twoGY: 1640, twoCY: 1700, twoZ: 1.35, closeCY: 900, closeZ: 1.25, sat: 1.08 };
 export const V3: BgCfg = { ...V2, wide: "eiffel/bg_wide3.png", cafe: "eiffel/bg_cafe3.png", blurWide: 0, blurClose: 3.2, blurTwo: 0.6, haze: 0.05, vig: 0.28, shadow: 1, grade: true, sat: 1.12,
   wideCY: 1600, wideGY: 1560, wideX0: 330, farGY: [1490, 1478], twoGY: 1725, twoCY: 1725, twoZ: 1.3, closeCY: 1000, closeZ: 1.3 };
+export const V4: BgCfg = { ...V3, wide: "eiffel/bg_wide4.png" };
 let CFG: BgCfg = V2;
+const subV4 = { ...sub, moves: [{ from: 0, to: 5.1, y: 0.42 }] };
 
 /** soft ground shadow under the feet (part of the set, drawn before the figure): grounds the character on the painted floor */
 const Ground: React.FC<{ x: number; y: number; s: number; k?: number }> = ({ x, y, s, k = 1 }) => CFG.shadow ? (
@@ -141,6 +143,56 @@ const ShotWide: React.FC<{ t: number }> = ({ t }) => {
         <Ground x={p.x} y={p.y} s={s0 * p.z} />
         <Figure id="lw" look={LUSTIG} x={p.x} y={p.y} s={s0 * p.z} pose={pose} />
         <Motes t={t} n={40} seed={1} />
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
+/** opening shot v4: the street plate gets a measured ground plane (vanishing point, horizon, camera height), so Lustig's
+ *  position, size and shadow all come from one projection; he walks diagonally across the cobbles, getting smaller as he
+ *  goes deeper, and the body follows the planted foot on screen (no sliding). Camera: a slow push-in on him. */
+const VX = 604, HY = 1410, CH = 4.1, CF = 4510, KS = 0.0012; // vanishing x, horizon y, camera height (m), focal x height, px-per-unit per px below horizon
+const ground = (X: number, Z: number) => { const d = CF / Z; return { x: VX + (X * d) / CH, y: HY + d, s: KS * d }; };
+const ShotWidePersp: React.FC<{ t: number }> = ({ t }) => {
+  const dur = S1.b - S1.a, Z0 = 1.0, Z1 = 1.32, CX = 560, CY = 1760;
+  const stop = W("small") - 0.25;
+  const wk = walker(t, 0.15, stop, 4.0);
+  const dir = [0.96, 0.28], mpu = CH * KS; // metres per drawing unit
+  const along = (wk.dist * mpu) / dir[0];   // screen-x speed of the body = the planted foot's
+  const g = ground(-2.3 + dir[0] * along, 11.0 + dir[1] * along);
+  const p = camXY(g.x, g.y, t, dur, Z0, Z1, CX, CY);
+  const turned = t > stop;
+  const pose: Pose = {
+    phase: wk.phase, walk: wk.walk, expr: t < W("small") ? "smile" : t < W("wasnt") - 0.1 ? "worried" : "smug",
+    facing: turned ? 0 : 0.6, gesture: t > W("problem") - 0.1 && t < W("his") ? "shrug" : "none", gk: ramp(t, W("problem") - 0.15, 0.25) * (1 - ramp(t, W("wasnt") + 0.1, 0.3)),
+    wink: t > W("his") - 0.05 && t < W("his") + 0.45, blink: blinkAt(t, 1), lookX: turned ? 0 : 0.6,
+  };
+  // two strollers far down the street crossing the other way, sized by the same ground plane
+  const e1 = walker(t, 0, 6, 7), e2 = walker(t, 0.5, 6, 6);
+  const f1 = ground(1.8 - e1.dist * mpu, 34), f2 = ground(2.2 - e2.dist * mpu, 40);
+  const q1 = camXY(f1.x, f1.y, t, dur, Z0, Z1, CX, CY), q2 = camXY(f2.x, f2.y, t, dur, Z0, Z1, CX, CY);
+  const shadow = (x: number, y: number, s: number, k = 1) => (
+    <g key={`${x}`}>
+      <ellipse cx={x} cy={y + 1} rx={72 * s} ry={12 * s} fill="url(#gshadow)" opacity={0.95 * k} />
+      <ellipse cx={x + 40 * s} cy={y + 2} rx={110 * s} ry={14 * s} fill="url(#gshadow)" opacity={0.35 * k} />
+    </g>
+  );
+  return (
+    <AbsoluteFill>
+      <Plate src={CFG.wide} t={t} dur={dur} z0={Z0} z1={Z1} cx={CX} cy={CY} blur={0} />
+      <Haze top={`rgba(255,190,170,${CFG.haze})`} vig={CFG.vig} />
+      <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <GroundDefs />
+        <Birds t={t} y0={330} n={5} seed={1} scale={0.8} />
+        {shadow(q1.x, q1.y, f1.s * q1.z, 0.8)}
+        {shadow(q2.x, q2.y, f2.s * q2.z, 0.8)}
+        <Figure id="x1" look={EXTRA1} x={q1.x} y={q1.y} s={f1.s * q1.z} flip shadow={false} pose={{ phase: e1.phase, walk: 1, expr: "neutral", facing: 0.5, blink: blinkAt(t, 3) }} />
+        <Figure id="x2" look={EXTRA2} x={q2.x} y={q2.y} s={f2.s * q2.z} flip shadow={false} pose={{ phase: e2.phase, walk: 1, expr: "smile", facing: 0.5, blink: blinkAt(t, 4) }} />
+        {shadow(p.x, p.y, g.s * p.z)}
+        <Figure id="lw" look={LUSTIG} x={p.x} y={p.y} s={g.s * p.z} pose={pose} shadow={false} />
+        {/* warm spill from the cafe lamps on his left side */}
+        <ellipse cx={p.x - 40 * g.s * p.z} cy={p.y - 200 * g.s * p.z} rx={170 * g.s * p.z} ry={230 * g.s * p.z} fill="rgba(255,190,110,0.10)" style={{ mixBlendMode: "screen" }} />
+        <Motes t={t} n={30} seed={1} />
       </svg>
     </AbsoluteFill>
   );
@@ -226,10 +278,10 @@ const ShotTwo: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-export const StyleTest: React.FC<{ withAudio?: boolean; bg?: "v2" | "v3" }> = ({ withAudio = true, bg = "v2" }) => {
-  CFG = bg === "v3" ? V3 : V2;
+export const StyleTest: React.FC<{ withAudio?: boolean; bg?: "v2" | "v3" | "v4" }> = ({ withAudio = true, bg = "v2" }) => {
+  CFG = bg === "v4" ? V4 : bg === "v3" ? V3 : V2;
   const f = useCurrentFrame(), t = f / FPS;
-  const shot = t < S1.b ? <ShotWide t={t - S1.a} /> : t < S2.b ? <ShotClose t={t - S2.a} /> : <ShotTwo t={t - S3.a} />;
+  const shot = t < S1.b ? (bg === "v4" ? <ShotWidePersp t={t - S1.a} /> : <ShotWide t={t - S1.a} />) : t < S2.b ? <ShotClose t={t - S2.a} /> : <ShotTwo t={t - S3.a} />;
   // 3-frame dip at each cut keeps the cuts crisp but not harsh
   const cutK = [S2.a, S3.a].reduce((m, c) => Math.min(m, Math.abs(t - c) * FPS), 99);
   return (
@@ -237,7 +289,7 @@ export const StyleTest: React.FC<{ withAudio?: boolean; bg?: "v2" | "v3" }> = ({
       {shot}
       {CFG.grade && <AbsoluteFill style={{ background: "linear-gradient(rgba(255,170,120,0.10), rgba(255,200,150,0.0) 50%, rgba(80,40,90,0.10))", mixBlendMode: "soft-light" }} />}
       {cutK < 1.5 && <AbsoluteFill style={{ background: "#fff", opacity: 0.12 * (1.5 - cutK) }} />}
-      <Subtitles words={WORDS} style={sub} />
+      <Subtitles words={WORDS} style={bg === "v4" ? subV4 : sub} />
       {withAudio && <Audio src={staticFile("eiffel/test_mix.wav")} />}
       {interpolate(t, [0, 0.25], [1, 0], { extrapolateRight: "clamp" }) > 0 && <AbsoluteFill style={{ background: "#000", opacity: interpolate(t, [0, 0.25], [1, 0], { extrapolateRight: "clamp" }) }} />}
     </AbsoluteFill>
