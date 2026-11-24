@@ -16,13 +16,13 @@ const WORDS = ((vis as { words: { w: string; s: number; e: number }[] }).words).
 const KEY = ["1925", "eiffel", "tower", "victor", "lustig", "dozens", "fake", "smile", "sand", "desert", "his"];
 const sub = defaultStyle("funny", { keyWords: KEY, y: 0.86 });
 
-const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
-const smooth = (x: number) => { const c = clamp01(x); return c * c * (3 - 2 * c); };
-const ramp = (t: number, a: number, d = 0.3) => smooth((t - a) / d);
+export const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+export const smooth = (x: number) => { const c = clamp01(x); return c * c * (3 - 2 * c); };
+export const ramp = (t: number, a: number, d = 0.3) => smooth((t - a) / d);
 const W = (w: string, n = 0) => WORDS.filter((x) => x.w.toLowerCase().replace(/[^a-z0-9]/g, "") === w)[n]?.s ?? 0;
 
 /** blink: a 4-frame blink every 2-4 s, plus forced blinks */
-const blinkAt = (t: number, seed: number, extra: number[] = []) => {
+export const blinkAt = (t: number, seed: number, extra: number[] = []) => {
   const f = Math.round(t * FPS);
   for (const e of extra) { const k = f - Math.round(e * FPS); if (k >= 0 && k < 4) return [0.5, 1, 1, 0.5][k]; }
   let s = Math.round(20 + 30 * ((seed * 7.3) % 1));
@@ -31,7 +31,7 @@ const blinkAt = (t: number, seed: number, extra: number[] = []) => {
 };
 
 /** stance-driven walk between t0 and t1 (ease in/out on the phase, the body follows the planted foot) */
-const walker = (t: number, t0: number, t1: number, cycles: number) => {
+export const walker = (t: number, t0: number, t1: number, cycles: number) => {
   const u = clamp01((t - t0) / (t1 - t0));
   // ease the cadence in and out (the body speed always follows the planted foot)
   const k = u < 0.2 ? (u * u) / 0.4 / 0.8 : u > 0.8 ? 1 - ((1 - u) * (1 - u)) / 0.4 / 0.8 : (u - 0.1) / 0.8;
@@ -41,7 +41,7 @@ const walker = (t: number, t0: number, t1: number, cycles: number) => {
 };
 
 // ---------------------------------------------------------------- set dressing
-const Birds: React.FC<{ t: number; y0: number; n: number; seed: number; scale?: number }> = ({ t, y0, n, seed, scale = 1 }) => (
+export const Birds: React.FC<{ t: number; y0: number; n: number; seed: number; scale?: number }> = ({ t, y0, n, seed, scale = 1 }) => (
   <g>
     {Array.from({ length: n }, (_, i) => {
       const x = ((i * 137 + seed * 53 + t * (90 + i * 13)) % 1500) - 200, y = y0 + i * 26 + 18 * Math.sin(t * 1.3 + i);
@@ -50,7 +50,7 @@ const Birds: React.FC<{ t: number; y0: number; n: number; seed: number; scale?: 
     })}
   </g>
 );
-const Motes: React.FC<{ t: number; n: number; seed: number }> = ({ t, n, seed }) => (
+export const Motes: React.FC<{ t: number; n: number; seed: number }> = ({ t, n, seed }) => (
   <g>
     {Array.from({ length: n }, (_, i) => {
       const a = Math.abs(Math.sin(i * 12.9898 + seed) * 43758.5453) % 1, b = Math.abs(Math.sin(i * 78.233 + seed) * 12543.13) % 1;
@@ -61,7 +61,7 @@ const Motes: React.FC<{ t: number; n: number; seed: number }> = ({ t, n, seed })
   </g>
 );
 /** painted background plate with a slow camera move (zoom about a point, drift) and depth blur */
-const Plate: React.FC<{ src: string; t: number; dur: number; z0: number; z1: number; cx: number; cy: number; dx?: number; dy?: number; blur: number; bright?: number }> =
+export const Plate: React.FC<{ src: string; t: number; dur: number; z0: number; z1: number; cx: number; cy: number; dx?: number; dy?: number; blur: number; bright?: number }> =
   ({ src, t, dur, z0, z1, cx, cy, dx = 0, dy = 0, blur, bright = 1 }) => {
     const u = Easing.inOut(Easing.sin)(clamp01(t / dur)), z = z0 + (z1 - z0) * u;
     return (
@@ -71,7 +71,7 @@ const Plate: React.FC<{ src: string; t: number; dur: number; z0: number; z1: num
       </AbsoluteFill>
     );
   };
-const Haze: React.FC<{ top?: string; bottom?: string; vig?: number }> = ({ top = "rgba(255,190,170,0.16)", bottom = "rgba(60,30,70,0.0)", vig = 0.45 }) => (
+export const Haze: React.FC<{ top?: string; bottom?: string; vig?: number }> = ({ top = "rgba(255,190,170,0.16)", bottom = "rgba(60,30,70,0.0)", vig = 0.45 }) => (
   <>
     <AbsoluteFill style={{ background: `linear-gradient(${top}, rgba(255,200,160,0.0) 45%, ${bottom})` }} />
     <AbsoluteFill style={{ background: `radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 55%, rgba(25,12,30,${vig}) 100%)` }} />
@@ -79,13 +79,13 @@ const Haze: React.FC<{ top?: string; bottom?: string; vig?: number }> = ({ top =
 );
 
 /** a figure on a camera-moving plate: world x/ground y in plate pixels, transformed with the same zoom as the plate */
-const camXY = (x: number, y: number, t: number, dur: number, z0: number, z1: number, cx: number, cy: number, dx = 0, dy = 0) => {
+export const camXY = (x: number, y: number, t: number, dur: number, z0: number, z1: number, cx: number, cy: number, dx = 0, dy = 0) => {
   const u = Easing.inOut(Easing.sin)(clamp01(t / dur)), z = z0 + (z1 - z0) * u;
   return { x: cx + (x - cx) * z + dx * u, y: cy + (y - cy) * z + dy * u, z };
 };
 
-const EXTRA1: Look = { ...LUSTIG, suit: "#5a6a4a", suitDark: "#45523a", pin: undefined, vest: "#7a6a4a", tie: "#2a3a6a", hat: "homburg", hatCol: "#4a4038", mustache: undefined, flower: undefined, chain: false, trousers: "#4e5a40" };
-const EXTRA2: Look = { ...POISSON, suit: "#4a5a7a", suitDark: "#384560", check: undefined, vest: "#6a7a9a", hat: "bowler", hatCol: "#3a2a22", glasses: false, mustache: "pencil", stout: 0, hair: "#5a3a22", brows: "#5a3a22", trousers: "#3f4c68" };
+export const EXTRA1: Look = { ...LUSTIG, suit: "#5a6a4a", suitDark: "#45523a", pin: undefined, vest: "#7a6a4a", tie: "#2a3a6a", hat: "homburg", hatCol: "#4a4038", mustache: undefined, flower: undefined, chain: false, trousers: "#4e5a40" };
+export const EXTRA2: Look = { ...POISSON, suit: "#4a5a7a", suitDark: "#384560", check: undefined, vest: "#6a7a9a", hat: "bowler", hatCol: "#3a2a22", glasses: false, mustache: "pencil", stout: 0, hair: "#5a3a22", brows: "#5a3a22", trousers: "#3f4c68" };
 
 // ---------------------------------------------------------------- shots
 /** background set: v2 = the first painted plates (kept for reference), v3 = the illustrated plates of the background test */
@@ -97,13 +97,14 @@ export const V3: BgCfg = { ...V2, wide: "eiffel/bg_wide3.png", cafe: "eiffel/bg_
   wideCY: 1600, wideGY: 1560, wideX0: 330, farGY: [1490, 1478], twoGY: 1725, twoCY: 1725, twoZ: 1.3, closeCY: 1000, closeZ: 1.3 };
 export const V4: BgCfg = { ...V3, wide: "eiffel/bg_wide4.png" };
 let CFG: BgCfg = V2;
+export const setCfg = (c: BgCfg) => { CFG = c; };
 const subV4 = { ...sub, moves: [{ from: 0, to: 5.1, y: 0.42 }] };
 
 /** soft ground shadow under the feet (part of the set, drawn before the figure): grounds the character on the painted floor */
 const Ground: React.FC<{ x: number; y: number; s: number; k?: number }> = ({ x, y, s, k = 1 }) => CFG.shadow ? (
   <ellipse cx={x} cy={y + 2 * s} rx={95 * s} ry={20 * s} fill="url(#gshadow)" opacity={0.85 * k} />
 ) : null;
-const GroundDefs = () => (
+export const GroundDefs = () => (
   <defs>
     <radialGradient id="gshadow"><stop offset="0" stopColor="rgba(40,22,40,0.55)" /><stop offset="0.6" stopColor="rgba(40,22,40,0.28)" /><stop offset="1" stopColor="rgba(40,22,40,0)" /></radialGradient>
   </defs>
@@ -151,9 +152,9 @@ const ShotWide: React.FC<{ t: number }> = ({ t }) => {
 /** opening shot v4: the street plate gets a measured ground plane (vanishing point, horizon, camera height), so Lustig's
  *  position, size and shadow all come from one projection; he walks diagonally across the cobbles, getting smaller as he
  *  goes deeper, and the body follows the planted foot on screen (no sliding). Camera: a slow push-in on him. */
-const VX = 604, HY = 1410, CH = 4.1, CF = 4510, KS = 0.0012; // vanishing x, horizon y, camera height (m), focal x height, px-per-unit per px below horizon
-const ground = (X: number, Z: number) => { const d = CF / Z; return { x: VX + (X * d) / CH, y: HY + d, s: KS * d }; };
-const ShotWidePersp: React.FC<{ t: number }> = ({ t }) => {
+export const VX = 604, HY = 1410, CH = 4.1, CF = 4510, KS = 0.0012; // vanishing x, horizon y, camera height (m), focal x height, px-per-unit per px below horizon
+export const ground = (X: number, Z: number) => { const d = CF / Z; return { x: VX + (X * d) / CH, y: HY + d, s: KS * d }; };
+export const ShotWidePersp: React.FC<{ t: number }> = ({ t }) => {
   const dur = S1.b - S1.a, Z0 = 1.0, Z1 = 1.32, CX = 560, CY = 1760;
   const stop = W("small") - 0.25;
   const wk = walker(t, 0.15, stop, 4.0);
@@ -198,7 +199,7 @@ const ShotWidePersp: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-const ShotClose: React.FC<{ t: number }> = ({ t }) => {
+export const ShotClose: React.FC<{ t: number }> = ({ t }) => {
   const T = t + S2.a, dur = S2.b - S2.a;
   const u = smooth(t / dur);
   // gentle push-in and a breathing sway
@@ -227,7 +228,7 @@ const ShotClose: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-const Sparkle: React.FC<{ x: number; y: number; k: number }> = ({ x, y, k }) => {
+export const Sparkle: React.FC<{ x: number; y: number; k: number }> = ({ x, y, k }) => {
   if (k <= 0 || k >= 1) return null;
   const r = 46 * Math.sin(Math.PI * k);
   return (
@@ -237,7 +238,7 @@ const Sparkle: React.FC<{ x: number; y: number; k: number }> = ({ x, y, k }) => 
   );
 };
 
-const ShotTwo: React.FC<{ t: number }> = ({ t }) => {
+export const ShotTwo: React.FC<{ t: number }> = ({ t }) => {
   const T = t + S3.a, dur = S3.b - S3.a;
   const Z0 = 1.0, Z1 = 1.06, CX = 540, CY = CFG.twoGY;
   const s0 = 1.45, gy = CFG.twoGY;
