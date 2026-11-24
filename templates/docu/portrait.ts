@@ -304,7 +304,7 @@ function hat(g: Ctx, B: Bust, back: number, lw: number, s: number) {
     // bronze Greek helmet pushed back on the head, with a tall horsehair crest
     const br = "#a8793a";
     const cr = P([[back - 0.08, 0.5], [back - 0.12, -0.1, 0.0, -0.14], [0.3, -0.13, 0.36, 0.1], [0.36, 0.2], [0.2, 0.16, 0.02, 0.24], [back + 0.06, 0.3, back - 0.02, 0.5]]);
-    const pl = P([[back + 0.02, 0.12], [back - 0.22, -0.4, 0.05, -0.46], [0.36, -0.42, 0.3, 0.1], [0.0, 0.12]]);
+    const pl = P([[0.3, -0.02], [0.26, -0.3, -0.05, -0.31], [back - 0.24, -0.3, back - 0.2, 0.3], [back - 0.08, 0.28], [back - 0.1, -0.08, -0.05, -0.08], [0.18, -0.08, 0.2, -0.04]]);
     g.fillStyle = B.plume ?? "#7a1e1e"; g.fill(pl); g.save(); g.clip(pl); hatchLines(g, -0.7, -0.45, 0.4, 0.1, 0.016, 1.2, 1.1 / s, "rgba(20,8,8,0.6)", 0.004); g.restore(); g.strokeStyle = INK; g.lineWidth = 3 * lw; g.stroke(pl);
     g.fillStyle = br; g.fill(cr); g.save(); g.clip(cr);
     const sh = g.createLinearGradient(-0.4, -0.1, 0.3, 0.2); sh.addColorStop(0, "rgba(60,30,10,0.55)"); sh.addColorStop(0.55, "rgba(255,220,150,0.35)"); sh.addColorStop(1, "rgba(60,30,10,0.3)"); g.fillStyle = sh; g.fill(cr);

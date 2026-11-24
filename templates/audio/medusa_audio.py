@@ -47,7 +47,8 @@ def drum(buf, t, vel=0.6, low=True):
 
 def padc(buf, t, ch, dur, vel=0.3, warm=650, trem=None):
     if dur > 0.2:
-        place(buf, I.pad([F(m) for m in CH[ch]], dur, vel, R, att=1.0, rel=1.5, warm=warm, trem=trem), t)
+        tf = (lambda tt, f=trem: 1 - 0.35 * (0.5 + 0.5 * np.sin(2 * np.pi * f * tt))) if trem else None
+        place(buf, I.pad([F(m) for m in CH[ch]], dur, vel, R, att=1.0, rel=1.5, warm=warm, trem=tf), t)
 
 
 def lyre_line(buf, a, b, notes, step=0.42, vel=0.45):
@@ -63,8 +64,32 @@ def heartbeat(buf, a, b, period=1.1, vel=0.5):
         drum(buf, t, vel); drum(buf, t + 0.22, vel * 0.6); t += period
 
 
+def shaker(buf, t, vel=0.2):
+    n = ns(0.09); tt = np.arange(n) / SR
+    place(buf, pan(bp(R.standard_normal(n), 4000, 11000, 1) * np.exp(-tt / 0.025) * vel, 0.3), t)
+
+
+def groove(buf, a, b, bpm=104, vel=1.0):
+    """frame-drum groove: low dum on 1 and 3, tek on the offbeats, shaker sixteenths"""
+    beat = 60.0 / bpm; t, k = a, 0
+    while t < b - 0.05:
+        if k % 4 in (0, 2):
+            drum(buf, t, 0.55 * vel)
+        if k % 4 == 3:
+            drum(buf, t + beat * 0.5, 0.3 * vel)
+        drum(buf, t + beat * 0.5, 0.22 * vel, low=False)
+        for j in range(4):
+            shaker(buf, t + j * beat / 4, (0.16 if j % 2 else 0.1) * vel)
+        t += beat; k += 1
+
+
 def music():
     buf = np.zeros((2, N))
+    # a driving groove under most of the story, so it never sits still
+    groove(buf, S[0] + 0.2, S[1] - 0.1, 104, 0.55)
+    groove(buf, S[4] + 0.1, S[8] - 0.1, 108, 0.9)
+    groove(buf, S[10] + 0.1, wt(10, "stone") - 0.1, 116, 1.0)
+    groove(buf, S[12] + 0.1, S[13] - 0.1, 104, 0.6)
     # 0: a calm lyre over a drone (the young woman by the sea)
     padc(buf, 0.0, "Dm", S[1] + 0.4, 0.26, warm=800)
     lyre_line(buf, 0.4, S[1], [62, 65, 69, 67, 65, 63, 62, 57], 0.46, 0.42)
@@ -142,6 +167,9 @@ def wingbeat():
 
 def sfx():
     buf = np.zeros((2, N))
+    # a whoosh on every cut
+    for i in range(1, len(LINES)):
+        place(buf, G.whoosh(0.35, R, 0.6, 500, 4000, 0.7, 0.1, 0.4) * 0.5, S[i] - 0.12)
     # sea and wind by the shore
     place(buf, fades(G.water_bed(S[1] + 0.5, R, close=0.3) * 0.5, 0.5, 0.6), 0.0)
     place(buf, fades(G.breeze(S[1] + 0.5, R, 0.6, 0.3, 1100), 0.5, 0.6), 0.0)

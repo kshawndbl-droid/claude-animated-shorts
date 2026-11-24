@@ -10,6 +10,7 @@ import { NapoleonRabbits, NAP_TOTAL } from "../templates/napoleon/NapoleonRabbit
 import { PigWar, PIG_TOTAL } from "../templates/pigwar/PigWar";
 import { MaryCeleste, MC_TOTAL } from "../templates/celeste/MaryCeleste";
 import { DBCooper, DBC_TOTAL } from "../templates/cooper/DBCooper";
+import { Medusa, MED_TOTAL } from "../templates/medusa/Medusa";
 
 const WithSound: React.FC = () => (
   <AbsoluteFill>
@@ -23,6 +24,7 @@ export const Root: React.FC = () => (
     <Composition id="BridgeShort" component={WithSound} durationInFrames={BRIDGE_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="BridgePicture" component={BridgeShort} durationInFrames={BRIDGE_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="VasaShort" component={VasaShort} durationInFrames={VASA_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
+    <Composition id="Medusa" component={Medusa} durationInFrames={MED_TOTAL} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="DBCooper" component={DBCooper} durationInFrames={DBC_TOTAL} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="MaryCeleste" component={MaryCeleste} durationInFrames={MC_TOTAL} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="PigWar" component={PigWar} durationInFrames={PIG_TOTAL} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
