@@ -8,6 +8,7 @@ import { VasaShort, VASA_FRAMES } from "../templates/vasa/Vasa";
 import { EmuWar, EMU_TOTAL } from "../templates/emu/EmuWar";
 import { NapoleonRabbits, NAP_TOTAL } from "../templates/napoleon/NapoleonRabbits";
 import { PigWar, PIG_TOTAL } from "../templates/pigwar/PigWar";
+import { MaryCeleste, MC_TOTAL } from "../templates/celeste/MaryCeleste";
 
 const WithSound: React.FC = () => (
   <AbsoluteFill>
@@ -21,6 +22,7 @@ export const Root: React.FC = () => (
     <Composition id="BridgeShort" component={WithSound} durationInFrames={BRIDGE_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="BridgePicture" component={BridgeShort} durationInFrames={BRIDGE_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="VasaShort" component={VasaShort} durationInFrames={VASA_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
+    <Composition id="MaryCeleste" component={MaryCeleste} durationInFrames={MC_TOTAL} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="PigWar" component={PigWar} durationInFrames={PIG_TOTAL} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="NapoleonRabbits" component={NapoleonRabbits} durationInFrames={NAP_TOTAL} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="EmuWar" component={EmuWar} durationInFrames={EMU_TOTAL} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
