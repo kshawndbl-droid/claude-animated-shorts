@@ -5,9 +5,10 @@ import * as THREE from "three";
 import { TONE, LFB, untone } from "../bridge/shade";
 import { NOINK } from "../bridge/ink";
 import {
-  buildShip, buildTown, makePerson, pose, rowBoat, pontoon, sprite, mat, flat, ShipParts, Person, Look as PLook,
+  buildShip, buildTown, rowBoat, pontoon, sprite, mat, flat, ShipParts,
   cloudTex, dotTex, ringTex, streakTex, sparkTex, labelTex, gridTex, mudTex, panelTex, deckY, halfAt, HALF_L, sheer,
 } from "./vparts";
+import { makePerson, pose, drawToons, Person, Look as PLook } from "./toon2d";
 import { FPS, SHOTS, shotAt, shipAt, camAt, Look, V3, MOOR, SINK, DIAG, ROOM, MUSE, MUD_Y, smooth, clamp01, crowdSide, running, RUNS, lerp, keys, sailPos } from "./vstory";
 
 type C3 = [number, number, number];
@@ -311,6 +312,9 @@ export class VasaWorld {
       this.fish.forEach((f, i) => { const a = t * 0.25 + i * 0.7; f.position.set(SINK[0] + Math.cos(a) * (16 + i * 2), -18 - (i % 4) * 3, SINK[2] + Math.sin(a) * (14 + i)); f.rotation.y = -a; });
       this.rays.forEach((r, i) => ((r.material as THREE.MeshBasicMaterial).opacity = 0.09 + 0.04 * Math.sin(t * 0.8 + i)));
     }
+    // 2D cartoon people: turn cards to the lens, pick views, draw this frame
+    this.root.updateMatrixWorld(true);
+    drawToons(cam, t, this.sun.position.clone().sub(this.sun.target.position).normalize());
     return focus;
   }
 
@@ -370,16 +374,16 @@ export class VasaWorld {
         const dir = Math.sign(sd2 - sd);
         const moving = Math.abs(sd2 - sd) > 0.002 && run;
         yaw = moving ? (dir > 0 ? -Math.PI / 2 : Math.PI / 2) : Math.PI / 2 + Math.sin(k) * 0.4;
-        P = moving ? { run: 1, phase: t * 2.6 + k * 0.17 } : { armL: [0.1, 0.15, 0.2], armR: [0.1, 0.15, 0.2], headYaw: Math.sin(t + k) * 0.3 };
-        if (id === 6) P = { armL: [0.05, 0.12, 0.3], armR: [0.05, 0.12, 0.3], headYaw: -0.6 };
+        P = moving ? { run: 1, phase: t * 2.6 + k * 0.17, face: k % 3 === 0 ? "shock" : "grin" } : { armL: [0.1, 0.15, 0.2], armR: [0.1, 0.15, 0.2], headYaw: Math.sin(t + k) * 0.3, face: k % 2 ? "worried" : "neutral", squash: -0.05 * Math.max(0, 1 - Math.abs(sd2 - sd) * 50) };
+        if (id === 6) P = { armL: [0.05, 0.12, 0.3], armR: [0.05, 0.12, 0.3], headYaw: -0.6, face: "worried" };
       } else if (id >= 8) {
         // the gusts: hanging on, leaning against the heel
         z = c.z * 0.9; yaw = Math.PI / 2 + (k % 2 ? 0.5 : -0.5);
-        P = { armL: [1.2, 0.5, 0.4], armR: [1.4, 0.4, 0.2], lean: 0.3, brow: 0.8, mouthOpen: 0.6, headYaw: 0.2 };
+        P = { armL: [1.2, 0.5, 0.4], armR: [1.4, 0.4, 0.2], lean: 0.3, brow: 0.8, mouthOpen: 0.6, headYaw: 0.2, face: "scared" };
       } else if (id === 7) {
-        z = c.z; P = { armR: [2.7, 0.2 + Math.sin(t * 9 + k) * 0.2, 0.3], armL: [0.1, 0.12, 0.2], mouthOpen: 0.4 };  // waving goodbye
+        z = c.z; P = { armR: [2.7, 0.2 + Math.sin(t * 9 + k) * 0.4, 0.3 + Math.sin(t * 9 + k) * 0.5], armL: [0.1, 0.12, 0.2], mouthOpen: 0.4, face: "happy", bounce: Math.abs(Math.sin(t * 4.5 + k)) * 0.05 };  // waving goodbye
       } else {
-        P = { armL: [0.1, 0.12, 0.2], armR: [0.1, 0.12, 0.2], headYaw: Math.sin(t * 0.7 + k) * 0.5 };
+        P = { armL: [0.1, 0.12, 0.2], armR: [0.1, 0.12, 0.2], headYaw: Math.sin(t * 0.7 + k) * 0.5, face: k % 4 ? "neutral" : "happy" };
       }
       const y = deckY(x);
       p.g.position.set(x, y, Math.max(-halfAt(x, y) + 0.6, Math.min(halfAt(x, y) - 0.6, z)));
@@ -392,15 +396,15 @@ export class VasaWorld {
     A.g.visible = id >= 4 && id <= 7;
     A.g.position.set(ax, deckY(ax), 0);
     let P: Parameters<typeof pose>[1] = { armL: [0.1, 0.2, 0.3], armR: [0.1, 0.2, 0.3] }, yaw = Math.PI / 2 + 0.5;
-    if (id === 5) { const up = smooth((t - 21.9) / 0.25); P = { armR: [lerp(0.1, 2.8, up), 0.25, lerp(0.3, 0.1, up)], armL: [0.1, 0.2, 0.3], brow: up * 0.9, mouthOpen: up * 0.8 }; yaw = 0.2; }
+    if (id === 5) { const up = smooth((t - 21.9) / 0.18), pre = smooth((t - 21.62) / 0.22) * (1 - up); P = { armR: [lerp(0.1, 2.8, up) - pre * 0.6, 0.25, lerp(0.3, 0.1, up) + pre * 1.2], armL: [0.1 - pre * 0.3, 0.2, 0.3 + pre * 0.6], bounce: -0.07 * pre, squash: -0.08 * pre + 0.06 * up * (1 - smooth((t - 22.1) / 0.3)), brow: up * 0.9, mouthOpen: up * 0.8, face: up > 0.3 ? "shout" : pre > 0.2 ? "angry" : "worried" }; yaw = 0.2; }
     if (id === 6) {
       yaw = 0.8;
-      if (t < 24.35) P = { armR: [2.8, 0.25, 0.1], armL: [0.1, 0.2, 0.3], brow: 0.9, mouthOpen: 0.6 };
-      else if (t < 25.3) P = { armL: [0.2, 0.75, 1.9], armR: [0.2, 0.75, 1.9], brow: -0.5, headPitch: -0.05 };            // hands on hips
-      else if (t < 27.15) { const d = Math.sin((t - 25.3) * 2) * 0.05; P = { armL: [1.0, -0.15, 1.7], armR: [1.0, -0.15, 1.7], headPitch: 0.28 + d, headYaw: -0.35, brow: -0.6, mouthOpen: 0.2 }; } // dreamy
-      else { const b = Math.abs(Math.sin((t - 27.15) * 5)) * 0.04 * (t < 28.1 ? 1 : 0); P = { armL: [0.55, 0.65, 1.3], armR: [0.55, 0.65, 1.3], headYaw: 0.05, brow: 0.7, bounce: b }; } // shrug
+      if (t < 24.35) P = { armR: [2.8, 0.25 + Math.sin(t * 14) * 0.08, 0.1], armL: [0.1, 0.2, 0.3], brow: -0.6, mouthOpen: 0.6 + Math.sin(t * 18) * 0.3, face: "shout" };
+      else if (t < 25.3) P = { armL: [0.2, 0.75, 1.9], armR: [0.2, 0.75, 1.9], hips: 1, brow: -0.5, headPitch: -0.05, face: "smug", bounce: -0.04 * (1 - smooth((t - 24.35) / 0.25)) };            // hands on hips
+      else if (t < 27.15) { const d = Math.sin((t - 25.3) * 2) * 0.05; P = { armL: [0.3, 0.2, 2.4], armR: [0.3, 0.2, 2.4], headPitch: 0.28 + d, headYaw: -0.35, face: "dreamy", lean: -0.08, bounce: d * 0.5 }; } // dreamy, hands clasped
+      else { const b = Math.abs(Math.sin((t - 27.15) * 5)) * 0.04 * (t < 28.1 ? 1 : 0); const pre = 1 - smooth((t - 27.15) / 0.15); P = { armL: [0.55 - pre * 0.4, 0.65 - pre * 0.4, 1.3], armR: [0.55 - pre * 0.4, 0.65 - pre * 0.4, 1.3], headYaw: 0.05, bounce: b - pre * 0.05, squash: 0.05 * (1 - pre) * Math.max(0, 1 - (t - 27.3) * 3), face: "grin" }; } // shrug
     }
-    if (id === 7) { P = { armR: [2.5, 0.3, 0.3], armL: [0.1, 0.2, 0.3], mouthOpen: 0.5 }; yaw = 0.6; }
+    if (id === 7) { P = { armR: [2.5, 0.3 + Math.sin(t * 8) * 0.3, 0.3], armL: [0.1, 0.2, 0.3], mouthOpen: 0.5, face: "happy" }; yaw = 0.6; }
     A.g.rotation.y = yaw;
     pose(A, P);
   }
@@ -417,7 +421,7 @@ export class VasaWorld {
       B.b.g.rotation.y = Math.atan2(-(to[1] - from[1]), to[0] - from[0]);
       const ph = t * 1.6 + i;
       B.b.oars.forEach((o, k) => (o.rotation.y = Math.sin(ph) * 0.5 * (k ? 1 : -1)));
-      B.rowers.forEach((r, k) => { r.g.rotation.y = Math.PI; pose(r, { armL: [1.3 + Math.sin(ph) * 0.6, 0.3, 0.6], armR: [1.3 + Math.sin(ph) * 0.6, 0.3, 0.6], lean: -0.2 + Math.sin(ph) * 0.25 }); r.legL.rotation.z = 1.4; r.legR.rotation.z = 1.4; });
+      B.rowers.forEach((r, k) => { r.g.rotation.y = Math.PI; pose(r, { armL: [1.3 + Math.sin(ph) * 0.6, 0.3, 0.6], armR: [1.3 + Math.sin(ph) * 0.6, 0.3, 0.6], lean: -0.2 + Math.sin(ph) * 0.25, sit: 1, face: "angry" }); });
     });
     this.swimmers.forEach((s, i) => {
       s.g.visible = show && t > 46.4;
@@ -442,8 +446,8 @@ export class VasaWorld {
       const toNext = Math.atan2(-(nz - z), nx - x), toCam = Math.atan2(-(cam[2] - z), cam[0] - x);
       const yaw = shrug > 0 ? lerp(toNext, toCam, shrug) : lerp(toCenter, toNext, blame);
       p.g.rotation.y = yaw;
-      if (shrug > 0) pose(p, { armL: [0.55, 0.7 * shrug, 1.35], armR: [0.55, 0.7 * shrug, 1.35], brow: 0.8, bounce: Math.abs(Math.sin((t - 58.75) * 6)) * 0.03 });
-      else pose(p, { armR: [lerp(0.1, 1.55, blame), 0.12, lerp(0.3, 0.05, blame)], armL: [0.15, 0.15, 0.4], brow: -0.8 * blame, mouthOpen: blame * 0.6 * (0.5 + 0.5 * Math.sin(t * 9 + i)), headYaw: (1 - blame) * Math.sin(t * 2 + i) * 0.4 });
+      if (shrug > 0) pose(p, { armL: [0.55, 0.7 * shrug, 1.35], armR: [0.55, 0.7 * shrug, 1.35], brow: 0.8, bounce: Math.abs(Math.sin((t - 58.75) * 6)) * 0.03, face: i % 2 ? "worried" : "grin" });
+      else pose(p, { armR: [lerp(0.1, 1.55, blame), 0.12, lerp(0.3, 0.05, blame)], armL: [0.15, 0.15, 0.4], brow: -0.8 * blame, mouthOpen: blame * 0.6 * (0.5 + 0.5 * Math.sin(t * 9 + i)), headYaw: (1 - blame) * Math.sin(t * 2 + i) * 0.4, face: blame > 0.5 ? "shout" : "neutral", bounce: blame * Math.abs(Math.sin(t * 7 + i)) * 0.03 });
     });
   }
 
