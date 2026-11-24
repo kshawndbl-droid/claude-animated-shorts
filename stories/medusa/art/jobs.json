@@ -5,7 +5,8 @@
   "seed": 2,
   "w": 576,
   "h": 1024,
-  "bg": true
+  "bg": true,
+  "steps": 11
  },
  {
   "name": "bg_temple",
@@ -13,7 +14,8 @@
   "seed": 3,
   "w": 576,
   "h": 1024,
-  "bg": true
+  "bg": true,
+  "steps": 11
  },
  {
   "name": "bg_olympus",
@@ -21,7 +23,8 @@
   "seed": 4,
   "w": 576,
   "h": 1024,
-  "bg": true
+  "bg": true,
+  "steps": 11
  },
  {
   "name": "bg_curse",
@@ -29,7 +32,8 @@
   "seed": 5,
   "w": 576,
   "h": 1024,
-  "bg": true
+  "bg": true,
+  "steps": 11
  },
  {
   "name": "bg_edge",
@@ -37,7 +41,8 @@
   "seed": 6,
   "w": 576,
   "h": 1024,
-  "bg": true
+  "bg": true,
+  "steps": 11
  },
  {
   "name": "bg_throne",
@@ -45,7 +50,8 @@
   "seed": 7,
   "w": 576,
   "h": 1024,
-  "bg": true
+  "bg": true,
+  "steps": 11
  },
  {
   "name": "bg_sky",
@@ -53,7 +59,8 @@
   "seed": 8,
   "w": 576,
   "h": 1024,
-  "bg": true
+  "bg": true,
+  "steps": 11
  },
  {
   "name": "bg_cave",
@@ -61,15 +68,8 @@
   "seed": 9,
   "w": 576,
   "h": 1024,
-  "bg": true
- },
- {
-  "name": "bg_sunset",
-  "prompt": "peaceful ancient Greek coastline at sunset, calm sea, lonely rocky shore",
-  "seed": 10,
-  "w": 576,
-  "h": 1024,
-  "bg": true
+  "bg": true,
+  "steps": 11
  },
  {
   "name": "fb_medusa",
@@ -77,7 +77,8 @@
   "seed": 21,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_medusa_scared",
@@ -85,7 +86,8 @@
   "seed": 22,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_gorgon",
@@ -93,7 +95,8 @@
   "seed": 5,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_athena_angry",
@@ -101,7 +104,8 @@
   "seed": 4,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_athena_shield",
@@ -109,7 +113,8 @@
   "seed": 14,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_perseus",
@@ -117,7 +122,8 @@
   "seed": 8,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_perseus_fly",
@@ -125,7 +131,8 @@
   "seed": 18,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_perseus_swing",
@@ -133,7 +140,8 @@
   "seed": 28,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_king",
@@ -141,15 +149,8 @@
   "seed": 31,
   "w": 512,
   "h": 896,
-  "cut": true
- },
- {
-  "name": "fb_hermes",
-  "prompt": "full body character design, standing, whole figure from head to feet visible, fully clothed, Hermes the messenger god, young man with winged helmet and winged sandals, blue cloak, short tunic, holding a curved sickle sword, flying, plain white background",
-  "seed": 12,
-  "w": 512,
-  "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "fb_poseidon",
@@ -157,7 +158,8 @@
   "seed": 17,
   "w": 512,
   "h": 896,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "medusa_scared",
@@ -165,7 +167,8 @@
   "seed": 21,
   "w": 512,
   "h": 640,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "medusa_cry",
@@ -173,7 +176,8 @@
   "seed": 21,
   "w": 512,
   "h": 640,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "gorgon_angry",
@@ -181,7 +185,8 @@
   "seed": 5,
   "w": 512,
   "h": 640,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "gorgon_stare",
@@ -189,7 +194,8 @@
   "seed": 13,
   "w": 512,
   "h": 640,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "gorgon_sleep",
@@ -197,7 +203,8 @@
   "seed": 5,
   "w": 512,
   "h": 640,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "king_shock",
@@ -205,7 +212,8 @@
   "seed": 31,
   "w": 512,
   "h": 640,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "perseus_focus",
@@ -213,7 +221,8 @@
   "seed": 8,
   "w": 512,
   "h": 640,
-  "cut": true
+  "cut": true,
+  "steps": 11
  },
  {
   "name": "pegasus",
@@ -221,14 +230,7 @@
   "seed": 3,
   "w": 640,
   "h": 640,
-  "cut": true
- },
- {
-  "name": "shield_face",
-  "prompt": "a round bronze ancient Greek shield with the face of Medusa with snake hair carved in the center, plain white background",
-  "seed": 6,
-  "w": 576,
-  "h": 576,
-  "cut": true
+  "cut": true,
+  "steps": 11
  }
 ]

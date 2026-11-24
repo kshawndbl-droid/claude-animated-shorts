@@ -18,7 +18,7 @@ export type ChibiPose = {
   eyes?: "open" | "closed" | "angry" | "wide" | "sad" | "happy" | "sleep" | "glow";
   mouth?: "smile" | "open" | "o" | "frown" | "teeth" | "flat" | "grin" | "scream";
   blush?: number; sweat?: number; talk?: number; stone?: number;
-  holdR?: "spear" | "sword" | "harpe" | "trident" | "bag" | "none"; holdL?: "shield" | "none" | "bag";
+  propRot?: number; holdR?: "spear" | "sword" | "harpe" | "trident" | "bag" | "none"; holdL?: "shield" | "none" | "bag";
 };
 
 const OUT = "#2a1a16";
@@ -33,13 +33,13 @@ const light = (c: string, k = 0.25) => mix(c, "#fff6e8", k);
 function fillOut(g: Ctx, p: Path2D, col: string, lw: number, shadeCol?: string, shadeDir = 1) {
   g.fillStyle = col; g.fill(p);
   if (shadeCol) { // soft cel shadow on the far side
-    g.save(); g.clip(p); const b = 0.6; const gr = g.createLinearGradient(-b * shadeDir, 0, b * shadeDir, 0); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(0.55, "rgba(0,0,0,0)"); gr.addColorStop(0.56, shadeCol); gr.addColorStop(1, shadeCol);
+    g.save(); g.clip(p); const b = 0.6; const gr = g.createLinearGradient(-b * shadeDir, 0, b * shadeDir, 0); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(0.5, "rgba(0,0,0,0)"); gr.addColorStop(0.72, shadeCol); gr.addColorStop(1, shadeCol);
     g.fillStyle = gr; g.globalAlpha = 0.55; g.fillRect(-2, -2, 4, 4); g.restore();
   }
   g.strokeStyle = OUT; g.lineWidth = lw; g.lineJoin = "round"; g.stroke(p);
 }
 function limb(g: Ctx, x0: number, y0: number, a1: number, l1: number, a2: number, l2: number, w: number, col: string, lw: number, end: string, endR: number) {
-  const x1 = x0 + Math.sin(a1) * l1, y1 = y0 - Math.cos(a1) * l1 * -1;
+  const x1 = x0 + Math.sin(a1) * l1, y1 = y0 + Math.cos(a1) * l1;
   const x2 = x1 + Math.sin(a1 + a2) * l2, y2 = y1 + Math.cos(a1 + a2) * l2;
   g.lineCap = "round"; g.lineJoin = "round";
   g.strokeStyle = OUT; g.lineWidth = w + lw * 2; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.lineTo(x2, y2); g.stroke();
@@ -58,15 +58,16 @@ export function drawChibi(g: Ctx, L: ChibiLook, P: ChibiPose, t: number, s: numb
   const stone = P.stone ?? 0;
   const C = (c: string) => stone > 0 ? mix(c, mix("#9a968e", c, 0.0), stone) : c;
   const skin = C(L.skin), robe = C(L.robe), hair = C(L.hair);
+  { g.save(); g.translate(0, (P.hop ?? 0) + bob); const gs = Math.max(0.4, 1 - (P.hop ?? 0) * 2); g.fillStyle = "rgba(20,10,20,0.28)"; g.beginPath(); g.ellipse(0, 0.0, 0.17 * gs, 0.035 * gs, 0, 0, 7); g.fill(); g.restore(); }
   // ---- legs (behind the body) ----
   const legL = P.legL ?? [step * 0.6, Math.max(0, -step) * 0.6], legR = P.legR ?? [-step * 0.6, Math.max(0, step) * 0.6];
   const sandal = C("#7a4a2a");
-  limb(g, -0.06, -0.2, legL[0], 0.1, legL[1], 0.09, 0.07, skin, lw, sandal, 0.04);
-  limb(g, 0.06, -0.2, legR[0], 0.1, legR[1], 0.09, 0.07, skin, lw, sandal, 0.04);
+  limb(g, -0.06, -0.2, legL[0], 0.1, legL[1], 0.08, 0.075, skin, lw, sandal, 0.045);
+  limb(g, 0.06, -0.2, legR[0], 0.1, legR[1], 0.08, 0.075, skin, lw, sandal, 0.045);
   g.save(); g.translate(0, -0.2); g.scale(1 + sq, 1 - sq); g.rotate(P.lean ?? 0);
   // ---- back arm ----
   const aL = P.armL ?? [0.15 - step * 0.5, 0.3], aR = P.armR ?? [0.15 + step * 0.5, 0.3];
-  const handL = limb(g, -0.11, -0.2, -aL[0], 0.09, -aL[1], 0.08, 0.065, C(L.cloak ?? robe), lw, skin, 0.042);
+  const handL = limb(g, -0.11, -0.2, -aL[0], 0.11, -aL[1], 0.1, 0.07, C(L.cloak ?? robe), lw, skin, 0.05);
   if (P.holdL === "shield") { g.save(); g.translate(handL[0] - 0.02, handL[1]); const sp = new Path2D(); sp.arc(0, 0, 0.15, 0, 7); fillOut(g, sp, C("#c08a3a"), lw, shade(C("#c08a3a"))); const s2 = new Path2D(); s2.arc(0, 0, 0.11, 0, 7); g.strokeStyle = C("#8a5a20"); g.lineWidth = lw; g.stroke(s2); g.fillStyle = C("#e8c070"); g.beginPath(); g.arc(-0.04, -0.05, 0.03, 0, 7); g.fill(); g.restore(); }
   if (L.cloak) { const cp = new Path2D(); cp.moveTo(-0.12, -0.24); cp.quadraticCurveTo(-0.26 - step * 0.03, -0.1, -0.2 - Math.sin(t * 3) * 0.02, 0.02); cp.lineTo(0.0, 0.0); cp.lineTo(0.04, -0.25); cp.closePath(); fillOut(g, cp, C(L.cloak), lw, shade(C(L.cloak))); }
   // ---- body: a rounded robe / tunic ----
@@ -76,9 +77,9 @@ export function drawChibi(g: Ctx, L: ChibiLook, P: ChibiPose, t: number, s: numb
   if (L.armor) { const ar = new Path2D(); ar.moveTo(-0.11, -0.25); ar.quadraticCurveTo(0, -0.29, 0.11, -0.25); ar.lineTo(0.12, -0.08); ar.quadraticCurveTo(0, -0.05, -0.12, -0.08); ar.closePath(); fillOut(g, ar, C(L.armor), lw, shade(C(L.armor))); g.strokeStyle = shade(C(L.armor), 0.4); g.lineWidth = lw * 0.8; g.beginPath(); g.moveTo(-0.07, -0.17); g.quadraticCurveTo(0, -0.14, 0.07, -0.17); g.stroke(); }
   if (L.trim) { g.strokeStyle = C(L.trim); g.lineWidth = lw * 2; g.beginPath(); g.moveTo(-0.14 - sl * 0.2, sl - 0.015); g.lineTo(0.14 + sl * 0.2, sl - 0.015); g.stroke(); g.beginPath(); g.moveTo(-0.13, -0.08); g.quadraticCurveTo(0, -0.05, 0.13, -0.08); g.stroke(); }
   // ---- front arm + held props ----
-  const handR = limb(g, 0.11, -0.2, aR[0], 0.09, aR[1], 0.08, 0.065, C(L.cloak && !L.armor ? robe : robe), lw, skin, 0.042);
+  const handR = limb(g, 0.11, -0.2, aR[0], 0.11, aR[1], 0.1, 0.07, robe, lw, skin, 0.05);
   const hold = P.holdR ?? "none"; const ha = aR[0] + aR[1];
-  if (hold !== "none") { g.save(); g.translate(handR[0], handR[1]); g.rotate(-ha + Math.PI);
+  if (hold !== "none") { g.save(); g.translate(handR[0], handR[1]); g.rotate(P.propRot ?? (ha > 1.6 ? ha - Math.PI * 0.6 : 0.1));
     if (hold === "spear" || hold === "trident") { g.strokeStyle = OUT; g.lineWidth = 0.03 + lw * 2; g.beginPath(); g.moveTo(0, 0.25); g.lineTo(0, -0.42); g.stroke(); g.strokeStyle = C("#8a5a30"); g.lineWidth = 0.03; g.stroke();
       const tip = new Path2D(); if (hold === "spear") { tip.moveTo(-0.035, -0.4); tip.lineTo(0, -0.52); tip.lineTo(0.035, -0.4); tip.closePath(); } else { for (const dx of [-0.07, 0, 0.07]) { tip.moveTo(dx - 0.015, -0.4); tip.lineTo(dx, -0.52); tip.lineTo(dx + 0.015, -0.4); } tip.rect(-0.08, -0.42, 0.16, 0.03); }
       fillOut(g, tip, C("#d8c070"), lw); }
@@ -88,7 +89,7 @@ export function drawChibi(g: Ctx, L: ChibiLook, P: ChibiPose, t: number, s: numb
     g.restore(); }
   g.restore();
   // ---- head ----
-  g.save(); g.translate(0, -0.47 - sq * 0.1); g.rotate((P.headTilt ?? 0) + Math.sin(t * 1.6) * 0.02);
+  g.save(); g.translate(0, -0.56 - sq * 0.1); g.rotate((P.headTilt ?? 0) + Math.sin(t * 1.6) * 0.02);
   const R = 0.22;
   // hair behind the head
   if (L.hairStyle === "long") { const hb = new Path2D(); hb.moveTo(-R * 0.9, -R * 0.4); hb.quadraticCurveTo(-R * 1.35, R * 0.8, -R * 1.0 + Math.sin(t * 2) * 0.01, R * 1.55); hb.quadraticCurveTo(-R * 0.2, R * 1.7, R * 0.2, R * 1.2); hb.quadraticCurveTo(R * 0.5, R * 0.6, R * 0.9, -R * 0.2); hb.closePath(); fillOut(g, hb, hair, lw, shade(hair)); }
@@ -100,7 +101,7 @@ export function drawChibi(g: Ctx, L: ChibiLook, P: ChibiPose, t: number, s: numb
   // face: eyes, brows, mouth, cheeks (on the +x side, three-quarter)
   face(g, L, P, R, t, lw, skin);
   // beard
-  if (L.beard && L.beard !== "none") { const bc = C(L.beardCol ?? L.hair); const bd = new Path2D(); const ln = L.beard === "long" ? 0.75 : 0.45; bd.moveTo(-R * 0.62, R * 0.15); bd.quadraticCurveTo(-R * 0.5, R * (0.9 + ln), R * 0.2, R * (1.0 + ln)); bd.quadraticCurveTo(R * 0.85, R * (0.8 + ln * 0.6), R * 0.95, R * 0.25); bd.quadraticCurveTo(R * 0.6, R * 0.62, R * 0.38, R * 0.55); bd.quadraticCurveTo(R * 0.1, R * 0.62, -R * 0.62, R * 0.15); bd.closePath(); fillOut(g, bd, bc, lw, shade(bc)); const mo = P.mouth ?? "flat"; if (mo !== "flat") { g.fillStyle = "#5a2020"; g.beginPath(); g.ellipse(R * 0.42, R * 0.62, R * 0.12, R * (mo === "open" || mo === "scream" || mo === "o" ? 0.1 : 0.03), 0, 0, 7); g.fill(); } }
+  if (L.beard && L.beard !== "none") { const bc = C(L.beardCol ?? L.hair); const bd = new Path2D(); const ln = L.beard === "long" ? 0.75 : 0.45; bd.moveTo(-R * 0.6, R * 0.25); bd.quadraticCurveTo(-R * 0.5, R * (0.9 + ln), R * 0.2, R * (1.0 + ln)); bd.quadraticCurveTo(R * 0.85, R * (0.8 + ln * 0.6), R * 0.96, R * 0.3); bd.quadraticCurveTo(R * 0.75, R * 0.42, R * 0.4, R * 0.38); bd.quadraticCurveTo(R * 0.1, R * 0.4, -R * 0.6, R * 0.25); bd.closePath(); fillOut(g, bd, bc, lw, shade(bc)); const mo = P.mouth ?? "flat"; if (mo !== "flat") { g.fillStyle = "#5a2020"; g.beginPath(); g.ellipse(R * 0.42, R * 0.62, R * 0.12, R * (mo === "open" || mo === "scream" || mo === "o" ? 0.1 : 0.03), 0, 0, 7); g.fill(); } }
   // hair on top
   hairTop(g, L, R, t, lw, hair);
   if (L.hairStyle === "snakes") snakeHair(g, R, t, lw, C, false);
@@ -160,22 +161,29 @@ function hairTop(g: Ctx, L: ChibiLook, R: number, t: number, lw: number, col: st
   const p = new Path2D();
   if (st === "long") { p.moveTo(-R * 1.05, R * 0.3); p.quadraticCurveTo(-R * 1.2, -R * 1.2, R * 0.2, -R * 1.08); p.quadraticCurveTo(R * 1.05, -R * 0.95, R * 1.02, -R * 0.1); p.quadraticCurveTo(R * 0.7, -R * 0.55, R * 0.2, -R * 0.5); p.quadraticCurveTo(-R * 0.35, -R * 0.45, -R * 0.55, R * 0.4); p.closePath(); }
   else if (st === "curly") { for (let i = 0; i < 9; i++) { const a = Math.PI * (0.95 + i * 0.13); p.moveTo(Math.cos(a) * R * 0.95 + R * 0.16, Math.sin(a) * R * 0.95); p.arc(Math.cos(a) * R * 0.95, Math.sin(a) * R * 0.95, R * 0.19, 0, 7); } p.ellipse(-R * 0.1, -R * 0.55, R * 0.9, R * 0.5, 0, 0, 7); }
-  else if (st === "wild") { p.moveTo(-R * 1.1, R * 0.4); for (let i = 0; i <= 10; i++) { const a = Math.PI * (0.85 + i * 0.14); const r = R * (1.15 + (i % 2) * 0.22 + Math.sin(t * 3 + i) * 0.02); p.lineTo(Math.cos(a) * r, Math.sin(a) * r); } p.quadraticCurveTo(R * 0.6, -R * 0.4, -R * 0.4, R * 0.1); p.closePath(); }
+  else if (st === "wild") { p.moveTo(-R * 1.0, R * 0.2); for (let i = 0; i <= 12; i++) { const a = Math.PI * (0.92 + i * 0.1); const r = R * (1.12 + (i % 2) * 0.2 + Math.sin(t * 3 + i) * 0.02); p.lineTo(Math.cos(a) * r, Math.sin(a) * r); } p.quadraticCurveTo(R * 0.5, -R * 0.55, -R * 0.2, -R * 0.5); p.quadraticCurveTo(-R * 0.55, -R * 0.3, -R * 0.62, R * 0.2); p.closePath(); }
   else { p.moveTo(-R * 1.0, R * 0.1); p.quadraticCurveTo(-R * 1.1, -R * 1.15, R * 0.3, -R * 1.05); p.quadraticCurveTo(R * 1.0, -R * 0.9, R * 0.95, -R * 0.35); p.quadraticCurveTo(R * 0.4, -R * 0.6, -R * 0.3, -R * 0.45); p.quadraticCurveTo(-R * 0.6, -R * 0.2, -R * 0.62, R * 0.15); p.closePath(); }
   fillOut(g, p, col, lw, shade(col)); g.save(); g.clip(p); g.strokeStyle = light(col, 0.35); g.lineWidth = lw * 1.4; g.beginPath(); g.arc(-R * 0.1, -R * 0.6, R * 0.6, Math.PI * 1.15, Math.PI * 1.55); g.stroke(); g.restore();
 }
 
 function snakeHair(g: Ctx, R: number, t: number, lw: number, C: (c: string) => string, back: boolean) {
-  const n = back ? 6 : 7;
+  const n = back ? 6 : 7, body = C(back ? "#4c7a32" : "#64a040"), belly = C(back ? "#6a9a48" : "#a8d870"), head = C(back ? "#3e6a28" : "#4f8a34");
   for (let i = 0; i < n; i++) {
     const a0 = back ? Math.PI * (0.75 + i * 0.12) : Math.PI * (1.05 + i * 0.13), x0 = Math.cos(a0) * R * 0.85, y0 = Math.sin(a0) * R * 0.85;
-    const pts: number[][] = []; let x = x0, y = y0, a = a0;
-    for (let k = 0; k < 7; k++) { a += Math.sin(t * 4 + i * 1.7 + k * 0.9) * 0.35; x += Math.cos(a) * R * 0.11; y += Math.sin(a) * R * 0.11; pts.push([x, y]); }
+    const pts: number[][] = [[x0, y0]]; let x = x0, y = y0, a = a0;
+    for (let k = 0; k < 6; k++) { a += Math.sin(t * 4 + i * 1.7 + k * 0.9) * 0.38; x += Math.cos(a) * R * 0.12; y += Math.sin(a) * R * 0.12; pts.push([x, y]); }
     g.lineCap = "round"; g.lineJoin = "round";
-    g.strokeStyle = OUT; g.lineWidth = R * 0.2 + lw * 2; g.beginPath(); g.moveTo(x0, y0); for (const q of pts) g.lineTo(q[0], q[1]); g.stroke();
-    g.strokeStyle = C(back ? "#4c7a32" : "#64a040"); g.lineWidth = R * 0.2; g.stroke();
-    const e = pts[pts.length - 1]; g.fillStyle = C(back ? "#4c7a32" : "#6eb046"); g.beginPath(); g.ellipse(e[0], e[1], R * 0.14, R * 0.1, a, 0, 7); g.fill(); g.strokeStyle = OUT; g.lineWidth = lw; g.stroke();
-    if (!back) { g.fillStyle = "#fff2a0"; g.beginPath(); g.arc(e[0] + Math.cos(a) * R * 0.04, e[1] + Math.sin(a) * R * 0.04 - R * 0.03, R * 0.03, 0, 7); g.fill(); }
+    for (let k = 1; k < pts.length; k++) { const w = R * (0.17 - k * 0.012); g.strokeStyle = OUT; g.lineWidth = w + lw * 2; g.beginPath(); g.moveTo(pts[k - 1][0], pts[k - 1][1]); g.lineTo(pts[k][0], pts[k][1]); g.stroke(); }
+    for (let k = 1; k < pts.length; k++) { const w = R * (0.17 - k * 0.012); g.strokeStyle = body; g.lineWidth = w; g.beginPath(); g.moveTo(pts[k - 1][0], pts[k - 1][1]); g.lineTo(pts[k][0], pts[k][1]); g.stroke();
+      g.strokeStyle = belly; g.lineWidth = w * 0.3; g.beginPath(); g.moveTo(pts[k - 1][0], pts[k - 1][1]); g.lineTo(pts[k][0], pts[k][1]); g.stroke(); }
+    // the head: a broad wedge with eyes and a flicking forked tongue
+    const e = pts[pts.length - 1], ha = Math.atan2(e[1] - pts[pts.length - 2][1], e[0] - pts[pts.length - 2][0]);
+    g.save(); g.translate(e[0], e[1]); g.rotate(ha);
+    if (!back && Math.sin(t * 7 + i * 2.3) > 0.4) { g.strokeStyle = "#d02a3a"; g.lineWidth = lw * 1.3; g.beginPath(); g.moveTo(R * 0.14, 0); g.lineTo(R * 0.25, 0); g.lineTo(R * 0.3, -R * 0.04); g.moveTo(R * 0.25, 0); g.lineTo(R * 0.3, R * 0.04); g.stroke(); }
+    const hp = new Path2D(); hp.moveTo(-R * 0.04, -R * 0.07); hp.quadraticCurveTo(R * 0.1, -R * 0.12, R * 0.16, 0); hp.quadraticCurveTo(R * 0.1, R * 0.12, -R * 0.04, R * 0.07); hp.closePath();
+    g.fillStyle = head; g.fill(hp); g.strokeStyle = OUT; g.lineWidth = lw; g.stroke(hp);
+    if (!back) for (const sy of [-1, 1]) { g.fillStyle = "#fff2a0"; g.beginPath(); g.arc(R * 0.06, sy * R * 0.05, R * 0.03, 0, 7); g.fill(); g.fillStyle = "#1a1008"; g.beginPath(); g.ellipse(R * 0.065, sy * R * 0.05, R * 0.008, R * 0.022, 0, 0, 7); g.fill(); }
+    g.restore();
   }
 }
 

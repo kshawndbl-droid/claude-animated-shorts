@@ -1,5 +1,6 @@
-// "Medusa" v2: bold-outline cartoon characters (generated with a free open model, then cut out) animated as cut-out
-// puppets and expressive close-ups over busy, painted, slightly blurred backgrounds. Lots of camera energy.
+// "Medusa" v2: bold-outline cartoon characters (generated with a free open model, then cut out), shown full body and
+// animated (walk, bend, breathe, hop, squash), with expressive close-ups only at the big emotional beats, over busy,
+// painted, slightly blurred backgrounds. Lots of camera energy.
 import React from "react";
 import { AbsoluteFill, Audio, Img, getInputProps, staticFile, useCurrentFrame } from "remotion";
 import { Subtitles, Word, defaultStyle } from "../../src/subtitles/Subtitles";
@@ -46,42 +47,42 @@ const Cut: React.FC<{ src: string; x: number; y: number; w: number; rot?: number
   }} />
 );
 
-type Pose = { lean?: number; aL?: [number, number]; aR?: [number, number]; walk?: number; hop?: number; tilt?: number };
-/** a cut-out puppet: a big generated head-and-shoulders on a small drawn body with jointed arms and legs */
-const Puppet: React.FC<{ head: string; x: number; y: number; s: number; robe: string; skin: string; pose: Pose; flip?: boolean; op?: number; filter?: string; feetWings?: number; t: number; glow?: string }> = ({ head, x, y, s, robe, skin, pose, flip, op = 1, filter = "", feetWings = 0, t, glow }) => {
-  const lean = pose.lean ?? 0, walk = pose.walk ?? 0, hop = pose.hop ?? 0;
-  const ph = walk ? Math.sin(t * 9) : 0, bob = walk ? Math.abs(Math.cos(t * 9)) * 10 : 0;
-  const arm = (side: number, [sh, el]: [number, number]) => {
-    const ax = side * 92, ay = -300; const a1 = (side * sh) - side * 0.15, x1 = ax + Math.sin(a1) * 90, y1 = ay + Math.cos(a1) * 90;
-    const a2 = a1 + side * el, x2 = x1 + Math.sin(a2) * 80, y2 = y1 + Math.cos(a2) * 80;
-    return (
-      <g key={side}>
-        <path d={`M${ax},${ay} L${x1},${y1} L${x2},${y2}`} stroke="#111" strokeWidth={46} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <path d={`M${ax},${ay} L${x1},${y1} L${x2},${y2}`} stroke={robe} strokeWidth={32} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx={x2} cy={y2} r={22} fill={skin} stroke="#111" strokeWidth={7} />
-      </g>
-    );
-  };
-  const leg = (side: number) => { const sw = ph * side * 0.45; const fx = side * 36 + Math.sin(sw) * 70, fy = -Math.max(0, Math.cos(sw)) * 4;
-    return (<g key={"l" + side}>
-      <path d={`M${side * 36},-150 L${fx},${fy - 14}`} stroke="#111" strokeWidth={40} strokeLinecap="round" /><path d={`M${side * 36},-150 L${fx},${fy - 14}`} stroke={skin} strokeWidth={26} strokeLinecap="round" />
-      <ellipse cx={fx + 14} cy={fy - 6} rx={34} ry={14} fill="#6a4426" stroke="#111" strokeWidth={7} />
-      {feetWings > 0 && [0, 1, 2].map((k) => <path key={k} d={`M${fx - 20},${fy - 20} q-50,${-30 - k * 18 + Math.sin(t * 22) * 14} -80,${-10 - k * 22}`} stroke="#111" strokeWidth={4} fill="#fff" opacity={feetWings} />)}
-    </g>); };
+/** a full-body cut-out that really moves: the upper body bends and breathes around the waist, the whole figure walks
+ *  (bob + sway), hops, squashes and leans. x,y = feet; h = figure height in px. */
+type Act = { bend?: number; walk?: number; hop?: number; lean?: number; sq?: number; breathe?: number };
+const Body: React.FC<{ src: string; x: number; y: number; h: number; t: number; act?: Act; flip?: boolean; op?: number; filter?: string; glow?: string; z?: number }> = ({ src, x, y, h, t, act = {}, flip = false, op = 1, filter = "", glow }) => {
+  const w = h * (512 / 896), walk = act.walk ?? 0, ph = t * 8.5;
+  const bob = Math.abs(Math.sin(ph)) * h * 0.018 * walk, sway = Math.sin(ph) * 0.035 * walk;
+  const br = (act.breathe ?? 1) * Math.sin(t * 2.3) * 0.012, sq = act.sq ?? 0;
+  const bend = (act.bend ?? 0) + Math.sin(t * 1.7) * 0.012 + Math.sin(ph * 2) * 0.02 * walk;
+  const im = (clip: string, tf: string) => <Img src={art(src + "_cut.png")} style={{ position: "absolute", left: 0, top: 0, width: w, height: h, clipPath: clip, transformOrigin: "50% 56%", transform: tf }} />;
   return (
-    <div style={{ position: "absolute", left: x, top: y - hop - bob, transform: `scale(${flip ? -s : s}, ${s}) rotate(${lean}rad)`, transformOrigin: "0 0", opacity: op, filter }}>
-      <svg width={600} height={700} viewBox="-300 -600 600 700" style={{ position: "absolute", left: -300, top: -600, overflow: "visible" }}>
-        {leg(-1)}{leg(1)}
-        <path d="M-120,-330 Q-150,-190 -125,-130 L125,-130 Q150,-190 120,-330 Z" fill={robe} stroke="#111" strokeWidth={8} />
-        <path d="M-60,-300 Q-70,-200 -50,-140 M40,-310 Q55,-210 45,-140" stroke="rgba(0,0,0,0.25)" strokeWidth={6} fill="none" />
-        {arm(-1, pose.aL ?? [0.2, 0.2])}
-      </svg>
-      <Img src={art(head + "_cut.png")} style={{ position: "absolute", left: -230, top: -890, width: 460, transformOrigin: "50% 92%", transform: `rotate(${pose.tilt ?? 0}rad)`,
-        filter: `drop-shadow(5px 0 0 #111) drop-shadow(-5px 0 0 #111) drop-shadow(0 -5px 0 #111)${glow ? ` drop-shadow(0 0 30px ${glow})` : ""}` }} />
-      <svg width={600} height={700} viewBox="-300 -600 600 700" style={{ position: "absolute", left: -300, top: -600, overflow: "visible" }}>{arm(1, pose.aR ?? [0.2, 0.2])}</svg>
+    <div style={{ position: "absolute", left: x - w / 2, top: y - h - (act.hop ?? 0) - bob, width: w, height: h, opacity: op, transformOrigin: "50% 100%",
+      transform: `scale(${(flip ? -1 : 1) * (1 + sq)}, ${1 - sq}) rotate(${(act.lean ?? 0) + sway}rad)`,
+      filter: `${filter} drop-shadow(5px 0 0 #111) drop-shadow(-5px 0 0 #111) drop-shadow(0 5px 0 #111) drop-shadow(0 -5px 0 #111)${glow ? ` drop-shadow(0 0 40px ${glow})` : ""} drop-shadow(0 26px 24px rgba(0,0,0,0.45))` }}>
+      {im("inset(54% 0 0 0)", "none")}
+      {im("inset(0 0 44% 0)", `rotate(${bend}rad) scale(${1 + br * 0.5}, ${1 + br})`)}
     </div>
   );
 };
+/** a polished bronze shield; `src` (a cut-out face) is shown in it as a reflection or a relief */
+const Shield: React.FC<{ src: string; x: number; y: number; d: number; t: number; relief?: boolean; rot?: number }> = ({ src, x, y, d, t, relief, rot = 0 }) => (
+  <div style={{ position: "absolute", left: x - d / 2, top: y - d / 2, width: d, height: d, borderRadius: "50%", border: `${d * 0.04}px solid #7a4e1c`, transform: `rotate(${rot}rad)`, boxShadow: "0 0 0 8px #111, inset 0 0 0 8px #111, 0 30px 60px rgba(0,0,0,0.6)", overflow: "hidden", background: "radial-gradient(circle at 35% 30%, #f2cc84, #b07a38 60%, #6a4218)" }}>
+    <Img src={art(src + "_cut.png")} style={{ position: "absolute", left: d * 0.06, top: d * 0.02 + Math.sin(t * 1.2) * 5, width: d * 0.85, filter: relief ? "sepia(1) saturate(1.6) brightness(0.85) contrast(1.3)" : "sepia(0.6) saturate(1.2) brightness(0.9)", opacity: relief ? 0.85 : 0.9, transform: "scaleX(-1)", mixBlendMode: relief ? "multiply" : "normal" }} />
+    <div style={{ position: "absolute", inset: 0, background: `linear-gradient(${110 + Math.sin(t) * 20}deg, rgba(255,240,200,0) 30%, rgba(255,240,200,0.4) 50%, rgba(255,240,200,0) 70%)` }} />
+  </div>
+);
+const Harpe: React.FC<{ x: number; y: number; s: number; rot: number; glow?: number }> = ({ x, y, s, rot, glow = 0 }) => (
+  <svg width={400} height={400} viewBox="-200 -200 400 400" style={{ position: "absolute", left: x - 200, top: y - 200, transform: `rotate(${rot}rad) scale(${s})`, overflow: "visible", filter: glow ? `drop-shadow(0 0 ${30 * glow}px rgba(255,240,180,1))` : undefined }}>
+    <path d="M-12,160 L-12,-60 Q-14,-150 60,-160 Q120,-160 125,-100 Q95,-135 55,-128 Q14,-118 14,-50 L14,160 Z" fill="#e4ebef" stroke="#111" strokeWidth={9} strokeLinejoin="round" />
+    <rect x={-40} y={60} width={80} height={22} fill="#c9a13e" stroke="#111" strokeWidth={7} /><rect x={-13} y={82} width={26} height={90} fill="#6a3e1e" stroke="#111" strokeWidth={7} />
+  </svg>
+);
+const Wings: React.FC<{ x: number; y: number; s: number; t: number; op?: number }> = ({ x, y, s, t, op = 1 }) => (
+  <svg width={300} height={200} viewBox="-150 -100 300 200" style={{ position: "absolute", left: x - 150, top: y - 100, transform: `scale(${s})`, opacity: op, overflow: "visible" }}>
+    {[0, 1, 2].map((k) => <path key={k} d={`M0,0 Q${-60 - k * 15},${-40 - k * 22 + Math.sin(t * 24) * 16} ${-120 - k * 10},${-20 - k * 30 + Math.sin(t * 24) * 20} Q${-70},${-5 - k * 8} 0,10 Z`} fill="#fbf8f0" stroke="#111" strokeWidth={6} strokeLinejoin="round" />)}
+  </svg>
+);
 
 /** a canvas of effects drawn per frame: particles, speed lines, light beams, flashes */
 const FX: React.FC<{ t: number; kind: "dust" | "embers" | "spores" | "spray" | "none"; flash?: number; flashCol?: string; speed?: number; beams?: number; beamCol?: string }> = ({ t, kind, flash = 0, flashCol = "255,255,255", speed = 0, beams = 0, beamCol = "255,226,170" }) => {
@@ -108,45 +109,44 @@ const Title: React.FC<{ text: string; a: number; y?: number; size?: number; col?
   <div style={{ position: "absolute", top: y - size / 2, width: W, textAlign: "center", fontFamily: "Bitstream Charter, Caladea, serif", fontWeight: 700, fontSize: size, letterSpacing: size * 0.18, color: col, opacity: a, WebkitTextStroke: "6px #111", transform: `scale(${lerp(1.4, 1, smooth(a))})` }}>{text}</div>
 ) : null;
 
-const TEAL = "#1d6a6c", SKIN = "#f1c8a6", GREEN = "#5f9a4a";
 
 // ---------------------------------------------------------------- scenes (t = global time, u = time in shot)
 type Scene = (t: number, u: number) => React.ReactNode;
 const sc: Scene[] = [];
 
-// 0. Medusa as a young woman by the sea: she strolls in, then a punch-in on her face at "hair"
-sc[0] = (t, u) => { const h = rel(0, "hair") - 0.2, close = u > h;
+// 0. Medusa as a young woman by the sea: she walks in along the cliff path, then a punch-in on her face at "hair"
+sc[0] = (t, u) => { const h = rel(0, "hair") - 0.2, close = u > h, arrive = since(u, 0, 2.2);
   return close ? (<>
-    <Bg src="bg_sea" u={u} blur={6} z0={1.3} z1={1.36} />
+    <Bg src="bg_sea" u={u} blur={7} z0={1.35} z1={1.42} />
     <Cut src="medusa_smile" x={540 + Math.sin(t * 1.2) * 10} y={H + 40} w={980} rot={Math.sin(t * 1.4) * 0.02} sx={pop(u, h, 0.4)} sy={pop(u, h, 0.4)} />
-    <FX t={t} kind="spray" />
+    <FX t={t} kind="dust" />
   </>) : (<>
-    <Bg src="bg_sea" u={u} blur={2} dx={-40} />
-    <Puppet head="medusa_smile" x={lerp(-150, 540, since(u, 0, 1.6))} y={1600} s={1.15} robe={TEAL} skin={SKIN} t={t}
-      pose={{ walk: u < 1.6 ? 1 : 0, aR: u > 1.7 ? [2.6 + Math.sin(t * 10) * 0.25, 0.4] : [0.3, 0.3], aL: [0.25, 0.3], tilt: Math.sin(t * 2) * 0.05, lean: Math.sin(t * 2) * 0.02 }} />
+    <Bg src="bg_sea" u={u} blur={2} dx={-50} z0={1.1} z1={1.18} />
+    <Body src="fb_medusa" x={lerp(-120, 520, arrive)} y={1780} h={1250} t={t} act={{ walk: u < 2.2 ? 1 : 0, bend: u > 2.3 ? -0.05 : 0 }} />
     <FX t={t} kind="spray" />
   </>); };
 
-// 1. the temple: Poseidon looms in out of the storm; cut to Medusa, terrified
+// 1. the temple at night: the sea god looms in out of the storm; she backs away; close on her fear
 sc[1] = (t, u) => { const pz = rel(1, "poseidon") - 0.3, at = rel(1, "attacked") - 0.15;
-  const fl = Math.max(0, 1 - Math.abs(u - pz - 0.1) * 6) * 0.7;
+  const fl = Math.max(0, 1 - Math.abs(u - pz - 0.1) * 6) * 0.8;
   return u < at ? (<>
-    <Bg src="bg_temple" u={u} blur={3} bright={0.8} />
-    <Cut src="poseidon" x={lerp(1300, 640, since(u, pz, 0.5))} y={H + 60} w={1150} rot={-0.05 + Math.sin(t * 1.3) * 0.02} filter="brightness(0.85) saturate(1.1)" glow="rgba(60,200,255,0.6)" />
+    <Bg src="bg_temple" u={u} blur={3} bright={0.75} />
+    <Body src="fb_medusa_scared" x={lerp(560, 300, since(u, pz, 0.8))} y={1800} h={1050} t={t} act={{ bend: -0.08 * since(u, pz, 0.4), lean: -0.04 * since(u, pz, 0.5) }} />
+    <Body src="fb_poseidon" x={lerp(1500, 860, since(u, pz, 0.7))} y={2050} h={1900} t={t} flip filter="brightness(0.8)" glow="rgba(60,200,255,0.6)" act={{ bend: 0.06 }} />
     <FX t={t} kind="spray" flash={fl} flashCol="200,230,255" />
   </>) : (<>
-    <Bg src="bg_temple" u={u} blur={8} z0={1.4} bright={0.6} />
+    <Bg src="bg_temple" u={u} blur={9} z0={1.4} bright={0.55} />
     <Cut src="medusa_scared" x={540 - (u - at) * 30 + Math.sin(t * 40) * 6 * Math.exp(-(u - at) * 4)} y={H + 40} w={1000} rot={0.04} sx={pop(u, at, 0.3)} sy={pop(u, at, 0.3)} />
     <AbsoluteFill style={{ background: "rgba(10,40,60,0.25)" }} />
   </>); };
 
-// 2. Athena, furious, stamps and flares; then Medusa in tears at "punished Medusa"
-sc[2] = (t, u) => { const pm = rel(2, "medusa") - 0.2;
+// 2. Athena, furious, stamps in a blaze of light; then Medusa in tears at "punished Medusa"
+sc[2] = (t, u) => { const pm = rel(2, "medusa") - 0.2, fu = rel(2, "furious") - 0.2;
+  const stamp = u > fu ? Math.abs(Math.sin((u - fu) * 7)) * 40 * Math.exp(-(u - fu) * 1.2) : 0;
   return u < pm ? (<>
     <Bg src="bg_olympus" u={u} blur={3} />
     <FX t={t} kind="embers" beams={0.8} />
-    <Puppet head="athena_angry" x={540} y={1650} s={1.25} robe="#eeeae0" skin={SKIN} t={t} glow="rgba(255,180,80,0.7)"
-      pose={{ hop: Math.abs(Math.sin(t * 6)) * 30 * (u > 0.4 ? 1 : 0), aR: [2.9, 0.2], aL: [1.6 + Math.sin(t * 8) * 0.3, 0.8], tilt: Math.sin(t * 6) * 0.06, lean: Math.sin(t * 3) * 0.04 }} />
+    <Body src="fb_athena_angry" x={540} y={1820} h={1450} t={t} glow="rgba(255,170,70,0.8)" act={{ hop: stamp, sq: stamp > 2 ? 0 : 0.03 * Math.exp(-(u - fu) * 2) * (u > fu ? 1 : 0), bend: 0.05 * Math.sin(t * 3) }} />
   </>) : (<>
     <Bg src="bg_temple" u={u} blur={9} z0={1.4} bright={0.55} />
     <Cut src="medusa_cry" x={540} y={H + 40} w={1000} sx={pop(u, pm, 0.35)} sy={pop(u, pm, 0.35)} rot={Math.sin(t * 1.5) * 0.02} />
@@ -168,7 +168,7 @@ sc[3] = (t, u) => { const sn = rel(3, "snakes") - 0.3, st = rel(3, "stone") - 0.
 // 4. the edge of the world: she walks alone among the stone warriors toward her cave
 sc[4] = (t, u) => (<>
   <Bg src="bg_edge" u={u} blur={2} z0={1.15} z1={1.3} dy={-60} dur={4.5} />
-  <Puppet head="gorgon_sad" x={lerp(300, 700, clamp01(u / 4.5))} y={1700} s={0.8} robe={TEAL} skin="#8fbf74" t={t} pose={{ walk: 1, aL: [0.2, 0.3], aR: [0.15, 0.3], tilt: 0.12 }} />
+  <Body src="fb_gorgon" x={lerp(260, 720, clamp01(u / 5))} y={1760} h={900} t={t} act={{ walk: 0.7, bend: 0.06 }} />
   <FX t={t} kind="dust" />
   <AbsoluteFill style={{ background: "linear-gradient(to top, rgba(200,210,210,0.45), rgba(0,0,0,0) 35%)" }} />
 </>);
@@ -176,77 +176,75 @@ sc[4] = (t, u) => (<>
 // 5. the king sends Perseus; "lowkey, a death sentence"
 sc[5] = (t, u) => { const lk = rel(5, "lowkey") - 0.2, pin = rel(5, "perseus") - 0.3;
   return (<>
-    <Bg src="bg_throne" u={u} blur={4} />
+    <Bg src="bg_throne" u={u} blur={5} />
     <FX t={t} kind="embers" />
-    <Puppet head="king_smug" x={300} y={1600} s={1.05} robe="#5a2a6a" skin="#e2b48e" t={t} pose={{ aR: [lerp(0.3, 1.7, since(u, 0.3, 0.4)), 0.05], aL: [0.3, 0.6], tilt: Math.sin(t * 3) * 0.06, hop: Math.abs(Math.sin(t * 5)) * 8 }} />
-    <Puppet head={u > lk ? "perseus_shock" : "perseus_brave"} x={lerp(1350, 800, since(u, pin, 0.6))} y={1650} s={1.05} robe="#2a2224" skin="#e8b993" flip t={t}
-      pose={{ walk: u < pin + 0.6 && u > pin ? 1 : 0, hop: u > lk ? 60 * Math.exp(-(u - lk) * 6) * Math.abs(Math.sin((u - lk) * 12)) : 0, aL: u > lk ? [2.4, 0.6] : [0.3, 0.3], aR: u > lk ? [2.5, 0.5] : [1.0, 1.4], tilt: u > lk ? -0.1 : 0 }} />
+    <Body src="fb_king" x={290} y={1800} h={1250} t={t} act={{ bend: lerp(0, 0.1, since(u, 0.3, 0.4)) + Math.sin(t * 5) * 0.02 }} />
+    <Body src="fb_perseus" x={lerp(1350, 800, since(u, pin, 0.6))} y={1830} h={1250} t={t} flip
+      act={{ walk: u < pin + 0.6 && u > pin ? 1 : 0, hop: u > lk ? 70 * Math.exp(-(u - lk) * 6) * Math.abs(Math.sin((u - lk) * 12)) : 0, bend: u > lk ? -0.1 : 0, sq: u > lk ? 0.04 * Math.exp(-(u - lk) * 5) : 0 }} />
     {u > lk && <AbsoluteFill style={{ background: `rgba(120,0,0,${0.22 * since(u, lk, 0.3)})` }} />}
   </>); };
 
-// 6. gifts of the gods: Hermes swoops down with the blade, Athena brings the shield
-sc[6] = (t, u) => { const hm = rel(6, "hermes") - 0.9, at = rel(6, "athena") - 0.6;
+// 6. gifts of the gods: a curved blade drops out of the light; Athena brings the polished shield
+sc[6] = (t, u) => { const hm = rel(6, "blade") - 0.5, at = rel(6, "athena") - 0.6, got = since(u, hm + 0.55, 0.3);
   return (<>
     <Bg src="bg_sky" u={u} blur={3} dy={60} />
     <FX t={t} kind="dust" beams={0.9} />
-    <Cut src="hermes" x={lerp(300, 330, since(u, hm, 0.6))} y={lerp(-200, 1050, since(u, hm, 0.6)) + Math.sin(t * 3) * 20} w={620} rot={Math.sin(t * 2.4) * 0.05} />
-    <Cut src="athena_calm" x={lerp(1400, 780, since(u, at, 0.6))} y={1150 + Math.sin(t * 2.6) * 16} w={620} rot={-0.04} />
-    <Puppet head="perseus_brave" x={540} y={1800} s={0.95} robe="#2a2224" skin="#e8b993" t={t} pose={{ aL: [lerp(0.3, 2.6, since(u, hm + 0.5, 0.4)), 0.3], aR: [lerp(0.3, 2.6, since(u, at + 0.5, 0.4)), 0.3], hop: Math.abs(Math.sin(t * 4)) * 10, tilt: Math.sin(t * 2) * 0.05 }} />
+    <Body src="fb_athena_shield" x={lerp(1450, 820, since(u, at, 0.6))} y={1700} h={1150} t={t} flip act={{ bend: 0.05 }} glow="rgba(255,220,140,0.6)" />
+    <Body src="fb_perseus" x={360} y={1830} h={1200} t={t} act={{ bend: lerp(0, -0.08, since(u, hm, 0.4)), hop: Math.abs(Math.sin(t * 4)) * 6 }} />
+    {u > hm && <Harpe x={lerp(300, 420, since(u, hm, 0.55))} y={lerp(-200, 1080, since(u, hm, 0.55))} s={lerp(1.2, 0.85, got)} rot={lerp(2.5, 0.3, since(u, hm, 0.55)) + Math.sin(t * 3) * 0.05} glow={1 - got * 0.6} />}
   </>); };
 
 // 7. winged sandals lift him into the air; then the helmet of darkness: he vanishes
 sc[7] = (t, u) => { const sd = rel(7, "sandals") - 0.3, inv = rel(7, "invisible") - 0.1;
-  const lift = since(u, sd + 0.3, 1.2), gone = since(u, inv, 0.6);
+  const lift = since(u, sd + 0.3, 1.2), gone = since(u, inv, 0.6), fy = 1750 - lift * 420 + Math.sin(t * 3) * 25;
   return (<>
-    <Bg src="bg_sky" u={u + 5} blur={4} dy={lift * 200} z0={1.25} />
+    <Bg src="bg_sky" u={u + 5} blur={4} dy={lift * 220} z0={1.25} />
     <FX t={t} kind="dust" speed={lift * (1 - gone) * 0.6} />
-    <Puppet head="perseus_brave" x={540 + Math.sin(t * 2) * 30} y={1650 - lift * 500 + Math.sin(t * 3) * 25} s={1.05} robe="#2a2224" skin="#e8b993" t={t} feetWings={since(u, sd, 0.3)}
-      op={1 - gone} filter={gone > 0 ? `blur(${gone * 10}px)` : ""} pose={{ aL: [2.2, 0.4], aR: [2.4, 0.3], lean: Math.sin(t * 2) * 0.06, tilt: -0.08 }} />
+    <div style={{ opacity: 1 - gone, filter: gone > 0 ? `blur(${gone * 10}px)` : undefined }}>
+      <Body src="fb_perseus_fly" x={540 + Math.sin(t * 2) * 30} y={fy} h={1250} t={t} act={{ lean: Math.sin(t * 2) * 0.05, bend: -0.04 }} />
+      <Wings x={500 + Math.sin(t * 2) * 30} y={fy - 40} s={0.9} t={t} op={since(u, sd, 0.3)} />
+      <div style={{ transform: "scaleX(-1)", position: "absolute", inset: 0 }}><Wings x={W - 600 - Math.sin(t * 2) * 30} y={fy - 40} s={0.9} t={t} op={since(u, sd, 0.3)} /></div>
+    </div>
   </>); };
 
 // 8. the cave: she sleeps; he looks only at her reflection in the shield
-const ShieldMirror: React.FC<{ t: number; u: number }> = ({ t }) => (
-  <div style={{ position: "absolute", left: 540 - 330, top: 960 - 130, width: 660, height: 660, borderRadius: "50%", border: "26px solid #7a4e1c", boxShadow: "0 0 0 8px #111, inset 0 0 0 8px #111, 0 30px 60px rgba(0,0,0,0.6)", overflow: "hidden", background: "radial-gradient(circle at 35% 30%, #f2cc84, #b07a38 60%, #6a4218)" }}>
-    <Img src={art("gorgon_sleep_cut.png")} style={{ position: "absolute", left: 40, top: 30 + Math.sin(t * 1.2) * 6, width: 560, filter: "sepia(0.6) saturate(1.2) brightness(0.9)", opacity: 0.9, transform: "scaleX(-1)" }} />
-    <div style={{ position: "absolute", inset: 0, background: `linear-gradient(${110 + Math.sin(t) * 20}deg, rgba(255,240,200,0) 30%, rgba(255,240,200,0.35) 50%, rgba(255,240,200,0) 70%)` }} />
-  </div>
-);
 sc[8] = (t, u) => (<>
   <Bg src="bg_cave" u={u} blur={6} bright={0.7} />
   <FX t={t} kind="spores" />
-  <ShieldMirror t={t} u={u} />
+  <Shield src="gorgon_sleep" x={540} y={1290} d={660} t={t} rot={Math.sin(t * 0.8) * 0.03} />
   <Cut src="perseus_focus" x={lerp(-200, 260, since(u, 0, 1.2))} y={1000} w={700} rot={0.05} />
   <Vignette a={0.7} />
 </>);
 
-// 9. one swing: blade flash, then Pegasus bursts up out of the light
+// 9. one swing: he lunges, a blade flash, then Pegasus bursts up out of the light
 sc[9] = (t, u) => { const sw = rel(9, "swing") - 0.05, pg = rel(9, "pegasus") - 0.9;
   const fl = since(u, sw, 0.08) * (1 - since(u, sw + 0.15, 0.6)), rise = since(u, pg, 1.4);
   const arcA = clamp01((u - sw + 0.05) / 0.2);
   return (<>
     <AbsoluteFill style={{ background: "#050807" }} />
     <Bg src="bg_cave" u={u} blur={14} bright={0.35} />
-    {u < sw + 0.2 && <Cut src="perseus_focus" x={lerp(700, 560, since(u, 0, sw))} y={1400} w={760} rot={lerp(0.1, -0.15, arcA)} />}
+    {u < sw + 0.25 && <Body src="fb_perseus_swing" x={lerp(380, 560, since(u, 0, sw))} y={1850} h={1350} t={t} act={{ bend: lerp(-0.12, 0.2, arcA), lean: lerp(-0.03, 0.06, arcA), sq: 0.04 * arcA }} />}
     {arcA > 0 && arcA < 1 && <svg width={W} height={H} style={{ position: "absolute" }}><path d={`M100,700 Q540,${300 + arcA * 400} ${100 + 900 * arcA},${1300}`} stroke="white" strokeWidth={50 * (1 - arcA) + 6} fill="none" opacity={1 - arcA} style={{ filter: "drop-shadow(0 0 30px white)" }} /></svg>}
     {rise > 0 && <>
       <AbsoluteFill style={{ background: `radial-gradient(circle at 50% ${lerp(80, 45, rise)}%, rgba(255,252,235,${0.8 * rise}) 0%, rgba(0,0,0,0) 55%)` }} />
-      <Cut src="pegasus" x={540 + Math.sin(t * 2) * 30} y={lerp(2300, 1250, rise)} w={980 * lerp(0.7, 1, rise)} sy={1 + Math.sin(t * 9) * 0.03} rot={Math.sin(t * 4.5) * 0.04} glow="rgba(255,255,240,0.9)" />
+      <Cut src="pegasus" x={540 + Math.sin(t * 2) * 30} y={lerp(2300, 1350, rise)} w={980 * lerp(0.7, 1, rise)} sy={1 + Math.sin(t * 9) * 0.03} rot={Math.sin(t * 4.5) * 0.04} glow="rgba(255,255,240,0.9)" />
     </>}
     <FX t={t} kind="dust" flash={fl} speed={rise * 0.7} />
   </>); };
 
-// 10. the court: the king and his nobles see the head, and turn to stone
+// 10. the court: the king sees the head, and he and the whole hall turn to stone
 sc[10] = (t, u) => { const hd = rel(10, "held") - 0.3, st = rel(10, "stone") - 0.25, lvl = since(u, st, 0.9);
   const stone = lvl > 0 ? `grayscale(${lvl}) brightness(${1 - 0.15 * lvl}) contrast(${1 + 0.2 * lvl})` : "";
   const shake = u > st ? Math.sin(t * 60) * 14 * Math.exp(-(u - st) * 3) : 0;
-  const frozen = u > st + 0.9 ? st + 0.9 : u;
+  const tt = u > st + 0.9 ? SHOTS[10].a + st + 0.9 : t;
   return (<>
-    <Bg src="bg_throne" u={u} blur={6} bright={0.75} />
+    <div style={{ position: "absolute", inset: 0, filter: stone || undefined }}>
+      <Bg src="bg_throne" u={Math.min(u, st + 0.9)} blur={5} bright={0.8} />
+      {u < hd ? <Body src="fb_king" x={540 + shake} y={1820} h={1300} t={tt} act={{ bend: 0.04 }} />
+        : <Cut src="king_shock" x={540 + shake} y={H + 40} w={1000} sx={pop(u, hd, 0.3)} sy={pop(u, hd, 0.3)} rot={lvl < 1 ? Math.sin(tt * 3) * 0.03 : 0} />}
+    </div>
     <FX t={t} kind="embers" />
-    <Cut src="courtier1" x={210 + shake} y={1350} w={520} rot={-0.06 + (lvl < 1 ? Math.sin(frozen * 5) * 0.04 : 0)} filter={stone} />
-    <Cut src="courtier2" x={880 - shake} y={1380} w={520} rot={0.05} filter={stone} />
-    <Cut src={u > hd ? "king_shock" : "king_smug"} x={540 + shake} y={1500} w={760} sx={u > hd ? pop(u, hd, 0.3) : 1} sy={u > hd ? pop(u, hd, 0.3) : 1} rot={lvl < 1 ? Math.sin(frozen * 3) * 0.04 : 0} filter={stone} />
-    {u > hd && <AbsoluteFill style={{ background: `radial-gradient(ellipse at 50% 100%, rgba(150,255,110,${0.55 * since(u, hd, 0.5)}) 0%, rgba(0,0,0,0) 60%)` }} />}
+    {u > hd && <AbsoluteFill style={{ background: `radial-gradient(ellipse at 50% 100%, rgba(150,255,110,${0.5 * since(u, hd, 0.5) * (1 - 0.6 * lvl)}) 0%, rgba(0,0,0,0) 60%)` }} />}
     <FX t={t} kind="none" flash={Math.max(0, 1 - Math.abs(u - st) * 6) * 0.5} flashCol="200,255,180" />
   </>); };
 
@@ -254,16 +252,16 @@ sc[10] = (t, u) => { const hd = rel(10, "held") - 0.3, st = rel(10, "stone") - 0
 sc[11] = (t, u) => (<>
   <Bg src="bg_olympus" u={u} blur={4} />
   <FX t={t} kind="dust" beams={0.7} />
-  <Puppet head="athena_calm" x={lerp(540, 330, since(u, 0.3, 0.8))} y={1700} s={1.05} robe="#eeeae0" skin={SKIN} t={t} pose={{ aR: [1.4, 0.3], aL: [0.3, 0.4], tilt: Math.sin(t * 1.5) * 0.04 }} />
-  <Cut src="shield_face" x={lerp(1300, 760, since(u, 0.3, 0.8))} y={1450} w={lerp(560, 700, clamp01(u / 4))} rot={Math.sin(t * 1.2) * 0.04} glow="rgba(255,210,120,0.6)" />
+  <Body src="fb_athena_shield" x={lerp(560, 330, since(u, 0.3, 0.8))} y={1850} h={1300} t={t} act={{ bend: 0.04 }} />
+  <Shield src="gorgon_stare" relief x={lerp(1300, 760, since(u, 0.3, 0.8))} y={1100} d={lerp(520, 620, clamp01(u / 4))} t={t} rot={Math.sin(t * 1.2) * 0.04} />
 </>);
 
 // 12. a survivor: at peace by the sea at sunset
 sc[12] = (t, u) => { const sv = rel(12, "survivor") - 0.3;
   return (<>
-    <Bg src="bg_sunset" u={u} blur={5} z0={1.15} z1={1.25} />
+    <Bg src="bg_sea" u={u} blur={5} z0={1.2} z1={1.28} dx={60} tint="linear-gradient(to bottom, rgba(255,120,40,0.35), rgba(120,30,80,0.35))" />
     <FX t={t} kind="spray" />
-    <Cut src="gorgon_sad" x={540 + Math.sin(t * 0.8) * 10} y={H + 40} w={lerp(900, 980, clamp01(u / 4))} rot={Math.sin(t * 1.1) * 0.02} filter={`brightness(${1 + 0.15 * since(u, sv, 0.6)})`} glow={u > sv ? "rgba(255,200,140,0.6)" : undefined} />
+    <Body src="fb_gorgon" x={540} y={1900} h={lerp(1500, 1580, clamp01(u / 4))} t={t} filter={`brightness(${0.9 + 0.2 * since(u, sv, 0.6)}) sepia(0.15)`} glow={u > sv ? "rgba(255,200,140,0.7)" : undefined} act={{ breathe: 1.5 }} />
   </>); };
 
 // 13. villain or victim: her stare fills the frame; the title
