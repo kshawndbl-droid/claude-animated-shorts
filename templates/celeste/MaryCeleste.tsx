@@ -30,7 +30,7 @@ const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
 // ---------------------------------------------------------------- cast
 const BRIGGS: Bust = { skin: "#dfb291", hair: "#3b2b22", coat: "#262c3a", shirt: "#ece4d4", tie: "#1c1c22", lapel: "#20252f", buttons: "#c8a24a", hairStyle: "side", beard: "full", moustache: "full", age: 0.45 };
-const SARAH: Bust = { skin: "#ecc6a8", hair: "#3e2a1f", coat: "#4a3040", hairStyle: "center-bun", female: true, collar: "lace", age: 0.3, jaw: 1, nose: -0.6 };
+const SARAH: Bust = { skin: "#ecc6a8", hair: "#3e2a1f", coat: "#4a3040", hairStyle: "center-bun", female: true, collar: "lace", age: 0.3, jaw: -0.6, nose: -0.2 };
 const SOPHIA: Bust = { skin: "#f0cdb3", hair: "#6a4a30", coat: "#6b4a5a", hairStyle: "child", child: true, female: true, collar: "lace", age: 0, nose: -1 };
 const DOYLE: Bust = { skin: "#e6bc9c", hair: "#5a3e2a", coat: "#2d2a2a", shirt: "#efe8da", tie: "#4a2026", lapel: "#262323", hairStyle: "swept", moustache: "walrus", age: 0.15, nose: 0.3, jaw: -0.5 };
 const SAILOR: HLook = { skin: "#2a2224", hair: "#1a1416", hairStyle: "short", coat: "#1d1a1c", coatLen: "hip", pants: "#1a1719", boots: "#121012", hat: "seaman", hatCol: "#141113" };

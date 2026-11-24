@@ -1,0 +1,92 @@
+{
+ "title": "D.B. Cooper, 1971",
+ "engine": "chatterbox",
+ "mood": "mystery",
+ "voice": "am_onyx",
+ "lines": [
+  {
+   "text": "November twenty-fourth, nineteen seventy-one. A calm man in a dark suit buys a plane ticket with cash. Name: Dan Cooper.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "On the short flight from Portland to Seattle, he orders a bourbon... and hands the flight attendant a note.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "He has a bomb in his briefcase.",
+   "mood": "action",
+   "emotion": 0.7,
+   "gap": 0.3
+  },
+  {
+   "text": "He opens it just enough for her to see. Red sticks. Wires. A battery.",
+   "mood": "action",
+   "emotion": 0.6,
+   "gap": 0.4
+  },
+  {
+   "text": "His demands: two hundred thousand dollars in twenties, and four parachutes.",
+   "mood": "serious",
+   "emotion": 0.55,
+   "gap": 0.3
+  },
+  {
+   "text": "In Seattle, he gets the cash, lets all thirty-six passengers go, and sends the plane back into the sky.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "Then, at night, in the rain, over the forests of Washington... he lowers the rear stairs and jumps.",
+   "mood": "action",
+   "emotion": 0.75,
+   "gap": 0.4
+  },
+  {
+   "text": "With the money. Into the dark. Main character energy, honestly.",
+   "mood": "funny",
+   "emotion": 0.6,
+   "gap": 0.5
+  },
+  {
+   "text": "The FBI searched for years. No body. No parachute. Nothing.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "Then, in nineteen eighty, an eight-year-old boy digging on a Columbia River beach found almost six thousand dollars in rotting twenties. Cooper's money.",
+   "mood": "mystery",
+   "emotion": 0.55,
+   "gap": 0.4
+  },
+  {
+   "text": "The rest of the cash? Never found.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "Even his name is a mistake. He called himself Dan Cooper. A reporter's error made him D.B.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "In twenty sixteen, the FBI gave up the active hunt.",
+   "mood": "serious",
+   "emotion": 0.45,
+   "gap": 0.4
+  },
+  {
+   "text": "So... did he die in those woods? Or is D.B. Cooper the man who got away?",
+   "mood": "mystery",
+   "emotion": 0.6,
+   "gap": 0.0
+  }
+ ]
+}
