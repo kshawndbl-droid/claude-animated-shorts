@@ -39,6 +39,9 @@ npm run render   # -> out/bridge/video.mp4, 1440x2560, 30 fps, 67.5 s
 - **3D props (optional):** the town uses a few [Kenney](https://kenney.nl) CC0 models (lantern, cart, market stalls, banners, windmill, canoe). Put the `.glb` files in `public/bridge/kenney/` (names in `templates/bridge/world.ts`). Without them the short still renders; those props are simply left out.
 - **GPU:** with a GPU the default `REMOTION_GL=angle` is fast. On a Linux box without one, use `REMOTION_GL=swangle` and point `BROWSER_EXECUTABLE` at a Chrome or chrome-headless-shell; expect about 11 s per 1440x2560 frame (about 6 hours for the full short on 4 cores).
 
+## Free asset library (CC0)
+`python3 tools/fetch-assets.py` downloads 15 Poly Haven props (barrels, crates, lantern, ladder, spinning wheel, shield, fire pit...) and 9 ambientCG textures (planks, paving, bricks, roof tiles, thatch, ground, grass, rock, fabric) at 1k into `public/assets/` (about 87 MB, git-ignored), with `public/assets/manifest.json`. Load a model into the bridge kit and `kitClone()` gives it the two-tone toon shading; the InkPass outlines it like everything else. Check them all in one still: `node tools/asset-still.mjs out/assets.jpg AssetToon` (or `AssetRaw` for the untouched PBR look).
+
 ## Notes
 - Set `REMOTION_TMP` to a folder on a big drive. Every Remotion bundle copies `public/` (~1.3 GB) into the temp folder.
 - Story, characters and voice should always be your own. Use the references for the look, not the content.

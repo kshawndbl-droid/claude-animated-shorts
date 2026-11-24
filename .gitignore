@@ -9,3 +9,4 @@ templates/audio/_cache/
 public/bridge/mix.wav
 __pycache__/
 .venv-bpy/
+public/assets/
