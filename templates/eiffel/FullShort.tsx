@@ -283,14 +283,14 @@ const ShotDeputy: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) 
   const puff = ramp(T, W("deputy") - 0.1, 0.3);
   const pose: Pose = { expr: puff > 0.5 ? "smug" : "sly", hatLift: tip, facing: 0.2, lean: -5 * puff, headTilt: -5 * puff, lookX: puff > 0.5 ? 0.3 : -0.5, lookY: puff > 0.5 ? -0.3 : 0,
     gesture: puff > 0.5 ? "hips" : "none", gk: puff, blink: blinkAt(T, 30), ex: puff > 0.5 ? { brow: -10, browTilt: -10 } : {} };
-  const s = 2.7 + 0.35 * push;
+  const s = 2.7 + 0.3 * push;
   return (
     <AbsoluteFill>
       <PlateC src="eiffel/bg_salon.png" t={t} dur={dur} c={{ z0: 1.3, z1: 1.42, cx: 540, cy: 1100, dx: -30 }} blur={2.4} bright={0.97} />
       <Haze top="rgba(255,190,170,0.05)" vig={0.32} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <Motes t={T} n={22} seed={17} />
-        <AFigure id="ldep" look={LUSTIG} x={540 - 20 * push} y={2080 + 60 * push} s={s} pose={pose} shadow={false} />
+        <AFigure id="ldep" look={LUSTIG} x={540 - 20 * push} y={1760 + 30 * push} s={s} pose={pose} shadow={false} />
         <Banner x={540} y={560} k={(T - (W("deputy") - 0.1)) / 0.4} text="DEPUTY DIRECTOR" />
         <Sparkle x={300} y={500} k={(T - W("director")) / 0.5} />
         <Sparkle x={790} y={620} k={(T - W("director") - 0.12) / 0.5} />
@@ -305,7 +305,7 @@ const ShotSecret: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) 
   const push = Easing.inOut(Easing.cubic)(clamp01(t / dur));
   const sec = T > W("top") - 0.1;
   const dart = sec ? (Math.sin((T - W("top")) * 7) > 0 ? 1 : -1) : 0;
-  const pose: Pose = { expr: sec ? "sly" : "smile", facing: 0.1, gesture: sec ? "chin" : "present", gk: ramp(T, a + 0.05, 0.25), lookX: dart, blink: blinkAt(T, 31),
+  const pose: Pose = { expr: sec ? "sly" : "smile", facing: 0.1, gesture: sec ? "rub" : "present", gk: ramp(T, a + 0.05, 0.25), lookX: dart, blink: blinkAt(T, 31),
     lean: 6 * push, headTilt: sec ? 6 : 0, ex: sec ? { brow: -12, browTilt: -14 } : {} };
   return (
     <AbsoluteFill>
@@ -313,7 +313,7 @@ const ShotSecret: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) 
       <Haze top="rgba(255,190,170,0.05)" vig={0.38 + 0.08 * push} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <Motes t={T} n={18} seed={18} />
-        <AFigure id="lsec" look={LUSTIG} x={560} y={2030 + 40 * push} s={4.3 + 0.4 * push} pose={pose} shadow={false} />
+        <AFigure id="lsec" look={LUSTIG} x={560} y={1900 + 30 * push} s={4.2 + 0.3 * push} pose={pose} shadow={false} />
       </svg>
     </AbsoluteFill>
   );
@@ -356,7 +356,7 @@ const ShotSniff: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
       <Haze top="rgba(255,190,170,0.05)" vig={0.36} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <Motes t={T} n={18} seed={20} />
-        <AFigure id="dsn" look={DEALER3} x={600} y={2080 + 30 * push} s={4.1 + 0.3 * push} flip pose={pose} shadow={false} />
+        <AFigure id="dsn" look={DEALER3} x={600} y={1880 + 20 * push} s={4.1 + 0.3 * push} flip pose={pose} shadow={false} />
         {sniff && [0, 1].map((i) => { const k = ((T * 2.2 + i * 0.5) % 1); return (
           <path key={i} d={`M${340 - 40 * k},${1020 - 60 * k} q-30,-20 0,-40 q30,-20 0,-40`} fill="none" stroke="#fff6e0" strokeWidth={6} strokeLinecap="round" opacity={0.8 * (1 - k)} />); })}
         <g transform="translate(250,1260) scale(2.2)"><Rat x={0} y={0} k={(T - (W("rat") - 0.1)) / 0.35} t={T} /></g>
@@ -378,7 +378,7 @@ const ShotCaponeClose: React.FC<{ T: number; a: number; b: number }> = ({ T, a, 
       <Haze top="rgba(255,190,140,0.05)" vig={0.36} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <Motes t={T} n={14} seed={21} />
-        <AFigure id="capc" look={CAPONE} x={540} y={2080 + 30 * push} s={4.0 + 0.3 * push} flip pose={pose} shadow={false} />
+        <AFigure id="capc" look={CAPONE} x={540} y={1840 + 20 * push} s={4.0 + 0.3 * push} flip pose={pose} shadow={false} />
       </svg>
     </AbsoluteFill>
   );
@@ -689,7 +689,7 @@ const ShotBox: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => 
 // 16. real fake money: Lustig laughs as his counterfeit notes rain down
 const ShotMoney: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
   const t = T - a, dur = b - a;
-  const pose: Pose = { expr: T > W("real") - 0.1 ? "laugh" : "smug", facing: 0.1, blink: blinkAt(T, 27), lookY: -0.5, hold: "cash", gesture: "offer", gk: 0.8 + 0.2 * Math.sin(t * 6),
+  const pose: Pose = { expr: T > W("real") - 0.1 ? "laugh" : "smug", facing: 0.1, blink: blinkAt(T, 27), lookY: -0.5, hold: "cash", gesture: "shrug", gk: 0.8 + 0.2 * Math.sin(t * 6),
     bob: T > W("real") ? 4 * Math.abs(Math.sin(t * 9)) : 0, headTilt: 3 * Math.sin(t * 5) };
   return (
     <AbsoluteFill>
@@ -697,7 +697,7 @@ const ShotMoney: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
       <Haze top="rgba(255,190,140,0.05)" vig={0.33} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <FallingNotes t={t} n={14} k={clamp01(t / 0.4) * 0.6} />
-        <AFigure id="lm" look={LUSTIG} x={560} y={2230} s={3.4} pose={pose} shadow={false} />
+        <AFigure id="lm" look={LUSTIG} x={560} y={1950} s={3.0} pose={pose} shadow={false} />
         <FallingNotes t={t + 3.3} n={10} k={clamp01((t - 0.3) / 0.4)} />
       </svg>
     </AbsoluteFill>
@@ -736,7 +736,7 @@ const ShotCell: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =>
       <Haze top="rgba(150,170,230,0.06)" vig={0.4} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <g transform={`translate(540,1900) scale(${zoom}) translate(-540,-1900)`}>
-          <AFigure id="lcell" look={LUSTIG} x={540} y={1930} s={2.6} pose={pose} shadow={false} />
+          <AFigure id="lcell" look={LUSTIG} x={540} y={1820} s={2.6} pose={pose} shadow={false} />
           <ellipse cx={420} cy={900} rx={300} ry={500} fill="rgba(180,200,255,0.10)" style={{ mixBlendMode: "screen" }} />
           <Bars xs={[150, 330, 750, 930]} />
         </g>
@@ -770,7 +770,7 @@ const NEW_SHOTS: [number, React.FC<{ T: number; a: number; b: number }>][] = [
 
 // subtitles: same approved style; lifted where the action is low in frame
 const sub = defaultStyle("funny", { keyWords: KEY, y: 0.86 });
-const subFull = { ...sub, moves: [{ from: 0, to: 5.1, y: 0.42 }, { from: 15.05, to: 17.55, y: 0.42 }, { from: 19.6, to: 23.6, y: 0.5 }, { from: 25.3, to: 28.2, y: 0.5 }, { from: 33.2, to: 34.9, y: 0.4 },
+const subFull = { ...sub, moves: [{ from: 0, to: 5.1, y: 0.42 }, { from: 5.1, to: 8.75, y: 0.74 }, { from: 45.85, to: 47.75, y: 0.72 }, { from: 51.35, to: 52.75, y: 0.72 }, { from: 55.2, to: 57.7, y: 0.32 }, { from: 15.05, to: 17.55, y: 0.42 }, { from: 19.6, to: 23.6, y: 0.5 }, { from: 25.3, to: 28.2, y: 0.5 }, { from: 33.2, to: 34.9, y: 0.4 },
   { from: 34.9, to: 37.75, y: 0.4 }, { from: 37.75, to: 45.85, y: 0.4 }, { from: 47.75, to: 49.62, y: 0.4 }, { from: 49.62, to: 51.35, y: 0.4 }, { from: 52.75, to: 55.2, y: 0.4 }, { from: 65.2, to: 69.5, y: 0.8 }] };
 
 export const FullShort: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }) => {

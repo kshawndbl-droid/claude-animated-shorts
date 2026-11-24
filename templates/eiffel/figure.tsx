@@ -141,11 +141,16 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
   const gK = Math.max(0, Math.min(1, pose.gk ?? 1));
   // ---- arms: shoulder angles (deg, 0 = hanging, + = forward/up toward the facing side) ----
   const swing = walk * 30 * Math.sin(2 * Math.PI * (pose.phase ?? 0));
-  let aB = -swing, aF = swing, eB = 10, eF = 10; // back arm, front arm; elbow bends
+  // resting arms hang slightly away from the body, so both arms read clearly beside the torso (the back arm used to
+  // hang straight down behind the torso and vanish); a slow independent sway keeps the two arms from moving as one
+  const out = (18 + 14 * stout) * (1 - 0.5 * walk), ph = (pose.talk ?? 0) + (pose.bob ?? 0) * 0.05;
+  let aB = -swing - out + 2.5 * Math.sin(ph * 1.7), aF = swing + 6 + 6 * stout + 2 * Math.sin(ph * 1.3 + 1), eB = 8, eF = 12;
+  // gestures: [back angle, back elbow, front angle, front elbow]; + swings toward screen right, so a symmetric gesture
+  // mirrors the signs between the two arms
   const G: Record<Gesture, [number, number, number, number]> = {
-    none: [aB, eB, aF, eF], present: [aB, eB, 95, 25], shrug: [70, 80, 70, 80], point: [aB, eB, 150, 0], rub: [35, 95, 35, 95],
-    wave: [aB, eB, 150, 40 + 30 * Math.sin((pose.talk ?? 0) * 12)], hips: [-35, 120, -35, 120], offer: [aB, eB, 70, 20], shake: [aB, eB, 80, 4],
-    tip: [aB, eB, 160, 110], chin: [aB, eB, 40, 135],
+    none: [aB, eB, aF, eF], present: [aB, eB, 95, 25], shrug: [-70, -80, 70, 80], point: [aB, eB, 120, -10], rub: [22, 92, -22, -92],
+    wave: [aB, eB, 125, -25 + 22 * Math.sin((pose.talk ?? 0) * 12)], hips: [-38, 112, 38, -112], offer: [aB, eB, 70, 20], shake: [aB, eB, 80, 4],
+    tip: [aB, eB, 160, 110], chin: [aB - 4, eB + 6, 40, 135],
   };
   const g = G[pose.gesture ?? "none"];
   aB = lerp(aB, g[0], gK); eB = lerp(eB, g[1], gK); aF = lerp(aF, g[2], gK); eF = lerp(eF, g[3], gK);
@@ -300,6 +305,8 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
       <g transform={`translate(${P(-6 * (pose.hatLift ?? 0))},${P(-34 * (pose.hatLift ?? 0))}) rotate(${P(-12 * (pose.hatLift ?? 0))} ${P(headC.x)} ${P(headC.y - 60)})`}>{hatEl()}</g>
     </g>
   );
+  // does the back hand end up over the chest? then that arm is in front of the body
+  const across = (() => { const a1 = rad(aB), a2 = a1 + rad(eB); return -(tw - 8) + Math.sin(a1) * 34 + Math.sin(a2) * 41 > -(tw - 22); })();
   const flipT = flip ? -1 : 1;
   return (
     <g transform={`translate(${P(x)},${P(y)}) scale(${P(flipT * s / 1)},${P(s)})`}>
@@ -328,7 +335,7 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
       </defs>
       {shadow && <ellipse cx={0} cy={2} rx={62 + stout * 14} ry={11} fill="rgba(30,20,40,0.32)" />}
       <g transform={`rotate(${P(lean)} 0 ${P(hipY)})`}>
-        {arm(-1, aB, eB, false)}
+        {!across && arm(-1, aB, eB, false)}
         {legEl(0, false)}
         {legEl(1, true)}
         <path d={torso} fill={`url(#suit${id})`} />
@@ -356,6 +363,7 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
             <circle r={3.5} fill="#ffd2d4" />
           </g>
         )}
+        {across && arm(-1, aB, eB, false)}
         {arm(1, aF, eF, true)}
         {head}
       </g>
