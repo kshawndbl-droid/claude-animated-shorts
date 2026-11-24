@@ -188,13 +188,14 @@ add(pluck_bass(98, 1.2, 2), 68.25, -19, 0, True)
 # A: street ambience under shot 1, footsteps, two cars, honk, pigeons, twinkle (as in the style test)
 bab = flt(rng.standard_normal(int(R * 11.6)), "band", [250, 1800]) * (0.6 + 0.4 * np.abs(np.sin(2 * np.pi * 0.7 * t[:int(R * 11.6)] + np.sin(3.1 * t[:int(R * 11.6)]))))
 fade = np.minimum((11.6 - t[:int(R * 11.6)]) / 0.4, 1)
-add(norm(bab) * fade, 0, -38, 0.0)
-add(norm(flt(rng.standard_normal(int(R * 11.6)), "low", 400)) * fade, 0, -36, -0.3)
+fin = np.minimum(t[:int(R * 11.6)] / 1.5, 1)  # ambience eases in
+add(norm(bab) * fade * fin, 0, -42, 0.0)
+add(norm(flt(rng.standard_normal(int(R * 11.6)), "low", 400)) * fade * fin, 0, -42, -0.3)
 stop = W("small") - 0.27
 step = 0.0
 while step < stop:
     k = rng.standard_normal(int(0.06 * R)) * np.exp(-np.arange(int(0.06 * R)) / (0.008 * R))
-    add(norm(flt(k, "band", [300, 3500])), step + 0.2, -30, 0.1)
+    add(norm(flt(k, "band", [300, 2500])), step + 0.2, -38, 0.1)
     step += 0.48
 for t0, t1, p0, p1 in ((0.0, 5.3, -0.6, -0.2), (4.0, 11.6, 0.6, 0.1)):
     m = int(R * (t1 - t0))
@@ -202,12 +203,12 @@ for t0, t1, p0, p1 in ((0.0, 5.3, -0.6, -0.2), (4.0, 11.6, 0.6, 0.1)):
     eng = (np.sign(np.sin(2 * np.pi * 14 * tt)) * 0.5 + 0.5) * flt(rng.standard_normal(m), "low", 500)
     rum = flt(rng.standard_normal(m), "band", [60, 300])
     env = np.sin(np.pi * tt / (t1 - t0)) ** 0.8
-    add(norm(eng + 0.6 * rum) * env, t0, -26, (p0 + p1) / 2)
+    add(norm(flt(0.4 * eng + rum, "low", 260)) * env, t0, -42, (p0 + p1) / 2)  # soft distant traffic
 m = int(R * 0.55)
 tt = np.arange(m) / R
 f = 330 + 120 * np.sin(np.pi * tt / 0.55)
 honk = np.sign(np.sin(2 * np.pi * np.cumsum(f) / R)) * np.sin(np.pi * tt / 0.55) ** 0.5
-add(norm(flt(honk, "band", [300, 2500])), 1.0, -24, -0.4)
+# (honk removed after review: too startling at the start)
 
 
 def coo(t0, pan=0.5, db=-34):
@@ -247,7 +248,7 @@ def steps(t0, t1, every, db=-31, pan=0.0, band=(300, 3500)):
         s += every
 
 
-coo(0.6); coo(6.2)
+coo(1.4, 0.5, -40); coo(6.2)
 twinkle(W("smile") + 0.1)
 # room: city murmur through the window, newspaper rustles, stamping the letterhead
 room_tone(11.6, 17.55, -44, 500)
@@ -338,6 +339,8 @@ envv = flt(envv, "low", 4, 1)
 envv = envv / (envv.max() + 1e-9)
 duck = 10 ** (-4 * np.clip(envv * 3, 0, 1) / 20)
 add(v, 0.0, -3, 0)
+mfin = np.minimum(t / 1.2, 1) ** 1.5  # the score eases in, no hard start
+ML *= mfin; MR *= mfin
 L += ML * duck
 Rr += MR * duck
 # fade out the last 0.6 s

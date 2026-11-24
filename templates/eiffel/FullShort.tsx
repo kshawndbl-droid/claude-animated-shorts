@@ -35,7 +35,7 @@ const CAPONE: Look = { ...LUSTIG, suit: "#c9bfae", suitDark: "#a89d8a", pin: "rg
 const BUYER: Look = { ...EXTRA2, suit: "#6a5a3a", suitDark: "#52452c", vest: "#9a8a5a", tie: "#3a5a8a", hat: "homburg", hatCol: "#3a3430", mustache: "walrus", stout: 0.6, glasses: true };
 
 // ---------------------------------------------------------------- shot timeline (seconds)
-const CUTS = [0, 5.1, 8.75, 11.6, 15.05, 17.55, 23.6, 30.0, 33.2, 34.9, 37.75, 43.05, 47.75, 49.62, 52.75, 55.2, 57.7, 61.1, 65.2, 69.5];
+const CUTS = [0, 5.1, 8.75, 11.6, 15.05, 17.55, 19.6, 23.6, 25.3, 28.2, 30.0, 33.2, 34.9, 37.75, 43.05, 45.85, 47.75, 49.62, 51.35, 52.75, 55.2, 57.7, 61.1, 65.2, 69.5];
 
 // ---------------------------------------------------------------- props
 const shadowAt = (x: number, y: number, s: number, k = 1) => (
@@ -205,6 +205,20 @@ const Sign: React.FC<{ x: number; y: number; k: number; t: number }> = ({ x, y, 
   );
 };
 
+// ---------------------------------------------------------------- living figures
+/** standing characters never freeze: a breath, a slow weight shift and small head moves (off while walking) */
+const alive = (p: Pose, T: number, seed: number): Pose => {
+  if ((p.walk ?? 0) > 0.05) return p;
+  const b = 1.6 * Math.sin(T * 2.3 + seed * 1.7) + 1.2;
+  return { ...p, bob: (p.bob ?? 0) + b, headTilt: (p.headTilt ?? 0) + 2.2 * Math.sin(T * 1.1 + seed * 2.3) + 1.2 * Math.sin(T * 2.9 + seed),
+    lean: (p.lean ?? 0) + 1.5 * Math.sin(T * 0.8 + seed * 0.9) };
+};
+const AFigure: React.FC<React.ComponentProps<typeof Figure>> = (props) => {
+  const T = useCurrentFrame() / FPS;
+  const seed = props.id.split("").reduce((m, ch) => m + ch.charCodeAt(0), 0) % 17;
+  return <Figure {...props} pose={alive(props.pose, T, seed)} />;
+};
+
 // ---------------------------------------------------------------- generic helpers for the new shots
 type Cam = { z0: number; z1: number; cx: number; cy: number; dx?: number; dy?: number };
 const at = (x: number, y: number, t: number, dur: number, c: Cam) => camXY(x, y, t, dur, c.z0, c.z1, c.cx, c.cy, c.dx ?? 0, c.dy ?? 0);
@@ -224,7 +238,7 @@ const ShotNews: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =>
       <PlateC src="eiffel/bg_room.png" t={t} dur={dur} c={{ z0: 1.25, z1: 1.32, cx: 540, cy: 900 }} blur={3.2} bright={0.95} />
       <Haze top="rgba(255,190,170,0.05)" vig={0.33} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
-        <Figure id="ln" look={LUSTIG} x={540} y={2060 + 6 * Math.sin(t * 2)} s={4.3} pose={pose} shadow={false} />
+        <AFigure id="ln" look={LUSTIG} x={540} y={2060 + 6 * Math.sin(t * 2)} s={4.3} pose={pose} shadow={false} />
         <Newspaper x={540} y={ny} w={900} h={640} rot={rot} />
         {[-1, 1].map((sd) => <circle key={sd} cx={540 + sd * 430} cy={ny + 60 - sd * 10} r={44} fill="#f3dcc0" stroke={INK} strokeWidth={8} />)}
         <Motes t={T} n={22} seed={4} />
@@ -248,7 +262,7 @@ const ShotStamp: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
       <PlateC src="eiffel/bg_room.png" t={t} dur={dur} c={{ z0: 1.0, z1: 1.05, cx: 540, cy: 1200 }} blur={0.8} />
       <Haze top="rgba(255,190,170,0.05)" vig={0.28} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
-        <Figure id="ls" look={LUSTIG} x={400} y={1880} s={1.8} pose={pose} shadow={false} />
+        <AFigure id="ls" look={LUSTIG} x={400} y={1880} s={1.8} pose={pose} shadow={false} />
         <Desk top={top} />
         {Array.from({ length: n }, (_, i) => <Letter key={i} x={760 + i * 4} y={top - 6 - i * 7} rot={-4 + i * 3} />)}
         {!show && <Letter x={760} y={top - 6 - n * 7} seal={false} rot={2} />}
@@ -260,17 +274,127 @@ const ShotStamp: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
   );
 };
 
+
+// 6a. "deputy director": a medium close-up, Lustig straightens his bowler and puffs his chest; the camera pushes in
+const ShotDeputy: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
+  const t = T - a, dur = b - a;
+  const push = Easing.inOut(Easing.cubic)(clamp01(t / dur));
+  const tip = ramp(T, W("himself") - 0.1, 0.2) * (1 - ramp(T, W("deputy") - 0.05, 0.25));
+  const puff = ramp(T, W("deputy") - 0.1, 0.3);
+  const pose: Pose = { expr: puff > 0.5 ? "smug" : "sly", hatLift: tip, facing: 0.2, lean: -5 * puff, headTilt: -5 * puff, lookX: puff > 0.5 ? 0.3 : -0.5, lookY: puff > 0.5 ? -0.3 : 0,
+    gesture: puff > 0.5 ? "hips" : "none", gk: puff, blink: blinkAt(T, 30), ex: puff > 0.5 ? { brow: -10, browTilt: -10 } : {} };
+  const s = 2.7 + 0.35 * push;
+  return (
+    <AbsoluteFill>
+      <PlateC src="eiffel/bg_salon.png" t={t} dur={dur} c={{ z0: 1.3, z1: 1.42, cx: 540, cy: 1100, dx: -30 }} blur={2.4} bright={0.97} />
+      <Haze top="rgba(255,190,170,0.05)" vig={0.32} />
+      <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <Motes t={T} n={22} seed={17} />
+        <AFigure id="ldep" look={LUSTIG} x={540 - 20 * push} y={2080 + 60 * push} s={s} pose={pose} shadow={false} />
+        <Banner x={540} y={560} k={(T - (W("deputy") - 0.1)) / 0.4} text="DEPUTY DIRECTOR" />
+        <Sparkle x={300} y={500} k={(T - W("director")) / 0.5} />
+        <Sparkle x={790} y={620} k={(T - W("director") - 0.12) / 0.5} />
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
+// 7a. "the pitch? top secret": a close-up, Lustig leans in, finger to his chin, eyes darting left and right
+const ShotSecret: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
+  const t = T - a, dur = b - a;
+  const push = Easing.inOut(Easing.cubic)(clamp01(t / dur));
+  const sec = T > W("top") - 0.1;
+  const dart = sec ? (Math.sin((T - W("top")) * 7) > 0 ? 1 : -1) : 0;
+  const pose: Pose = { expr: sec ? "sly" : "smile", facing: 0.1, gesture: sec ? "chin" : "present", gk: ramp(T, a + 0.05, 0.25), lookX: dart, blink: blinkAt(T, 31),
+    lean: 6 * push, headTilt: sec ? 6 : 0, ex: sec ? { brow: -12, browTilt: -14 } : {} };
+  return (
+    <AbsoluteFill>
+      <PlateC src="eiffel/bg_salon.png" t={t} dur={dur} c={{ z0: 1.45, z1: 1.55, cx: 400, cy: 1100, dx: 20 }} blur={3.2} bright={0.93} />
+      <Haze top="rgba(255,190,170,0.05)" vig={0.38 + 0.08 * push} />
+      <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <Motes t={T} n={18} seed={18} />
+        <AFigure id="lsec" look={LUSTIG} x={560} y={2030 + 40 * push} s={4.3 + 0.4 * push} pose={pose} shadow={false} />
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
+// 7c. the dealers' reaction: three faces, wide-eyed; on "lucky bidder" they all shoot a hand up to bid
+const ShotDealers: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
+  const t = T - a, dur = b - a, c: Cam = { z0: 1.45, z1: 1.62, cx: 560, cy: 1500 };
+  const bid = (d: number) => ramp(T, W("bidder") - 0.25 + d, 0.18);
+  const dp = (seed: number, d: number, look: number): Pose => ({ expr: bid(d) > 0.5 ? "happy" : "amazed", facing: 0.3, blink: blinkAt(T, seed), lookX: look,
+    gesture: bid(d) > 0.02 ? "point" : "none", gk: bid(d), bob: 4 * bid(d) * Math.abs(Math.sin((T - 29.4) * 8)), ex: { blush: 0.8 } });
+  const D2 = at(250, 1780, t, dur, c), D1 = at(830, 1770, t, dur, c), P = at(540, 1850, t, dur, c);
+  const pp: Pose = { ...dp(32, 0, 0), gesture: bid(0.1) > 0.02 ? "point" : "rub", gk: 1, expr: bid(0.1) > 0.5 ? "happy" : "amazed" };
+  return (
+    <AbsoluteFill>
+      <PlateC src="eiffel/bg_salon.png" t={t} dur={dur} c={c} blur={1.6} />
+      <Haze top="rgba(255,190,170,0.05)" vig={0.32} />
+      <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <GroundDefs />
+        <AFigure id="rd2" look={EXTRA2} x={D2.x} y={D2.y} s={1.25 * D2.z} pose={dp(33, 0.08, 0.6)} />
+        <AFigure id="rd1" look={DEALER3} x={D1.x} y={D1.y} s={1.25 * D1.z} flip pose={dp(34, 0.16, 0.6)} />
+        <AFigure id="rp" look={POISSON} x={P.x} y={P.y} s={1.4 * P.z} flip pose={pp} />
+        {[0, 1, 2].map((i) => <Sparkle key={i} x={[260, 820, 560][i]} y={[620, 640, 520][i]} k={(T - W("lucky") - i * 0.1) / 0.5} />)}
+        <Motes t={T} n={22} seed={19} />
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
+// 12b. this dealer smells a rat: close-up, he sniffs the air, squints, and a rat pops up beside him
+const ShotSniff: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
+  const t = T - a, dur = b - a;
+  const push = Easing.inOut(Easing.cubic)(clamp01(t / dur));
+  const sniff = T > W("smelled") - 0.3 && T < W("rat") - 0.05, rat = T > W("rat") - 0.05;
+  const pose: Pose = { expr: "stern", facing: 0.15, blink: blinkAt(T, 35), lookY: sniff ? -0.8 : rat ? 0.7 : 0, lookX: rat ? -1 : 0,
+    headTilt: sniff ? -8 + 4 * Math.sin((T - 46.6) * 16) : rat ? 6 : 0, ex: { eyes: sniff ? "closed" : "squint", brow: 6, browTilt: -16 }, mouth: rat ? "frown" : sniff ? "M" : null };
+  return (
+    <AbsoluteFill>
+      <PlateC src="eiffel/bg_salon.png" t={t} dur={dur} c={{ z0: 1.5, z1: 1.6, cx: 820, cy: 1000 }} blur={3.2} bright={0.95} />
+      <Haze top="rgba(255,190,170,0.05)" vig={0.36} />
+      <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <Motes t={T} n={18} seed={20} />
+        <AFigure id="dsn" look={DEALER3} x={600} y={2080 + 30 * push} s={4.1 + 0.3 * push} flip pose={pose} shadow={false} />
+        {sniff && [0, 1].map((i) => { const k = ((T * 2.2 + i * 0.5) % 1); return (
+          <path key={i} d={`M${340 - 40 * k},${1020 - 60 * k} q-30,-20 0,-40 q30,-20 0,-40`} fill="none" stroke="#fff6e0" strokeWidth={6} strokeLinecap="round" opacity={0.8 * (1 - k)} />); })}
+        <g transform="translate(250,1260) scale(2.2)"><Rat x={0} y={0} k={(T - (W("rat") - 0.1)) / 0.35} t={T} /></g>
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
+// 14b. "out of Al Capone": a close-up of Capone chuckling as the name lands
+const ShotCaponeClose: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
+  const t = T - a, dur = b - a;
+  const push = Easing.inOut(Easing.cubic)(clamp01(t / dur));
+  const laugh = T > W("capone") - 0.1;
+  const pose: Pose = { expr: laugh ? "laugh" : "smile", facing: 0.15, blink: blinkAt(T, 36), gesture: "hips", gk: 1, lookX: -0.4,
+    bob: laugh ? 5 * Math.abs(Math.sin((T - 52.2) * 10)) : 0, headTilt: laugh ? 5 * Math.sin((T - 52.2) * 6) : 0 };
+  return (
+    <AbsoluteFill>
+      <PlateC src="eiffel/bg_office.png" t={t} dur={dur} c={{ z0: 1.45, z1: 1.55, cx: 760, cy: 1000, dx: -20 }} blur={3.2} bright={0.95} />
+      <Haze top="rgba(255,190,140,0.05)" vig={0.36} />
+      <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <Motes t={T} n={14} seed={21} />
+        <AFigure id="capc" look={CAPONE} x={540} y={2080 + 30 * push} s={4.0 + 0.3 * push} flip pose={pose} shadow={false} />
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
 // 6. the fancy hotel: "deputy director" Lustig welcomes the scrap-metal dealers into the salon
 const SAL = { gy: 1850, s: 1.15 };
 const ShotSalonWide: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
-  const t = T - a, dur = b - a, c: Cam = { z0: 1.0, z1: 1.12, cx: 540, cy: 1500 };
+  const t = T - a, dur = b - a, c: Cam = { z0: 1.0, z1: 1.2, cx: 540, cy: 1560, dx: -50 };
   const L = at(540, SAL.gy, t, dur, c);
-  const welcome = T > W("invited") - 0.1;
-  const lp: Pose = { expr: welcome ? "smile" : "smug", facing: 0, gesture: welcome ? "present" : "hips", gk: 1, blink: blinkAt(T, 9), lookX: welcome ? (T < 21.3 ? -0.7 : 0.7) : 0 };
+  const left = T < 21.3, bow = ramp(T, 22.45, 0.2) * (1 - ramp(T, 23.0, 0.25));
+  const lp: Pose = { expr: bow > 0.3 ? "happy" : "smile", facing: left ? -0.3 : 0.4, gesture: T < 20.1 ? "hips" : left ? "wave" : "present", gk: T < 20.1 ? 1 : ramp(T, 20.1, 0.25),
+    talk: T, blink: blinkAt(T, 9), lookX: left ? -0.8 : 0.8, lean: 12 * bow, headTilt: 6 * bow };
   const sD = SAL.s * 0.92;
   const d1 = walker(T, 19.7, 22.85, 3.0), d2 = walker(T, 20.0, 22.9, 3.0), d3 = walker(T, 20.4, 22.95, 2.5);
   const p1 = at(-90 + d1.dist * sD, SAL.gy + 10, t, dur, c), p2 = at(1170 - d2.dist * sD, SAL.gy + 20, t, dur, c), p3 = at(-120 + d3.dist * sD * 0.8, SAL.gy - 40, t, dur, c);
-  const banner = (T - (W("deputy") - 0.1)) / 0.4;
   return (
     <AbsoluteFill>
       <PlateC src="eiffel/bg_salon.png" t={t} dur={dur} c={c} />
@@ -278,14 +402,13 @@ const ShotSalonWide: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b 
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <GroundDefs />
         {shadowAt(p3.x, p3.y, sD * 0.8 * p3.z)}
-        <Figure id="d3" look={DEALER3} x={p3.x} y={p3.y} s={sD * 0.8 * p3.z} shadow={false} pose={{ phase: d3.phase, walk: d3.walk, expr: "neutral", facing: 0.5, blink: blinkAt(T, 12) }} />
+        <AFigure id="d3" look={DEALER3} x={p3.x} y={p3.y} s={sD * 0.8 * p3.z} shadow={false} pose={{ phase: d3.phase, walk: d3.walk, expr: "amazed", facing: 0.5, blink: blinkAt(T, 12), lookY: -1 }} />
         {shadowAt(L.x, L.y, SAL.s * L.z)}
-        <Figure id="lw2" look={LUSTIG} x={L.x} y={L.y} s={SAL.s * L.z} pose={lp} shadow={false} />
+        <AFigure id="lw2" look={LUSTIG} x={L.x} y={L.y} s={SAL.s * L.z} pose={lp} shadow={false} />
         {shadowAt(p1.x, p1.y, sD * p1.z)}
-        <Figure id="d1" look={EXTRA1} x={p1.x} y={p1.y} s={sD * p1.z} shadow={false} pose={{ phase: d1.phase, walk: d1.walk, expr: T > 22.9 ? "amazed" : "smile", facing: 0.5, blink: blinkAt(T, 10) }} />
+        <AFigure id="d1" look={EXTRA1} x={p1.x} y={p1.y} s={sD * p1.z} shadow={false} pose={{ phase: d1.phase, walk: d1.walk, expr: T > 22.6 ? "happy" : "amazed", facing: 0.5, blink: blinkAt(T, 10), lookY: T < 21.8 ? -1 : 0 }} />
         {shadowAt(p2.x, p2.y, sD * 1.05 * p2.z)}
-        <Figure id="pw" look={POISSON} x={p2.x} y={p2.y} s={sD * 1.05 * p2.z} flip shadow={false} pose={{ phase: d2.phase, walk: d2.walk, expr: T > 22.9 ? "amazed" : "neutral", facing: 0.5, blink: blinkAt(T, 11) }} />
-        <Banner x={L.x} y={L.y - 470 * SAL.s * L.z} k={banner} text="DEPUTY DIRECTOR" />
+        <AFigure id="pw" look={POISSON} x={p2.x} y={p2.y} s={sD * 1.05 * p2.z} flip shadow={false} pose={{ phase: d2.phase, walk: d2.walk, expr: T > 22.6 ? "happy" : "amazed", facing: 0.5, blink: blinkAt(T, 11), lookY: T < 22.0 ? -1 : 0 }} />
         <Sparkle x={300} y={420} k={(T - W("fancy")) / 0.5} />
         <Sparkle x={800} y={360} k={(T - W("fancy") - 0.15) / 0.5} />
         <Motes t={T} n={30} seed={6} />
@@ -296,17 +419,17 @@ const ShotSalonWide: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b 
 
 // 7. the pitch: top secret, the tower comes down, thousands of tons of iron for one lucky bidder
 const ShotPitch: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
-  const t = T - a, dur = b - a, c: Cam = { z0: 1.32, z1: 1.4, cx: 540, cy: 1600, dx: 20 };
+  const t = T - a, dur = b - a, c: Cam = { z0: 1.28, z1: 1.45, cx: 540, cy: 1600, dx: -70 };
   const gy = 1790;
   const L = at(290, gy, t, dur, c), P = at(800, gy + 10, t, dur, c), D1 = at(980, gy - 60, t, dur, c), D2 = at(640, gy - 80, t, dur, c);
   const secret = T > W("top") - 0.1 && T < W("paris", 1) - 0.1;
   const point = T > W("one", 0) - 0.1 && T > 28.8;
   const lp: Pose = { expr: secret ? "sly" : point ? "happy" : "smile", facing: 0.5, blink: blinkAt(T, 13),
-    gesture: secret ? "chin" : point ? "point" : T > W("paris", 1) ? "present" : "none", gk: ramp(T, 23.9, 0.25),
+    gesture: T > W("down") - 0.1 && T < W("thousands") - 0.2 ? "shrug" : T > W("thousands") - 0.2 ? "present" : "point", gk: 1, lean: T > W("down") - 0.1 && T < 27.2 ? -6 : 3,
     lookX: secret ? Math.sin((T - 24.4) * 9) : 0.7, ex: secret ? { brow: -10, browTilt: -12 } : {} };
   const wow = T > W("thousands") - 0.05;
   const dp = (seed: number, flipLook = 0): Pose => ({ expr: wow ? (seed === 1 ? "amazed" : "surprised") : "neutral", facing: 0.5, blink: blinkAt(T, seed + 20),
-    lookY: T > W("paris", 1) - 0.2 && T < 28.4 ? -0.9 : 0, lookX: flipLook, bob: wow ? 2 * Math.abs(Math.sin((T - 27) * 7)) : 0 });
+    lookY: T > W("paris", 1) - 0.2 && T < 28.4 ? -0.9 : 0, lookX: flipLook, bob: wow ? 2 * Math.abs(Math.sin((T - 27) * 7)) : 0, lean: T > W("down") && T < W("down") + 0.6 ? -8 * Math.sin(Math.PI * (T - W("down")) / 0.6) : 0 });
   const bub = (T - (W("paris", 1) - 0.25)) / 0.35;
   const fall = Easing.in(Easing.quad)(clamp01((T - W("down")) / 0.55));
   const pile = clamp01((T - (W("thousands") - 0.2)) / 0.4);
@@ -317,13 +440,13 @@ const ShotPitch: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <GroundDefs />
         {shadowAt(D2.x, D2.y, 0.95 * D2.z)}
-        <Figure id="pd2" look={EXTRA2} x={D2.x} y={D2.y} s={0.95 * D2.z} flip shadow={false} pose={dp(2)} />
+        <AFigure id="pd2" look={EXTRA2} x={D2.x} y={D2.y} s={0.95 * D2.z} flip shadow={false} pose={dp(2)} />
         {shadowAt(D1.x, D1.y, 1.0 * D1.z)}
-        <Figure id="pd1" look={DEALER3} x={D1.x} y={D1.y} s={1.0 * D1.z} flip shadow={false} pose={dp(3)} />
+        <AFigure id="pd1" look={DEALER3} x={D1.x} y={D1.y} s={1.0 * D1.z} flip shadow={false} pose={dp(3)} />
         {shadowAt(P.x, P.y, 1.12 * P.z)}
-        <Figure id="pp2" look={POISSON} x={P.x} y={P.y} s={1.12 * P.z} flip shadow={false} pose={dp(1, 0.6)} />
+        <AFigure id="pp2" look={POISSON} x={P.x} y={P.y} s={1.12 * P.z} flip shadow={false} pose={dp(1, 0.6)} />
         {shadowAt(L.x, L.y, 1.22 * L.z)}
-        <Figure id="lp" look={LUSTIG} x={L.x} y={L.y} s={1.22 * L.z} pose={lp} shadow={false} />
+        <AFigure id="lp" look={LUSTIG} x={L.x} y={L.y} s={1.22 * L.z} pose={lp} shadow={false} />
         <Bubble x={560} y={520} k={bub} tailX={L.x + 80} tailY={L.y - 520}>
           {pile < 1 && <MiniTower x={-10 + 60 * fall} y={50} s={1.3} rot={80 * fall} />}
           {pile > 0 && (
@@ -352,11 +475,11 @@ const ShotHook: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =>
     lookY: bit && !dreamy ? -1 : 0, lookX: bit && !dreamy ? (hx - 560) / 60 : 0, ex: dreamy ? { blush: 1 } : {}, headTilt: dreamy ? 5 * Math.sin((T - 32.8) * 3) : 0 };
   return (
     <AbsoluteFill>
-      <PlateC src="eiffel/bg_salon.png" t={t} dur={dur} c={{ z0: 1.5, z1: 1.58, cx: 700, cy: 1000 }} blur={3.2} bright={0.95} />
+      <PlateC src="eiffel/bg_salon.png" t={t} dur={dur} c={{ z0: 1.5, z1: 1.66, cx: 700, cy: 1000 }} blur={3.2} bright={0.95} />
       <Haze top="rgba(255,190,170,0.05)" vig={0.33} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <Motes t={T} n={22} seed={8} />
-        <Figure id="ph" look={POISSON} x={540} y={2080 + 5 * Math.sin(t * 2)} s={4.2} flip pose={pose} shadow={false} />
+        <AFigure id="ph" look={POISSON} x={540} y={2080 + 5 * Math.sin(t * 2) + 50 * smooth(t / dur)} s={4.2 + 0.35 * smooth(t / dur)} flip pose={pose} shadow={false} />
         {drop > 0 && (
           <g>
             <line x1={hx} y1={-20} x2={hx} y2={hy} stroke="#2a2230" strokeWidth={4} />
@@ -373,12 +496,12 @@ const ShotHook: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =>
 
 // 9. cash in hand: Poisson pays, Lustig pockets it with a grin
 const ShotCash: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
-  const t = T - a, dur = b - a, c: Cam = { z0: 1.3, z1: 1.36, cx: 540, cy: 1700, dx: -30 };
+  const t = T - a, dur = b - a, c: Cam = { z0: 1.3, z1: 1.5, cx: 540, cy: 1620, dx: -30 };
   const gy = 1760, s = 1.45;
   const L = at(330, gy, t, dur, c), P = at(760, gy + 6, t, dur, c);
   const handT = W("cash") + 0.1;
   const got = T > handT;
-  const lp: Pose = { expr: got ? "happy" : "smile", facing: 0.6, gesture: got ? "offer" : "offer", gk: got ? 1 : ramp(T, 33.3, 0.3) * 0.9, hold: got ? "cash" : null, blink: blinkAt(T, 15), lookX: got ? 0 : 0.8, ex: got ? { eyes: "sly" } : {} };
+  const lp: Pose = { expr: got ? "happy" : "smile", facing: 0.6, gesture: got ? "offer" : "offer", gk: got ? 1 : ramp(T, 33.3, 0.3) * 0.9, hold: got ? "cash" : null, blink: blinkAt(T, 15), lookX: got ? 0 : 0.8, ex: got ? { eyes: "sly" } : {}, hatLift: ramp(T, handT + 0.35, 0.2) * (1 - ramp(T, handT + 0.9, 0.25)), wink: T > handT + 0.4 && T < handT + 0.8 };
   const pp: Pose = { expr: got ? "laugh" : "smile", facing: 0.5, gesture: "offer", gk: got ? 1 - ramp(T, handT, 0.3) : ramp(T, 33.25, 0.25), hold: got ? null : "cash", blink: blinkAt(T, 16), lookX: 0.6 };
   return (
     <AbsoluteFill>
@@ -387,9 +510,9 @@ const ShotCash: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =>
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <GroundDefs />
         {shadowAt(P.x, P.y, s * P.z)}
-        <Figure id="pc" look={POISSON} x={P.x} y={P.y} s={s * P.z} flip pose={pp} shadow={false} />
+        <AFigure id="pc" look={POISSON} x={P.x} y={P.y} s={s * P.z} flip pose={pp} shadow={false} />
         {shadowAt(L.x, L.y, s * L.z)}
-        <Figure id="lc2" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
+        <AFigure id="lc2" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
         <Sparkle x={L.x + 90 * s} y={L.y - 280 * s} k={(T - handT) / 0.5} />
         <Motes t={T} n={24} seed={9} />
       </svg>
@@ -411,7 +534,7 @@ const ShotStation: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b })
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <GroundDefs />
         {shadowAt(L.x, L.y, s * L.z)}
-        <Figure id="lst" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
+        <AFigure id="lst" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
         {Array.from({ length: 5 }, (_, i) => {
           const k = ((t * 0.5 + i * 0.2) % 1);
           return <ellipse key={i} cx={180 + i * 190 + 60 * k} cy={1100 - 260 * k} rx={140 + 120 * k} ry={70 + 60 * k} fill="#ffffff" opacity={0.22 * (1 - k)} />;
@@ -447,7 +570,7 @@ const ShotPolice: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) 
             <ellipse cx={0} cy={0} rx={190} ry={90} fill="rgba(120,160,255,0.12)" />
           </g>); })()}
         {shadowAt(P.x, P.y, s * P.z)}
-        <Figure id="pol" look={POISSON} x={P.x} y={P.y} s={s * P.z} flip={back} pose={pp} shadow={false} />
+        <AFigure id="pol" look={POISSON} x={P.x} y={P.y} s={s * P.z} flip={back} pose={pp} shadow={false} />
         <Motes t={T} n={16} seed={11} />
       </svg>
     </AbsoluteFill>
@@ -456,7 +579,7 @@ const ShotPolice: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) 
 
 // 12. back for a second sale: this dealer smells a rat
 const ShotAgain: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
-  const t = T - a, dur = b - a, c: Cam = { z0: 1.28, z1: 1.36, cx: 760, cy: 1650, dx: -40 };
+  const t = T - a, dur = b - a, c: Cam = { z0: 1.22, z1: 1.42, cx: 620, cy: 1650, dx: -40 };
   const gy = 1770, s = 1.4;
   const L = at(400, gy, t, dur, c), D = at(830, gy + 6, t, dur, c);
   const sus = T > W("smelled") - 0.4, rat = T > W("rat") - 0.05, flee = T > 47.45;
@@ -471,9 +594,9 @@ const ShotAgain: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <GroundDefs />
         {shadowAt(D.x, D.y, s * D.z)}
-        <Figure id="da" look={DEALER3} x={D.x} y={D.y} s={s * D.z} flip pose={dp} shadow={false} />
+        <AFigure id="da" look={DEALER3} x={D.x} y={D.y} s={s * D.z} flip pose={dp} shadow={false} />
         {shadowAt(L.x, L.y, s * L.z)}
-        <Figure id="la" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
+        <AFigure id="la" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
         <Rat x={L.x + 150} y={L.y - 30} k={(T - (W("rat") - 0.1)) / 0.35} t={T} />
         <Motes t={T} n={20} seed={12} />
       </svg>
@@ -498,7 +621,7 @@ const ShotLiner: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
         <GroundDefs />
         <Birds t={T} y0={300} n={6} seed={3} />
         {shadowAt(L.x, L.y, s * L.z)}
-        <Figure id="lli" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
+        <AFigure id="lli" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
         <Motes t={T} n={18} seed={13} />
       </svg>
     </AbsoluteFill>
@@ -507,12 +630,12 @@ const ShotLiner: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
 
 // 14. Chicago: Lustig charms $5,000 out of Al Capone
 const ShotCapone: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => {
-  const t = T - a, dur = b - a, c: Cam = { z0: 1.18, z1: 1.26, cx: 540, cy: 1650 };
+  const t = T - a, dur = b - a, c: Cam = { z0: 1.15, z1: 1.32, cx: 560, cy: 1650, dx: 30 };
   const gy = 1770, s = 1.4;
   const L = at(320, gy, t, dur, c), C = at(790, gy + 4, t, dur, c);
   const payT = W("5000") + 0.25, got = T > W("out") + 0.05;
   const lp: Pose = { expr: got ? "smug" : "smile", facing: 0.6, gesture: got ? "offer" : "present", gk: ramp(T, a + 0.1, 0.3), hold: got ? "cash" : null, blink: blinkAt(T, 23), lookX: 0.7 };
-  const cp: Pose = { expr: T < payT - 0.3 ? "stern" : got ? "smile" : "smile", facing: 0.5, gesture: T > payT - 0.3 && !got ? "offer" : got ? "hips" : "hips",
+  const cp: Pose = { expr: T < W("charmed") + 0.2 ? "stern" : T < payT - 0.3 ? "neutral" : "smile", lean: T < W("charmed") + 0.2 ? -6 : 0, lookY: T < payT - 0.3 ? 0.2 : 0, facing: 0.5, gesture: T > payT - 0.3 && !got ? "offer" : got ? "hips" : "hips",
     gk: 1, hold: T > payT - 0.3 && !got ? "cash" : null, blink: blinkAt(T, 24), lookX: 0.6 };
   return (
     <AbsoluteFill>
@@ -521,9 +644,9 @@ const ShotCapone: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) 
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <GroundDefs />
         {shadowAt(C.x, C.y, s * 1.02 * C.z)}
-        <Figure id="cap" look={CAPONE} x={C.x} y={C.y} s={s * 1.02 * C.z} flip pose={cp} shadow={false} />
+        <AFigure id="cap" look={CAPONE} x={C.x} y={C.y} s={s * 1.02 * C.z} flip pose={cp} shadow={false} />
         {shadowAt(L.x, L.y, s * L.z)}
-        <Figure id="lcp" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
+        <AFigure id="lcp" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
         <Sparkle x={L.x + 70 * s} y={L.y - 300 * s} k={(T - (W("charmed") - 0.05)) / 0.5} />
         <Sparkle x={L.x + 110 * s} y={L.y - 150 * s} k={(T - (W("out") + 0.05)) / 0.5} />
         <Motes t={T} n={18} seed={14} />
@@ -548,9 +671,9 @@ const ShotBox: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) => 
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <GroundDefs />
         {shadowAt(B.x, B.y, s * B.z)}
-        <Figure id="buy" look={BUYER} x={B.x} y={B.y} s={s * B.z} flip pose={bp} shadow={false} />
+        <AFigure id="buy" look={BUYER} x={B.x} y={B.y} s={s * B.z} flip pose={bp} shadow={false} />
         {shadowAt(L.x, L.y, s * L.z)}
-        <Figure id="lbx" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
+        <AFigure id="lbx" look={LUSTIG} x={L.x} y={L.y} s={s * L.z} pose={lp} shadow={false} />
         {/* a little side table under the box */}
         <g transform={`translate(${bx.x},${bx.y}) scale(${bx.z})`}>
           <rect x={-120} y={-12} width={240} height={26} rx={6} fill="#6a3c22" stroke={INK} strokeWidth={6} />
@@ -574,7 +697,7 @@ const ShotMoney: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
       <Haze top="rgba(255,190,140,0.05)" vig={0.33} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <FallingNotes t={t} n={14} k={clamp01(t / 0.4) * 0.6} />
-        <Figure id="lm" look={LUSTIG} x={560} y={2230} s={3.4} pose={pose} shadow={false} />
+        <AFigure id="lm" look={LUSTIG} x={560} y={2230} s={3.4} pose={pose} shadow={false} />
         <FallingNotes t={t + 3.3} n={10} k={clamp01((t - 0.3) / 0.4)} />
       </svg>
     </AbsoluteFill>
@@ -613,7 +736,7 @@ const ShotCell: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =>
       <Haze top="rgba(150,170,230,0.06)" vig={0.4} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <g transform={`translate(540,1900) scale(${zoom}) translate(-540,-1900)`}>
-          <Figure id="lcell" look={LUSTIG} x={540} y={1930} s={2.6} pose={pose} shadow={false} />
+          <AFigure id="lcell" look={LUSTIG} x={540} y={1930} s={2.6} pose={pose} shadow={false} />
           <ellipse cx={420} cy={900} rx={300} ry={500} fill="rgba(180,200,255,0.10)" style={{ mixBlendMode: "screen" }} />
           <Bars xs={[150, 330, 750, 930]} />
         </g>
@@ -640,14 +763,15 @@ const ShotTower: React.FC<{ T: number; a: number; b: number }> = ({ T, a, b }) =
 };
 
 const NEW_SHOTS: [number, React.FC<{ T: number; a: number; b: number }>][] = [
-  [3, ShotNews], [4, ShotStamp], [5, ShotSalonWide], [6, ShotPitch], [7, ShotHook], [8, ShotCash], [9, ShotStation], [10, ShotPolice],
-  [11, ShotAgain], [12, ShotLiner], [13, ShotCapone], [14, ShotBox], [15, ShotMoney], [16, ShotAlcatraz], [17, ShotCell], [18, ShotTower],
+  [11.6, ShotNews], [15.05, ShotStamp], [17.55, ShotDeputy], [19.6, ShotSalonWide], [23.6, ShotSecret], [25.3, ShotPitch], [28.2, ShotDealers], [30.0, ShotHook],
+  [33.2, ShotCash], [34.9, ShotStation], [37.75, ShotPolice], [43.05, ShotAgain], [45.85, ShotSniff], [47.75, ShotLiner], [49.62, ShotCapone], [51.35, ShotCaponeClose],
+  [52.75, ShotBox], [55.2, ShotMoney], [57.7, ShotAlcatraz], [61.1, ShotCell], [65.2, ShotTower],
 ];
 
 // subtitles: same approved style; lifted where the action is low in frame
 const sub = defaultStyle("funny", { keyWords: KEY, y: 0.86 });
-const subFull = { ...sub, moves: [{ from: 0, to: 5.1, y: 0.42 }, { from: 15.05, to: 17.55, y: 0.42 }, { from: 17.55, to: 30.0, y: 0.5 }, { from: 33.2, to: 34.9, y: 0.4 },
-  { from: 34.9, to: 37.75, y: 0.4 }, { from: 37.75, to: 47.75, y: 0.4 }, { from: 47.75, to: 49.62, y: 0.4 }, { from: 49.62, to: 55.2, y: 0.4 }, { from: 65.2, to: 69.5, y: 0.8 }] };
+const subFull = { ...sub, moves: [{ from: 0, to: 5.1, y: 0.42 }, { from: 15.05, to: 17.55, y: 0.42 }, { from: 19.6, to: 23.6, y: 0.5 }, { from: 25.3, to: 28.2, y: 0.5 }, { from: 33.2, to: 34.9, y: 0.4 },
+  { from: 34.9, to: 37.75, y: 0.4 }, { from: 37.75, to: 45.85, y: 0.4 }, { from: 47.75, to: 49.62, y: 0.4 }, { from: 49.62, to: 51.35, y: 0.4 }, { from: 52.75, to: 55.2, y: 0.4 }, { from: 65.2, to: 69.5, y: 0.8 }] };
 
 export const FullShort: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }) => {
   const f = useCurrentFrame(), T = f / FPS;
@@ -659,7 +783,7 @@ export const FullShort: React.FC<{ withAudio?: boolean }> = ({ withAudio = true 
   else if (k === 2) { setCfg(V3); shot = <ShotTwo t={T - 8.75} />; }
   else {
     setCfg(V3);
-    const S = NEW_SHOTS.find(([i]) => i === k)![1];
+    const S = NEW_SHOTS.find(([a0]) => Math.abs(a0 - CUTS[k]) < 1e-6)![1];
     shot = <S T={T} a={CUTS[k]} b={CUTS[k + 1]} />;
   }
   const cutK = CUTS.slice(1, -1).reduce((m, c) => Math.min(m, Math.abs(T - c) * FPS), 99);
