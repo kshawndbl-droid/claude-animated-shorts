@@ -2,7 +2,7 @@
 // Same production approach as the Paris Short: figure.tsx cast, inked painted plates, breathing figures, push-ins.
 import React from "react";
 import { AbsoluteFill, Easing, useCurrentFrame, delayRender, continueRender, staticFile } from "remotion";
-import { Figure, Look, Pose, INK, ARM_UP, ARM_LO } from "../eiffel/figure";
+import { Figure, Look, Pose, INK, ARM_UP, ARM_LO, TORSO_TW } from "../eiffel/figure";
 import { Plate, camXY, GroundDefs, clamp01 } from "../eiffel/StyleTest";
 import { Word } from "../../src/subtitles/Subtitles";
 import words from "../../stories/mailed-himself/final/words.json";
@@ -59,7 +59,7 @@ export type ShotP = { T: number; a: number; b: number };
 const rad = (d: number) => (d * Math.PI) / 180;
 /** where a figure's hand is on screen for a given arm angle / elbow (same arm maths as figure.tsx); side +1 = front arm */
 export const handAt = (x: number, y: number, s: number, a: number, el: number, side = 1, flip = false, stout = 0, bob = 1.2) => {
-  const tw = 46 + stout * 16, sx = side * (tw - 8), sy = -150 + bob + 14;
+  const tw = TORSO_TW(stout), sx = side * (tw - 8), sy = -150 + bob + 14;
   const a1 = rad(a), ex = sx + Math.sin(a1) * ARM_UP(), ey = sy + Math.cos(a1) * ARM_UP();
   const a2 = a1 + rad(el), hx = ex + Math.sin(a2) * ARM_LO(), hy = ey + Math.cos(a2) * ARM_LO();
   return { x: x + (flip ? -hx : hx) * s, y: y + hy * s };

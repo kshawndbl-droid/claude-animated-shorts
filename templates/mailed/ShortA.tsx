@@ -509,6 +509,7 @@ const subS = { ...sub, moves: [{ from: 0, to: 4.15, y: 0.6 }, { from: 4.15, to: 
 export const ShortA: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }) => {
   setCfg(V3);
   FIGCFG.v2 = false;
+  FIGCFG.v3 = false;
   useMarkerFont();
   const f = useCurrentFrame(), T = f / FPS;
   let k = SHOTS.findIndex(([s0], i) => T >= s0 && T < (SHOTS[i + 1]?.[0] ?? 1e9));

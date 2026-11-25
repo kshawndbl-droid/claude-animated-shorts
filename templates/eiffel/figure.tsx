@@ -44,8 +44,10 @@ export const POISSON: Look = {
 
 /** v2 body (opt-in per film): longer, tapered illustrated arms with sleeves, cuffs and mitten hands with a thumb,
  *  tapered legs, eased gestures with a little overshoot. The heads are untouched. */
-export const FIGCFG = { v2: false };
-export const ARM_UP = () => (FIGCFG.v2 ? 39 : 34), ARM_LO = () => (FIGCFG.v2 ? 35 : 30);
+export const FIGCFG = { v2: false, v3: false };
+/** v3 ("new style"): same heads, a rounded bean-shaped body and thin rubber-hose line arms and legs */
+export const ARM_UP = () => (FIGCFG.v3 ? 44 : FIGCFG.v2 ? 39 : 34), ARM_LO = () => (FIGCFG.v3 ? 40 : FIGCFG.v2 ? 35 : 30);
+export const TORSO_TW = (stout = 0) => (FIGCFG.v3 ? 36 + stout * 14 : 46 + stout * 16);
 const backOut = (k: number) => { const c = 1.5; const u = k - 1; return 1 + (c + 1) * u * u * u + c * u * u; };
 
 export type Gesture = "none" | "present" | "shrug" | "point" | "rub" | "wave" | "hips" | "offer" | "shake" | "tip" | "chin" | "cross" | "facepalm" | "write";
@@ -141,13 +143,13 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
   // body bob: lowest at the double-support moments
   const bob = walk * 5 * Math.abs(Math.cos(2 * Math.PI * (pose.phase ?? 0) * 2)) + (pose.bob ?? 0);
   const hipY = -LEG - 2 + bob * 0.4, torsoTop = -150 + bob, torsoBot = hipY + 8;
-  const tw = 46 + stout * 16, bw = 52 + stout * 24; // half widths top / bottom
+  const tw = TORSO_TW(stout), bw = FIGCFG.v3 ? 44 + stout * 22 : 52 + stout * 24; // half widths top / bottom
   const gq = pose.gesture ?? "none", gLean = FIGCFG.v2 ? (["point", "present", "offer", "wave", "shake"].includes(gq) ? 3 : gq === "facepalm" ? -2 : 0) * Math.max(0, Math.min(1, pose.gk ?? 1)) : 0;
   const lean = (pose.lean ?? 0) + gLean, tilt = (pose.headTilt ?? 0) + lean * 0.5;
   const headC = { x: fc * 4, y: -246 + bob };
   const fx = headC.x + fc * 26, fy = headC.y + 8;
   const skin = L.skin ?? SKIN;
-  const v2 = FIGCFG.v2, UP = ARM_UP(), LO = ARM_LO();
+  const v2 = FIGCFG.v2 || FIGCFG.v3, v3 = FIGCFG.v3, UP = ARM_UP(), LO = ARM_LO();
   const gK0 = Math.max(0, Math.min(1, pose.gk ?? 1)), gK = v2 && gK0 < 1 ? backOut(gK0) : gK0;
   // ---- arms: shoulder angles (deg, 0 = hanging, + = forward/up toward the facing side) ----
   const swing = walk * 30 * Math.sin(2 * Math.PI * (pose.phase ?? 0));
@@ -174,6 +176,24 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
     const a2 = a1 + rad(el), hx = ex + Math.sin(a2) * lo, hy = ey + Math.cos(a2) * lo;
     const sleeve = front ? L.suit : L.suitDark, top = L.top ?? "suit";
     const mx = sx + (ex - sx) * 0.75, my = sy + (ey - sy) * 0.75;
+    if (v3) {
+      // a thin rubber-hose arm: one smooth curve through the elbow, a round hand
+      const cx2 = 2 * ex - (sx + hx) / 2, cy2 = 2 * ey - (sy + hy) / 2;
+      const dl = Math.hypot(hx - ex, hy - ey) || 1, ux = (hx - ex) / dl, uy = (hy - ey) / dl;
+      armDeg = (Math.atan2(uy, ux) * 180) / Math.PI;
+      const pnt = front && pose.gesture === "point" && gK0 > 0.5;
+      const hcx = hx + ux * 7, hcy = hy + uy * 7;
+      return (
+        <g key={`arm${side}`}>
+          <path d={`M${pt(sx, sy)} Q${pt(cx2, cy2)} ${pt(hx, hy)}`} fill="none" stroke={INK} strokeWidth={9.5} strokeLinecap="round" />
+          {front && pose.hold ? hold(pose.hold, hx + ux * 11, hy + uy * 11) : <g>
+            {pnt && <path d={`M${pt(hcx, hcy)} L${pt(hcx + ux * 20, hcy + uy * 20)}`} stroke={INK} strokeWidth={6} strokeLinecap="round" />}
+            <circle cx={hcx} cy={hcy} r={10} fill={front ? skin : SKIN_SH} stroke={INK} strokeWidth={4.5} />
+            <circle cx={hcx - uy * 6} cy={hcy + ux * 6} r={4.2} fill={front ? skin : SKIN_SH} stroke={INK} strokeWidth={3} />
+          </g>}
+        </g>
+      );
+    }
     if (v2) return arm2(side, sx, sy, ex, ey, hx, hy, front, a2);
     return (
       <g key={`arm${side}`}>
@@ -251,7 +271,7 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
       </g>
     );
   };
-  const handC = (x: number, y: number, rot: number) => FIGCFG.v2
+  const handC = (x: number, y: number, rot: number) => FIGCFG.v3 ? <circle cx={x} cy={y} r={10} fill={skin} stroke={INK} strokeWidth={4.5} /> : FIGCFG.v2
     ? mitt(x, y, armDeg - rot, true, false, true)
     : <circle cx={x} cy={y} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />;
   const hold = (k: string, hx: number, hy: number) => {
@@ -315,7 +335,9 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
     const col = front ? (L.trousers ?? L.suit) : L.suitDark;
     return (
       <g key={`leg${i}`}>
-        {v2 ? <g>{seg(hx, hipY - 8, fxp, fyp - 9, 14 + stout * 2, 10.5, INK, true, "li")}{seg(hx, hipY - 8, fxp, fyp - 9, 14 + stout * 2, 10.5, col, false, "lf")}
+        {v3 ? <g>
+          <path d={`M${pt(hx * 0.7, hipY - 4)} Q${pt((hx * 0.7 + fxp) / 2 + 7 * (lift[i] > 1 ? 1 : 0.3), (hipY + fyp) / 2)} ${pt(fxp, fyp - 9)}`} fill="none" stroke={INK} strokeWidth={10} strokeLinecap="round" />
+        </g> : v2 ? <g>{seg(hx, hipY - 8, fxp, fyp - 9, 14 + stout * 2, 10.5, INK, true, "li")}{seg(hx, hipY - 8, fxp, fyp - 9, 14 + stout * 2, 10.5, col, false, "lf")}
           <path d={`M${pt(fxp - 10, fyp - 15)} L${pt(fxp + 10, fyp - 15)}`} stroke="rgba(0,0,0,0.22)" strokeWidth={3} strokeLinecap="round" /></g> : <g>
         <path d={`M${pt(hx, hipY - 6)} L${pt(fxp, fyp - 8)}`} stroke={INK} strokeWidth={30} strokeLinecap="round" />
         <path d={`M${pt(hx, hipY - 6)} L${pt(fxp, fyp - 8)}`} stroke={col} strokeWidth={22} strokeLinecap="round" /></g>}
@@ -326,7 +348,9 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
     );
   };
   // ---- torso ----
-  const torso = `M${pt(-tw, torsoTop + 12)} Q${pt(-tw - 2, torsoTop)} ${pt(-tw + 16, torsoTop - 2)} L${pt(tw - 16, torsoTop - 2)} Q${pt(tw + 2, torsoTop)} ${pt(tw, torsoTop + 12)} L${pt(bw, torsoBot - 10)} Q${pt(bw + 2, torsoBot + 2)} ${pt(bw - 14, torsoBot + 4)} L${pt(-bw + 14, torsoBot + 4)} Q${pt(-bw - 2, torsoBot + 2)} ${pt(-bw, torsoBot - 10)} Z`;
+  const torso = v3
+    ? `M${pt(-tw + 4, torsoTop + 22)} C${pt(-tw + 2, torsoTop - 6)} ${pt(tw - 2, torsoTop - 6)} ${pt(tw - 4, torsoTop + 22)} C${pt(tw + 2, torsoTop + 46)} ${pt(bw + 4, torsoBot - 26)} ${pt(bw, torsoBot - 8)} Q${pt(bw - 2, torsoBot + 6)} ${pt(0, torsoBot + 6)} Q${pt(-bw + 2, torsoBot + 6)} ${pt(-bw, torsoBot - 8)} C${pt(-bw - 4, torsoBot - 26)} ${pt(-tw - 2, torsoTop + 46)} ${pt(-tw + 4, torsoTop + 22)} Z`
+    : `M${pt(-tw, torsoTop + 12)} Q${pt(-tw - 2, torsoTop)} ${pt(-tw + 16, torsoTop - 2)} L${pt(tw - 16, torsoTop - 2)} Q${pt(tw + 2, torsoTop)} ${pt(tw, torsoTop + 12)} L${pt(bw, torsoBot - 10)} Q${pt(bw + 2, torsoBot + 2)} ${pt(bw - 14, torsoBot + 4)} L${pt(-bw + 14, torsoBot + 4)} Q${pt(-bw - 2, torsoBot + 2)} ${pt(-bw, torsoBot - 10)} Z`;
   const cx = fc * 6;
   const vTop = torsoTop + 8, vBot = torsoTop + 62;
   const clip = `t${id}`;
