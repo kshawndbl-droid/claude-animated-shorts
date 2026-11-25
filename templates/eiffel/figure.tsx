@@ -26,8 +26,10 @@ export const EXPR: Record<string, Expr> = {
 
 export type Look = {
   skin?: string; suit: string; suitDark: string; pin?: string; check?: string; vest: string; shirt: string; tie: string;
-  shoes: string; trousers?: string; hat: "bowler" | "homburg" | "none"; hatCol: string; band: string; hair: string;
+  shoes: string; trousers?: string; hat: "bowler" | "homburg" | "cap" | "none"; hatCol: string; band: string; hair: string;
   mustache?: "pencil" | "walrus"; glasses?: boolean; flower?: string; chain?: boolean; stout?: number; brows: string; sideburns?: boolean;
+  /** modern wardrobe (all optional, the 1925 cast is unchanged): top style, hair without a hat, cap, stubble, lashes, a t-shirt print */
+  top?: "suit" | "tee" | "hoodie" | "sweater"; hairStyle?: "short" | "messy" | "ponytail" | "bob" | "curly"; stubble?: string; lashes?: boolean; print?: string;
 };
 export const LUSTIG: Look = {
   suit: "#3b3f52", suitDark: "#2a2d3c", pin: "rgba(220,225,240,0.16)", vest: "#4a3a4e", shirt: "#f7f3ea", tie: "#8e2a3a",
@@ -40,12 +42,12 @@ export const POISSON: Look = {
   mustache: "walrus", glasses: true, stout: 1, brows: "#6e6862", sideburns: true,
 };
 
-export type Gesture = "none" | "present" | "shrug" | "point" | "rub" | "wave" | "hips" | "offer" | "shake" | "tip" | "chin";
+export type Gesture = "none" | "present" | "shrug" | "point" | "rub" | "wave" | "hips" | "offer" | "shake" | "tip" | "chin" | "cross" | "facepalm" | "write";
 export type Pose = {
   expr?: string; ex?: Partial<Expr>; mouth?: MouthK | null; blink?: number; lookX?: number; lookY?: number; facing?: number;
   /** walk: phase 0..1 per full cycle (two steps), amt 0 standing .. 1 walking */
   phase?: number; walk?: number; bob?: number; lean?: number; headTilt?: number;
-  gesture?: Gesture; gk?: number; gesture2?: Gesture; wink?: boolean; hatLift?: number; hold?: "letter" | "case" | "cash" | "cane" | null; talk?: number;
+  gesture?: Gesture; gk?: number; gesture2?: Gesture; wink?: boolean; hatLift?: number; hold?: "letter" | "case" | "cash" | "cane" | "box" | "marker" | "flashlight" | "phone" | null; talk?: number;
 };
 
 const P = (n: number) => n.toFixed(2);
@@ -151,6 +153,7 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
     none: [aB, eB, aF, eF], present: [aB, eB, 95, 25], shrug: [-70, -80, 70, 80], point: [aB, eB, 120, -10], rub: [22, 92, -22, -92],
     wave: [aB, eB, 125, -25 + 22 * Math.sin((pose.talk ?? 0) * 12)], hips: [-38, 112, 38, -112], offer: [aB, eB, 70, 20], shake: [aB, eB, 80, 4],
     tip: [aB, eB, 160, 110], chin: [aB - 4, eB + 6, 40, 135],
+    cross: [30, 80, -30, -80], facepalm: [aB, eB, 135, 40], write: [aB, eB, 55, 55],
   };
   const g = G[pose.gesture ?? "none"];
   aB = lerp(aB, g[0], gK); eB = lerp(eB, g[1], gK); aF = lerp(aF, g[2], gK); eF = lerp(eF, g[3], gK);
@@ -160,12 +163,20 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
     // side = -1 back (screen left), +1 front (screen right). Positive angle swings the hand toward screen right/up.
     const a1 = rad(a), ex = sx + Math.sin(a1) * up * (side < 0 ? 1 : 1), ey = sy + Math.cos(a1) * up;
     const a2 = a1 + rad(el), hx = ex + Math.sin(a2) * lo, hy = ey + Math.cos(a2) * lo;
-    const sleeve = front ? L.suit : L.suitDark;
+    const sleeve = front ? L.suit : L.suitDark, top = L.top ?? "suit";
+    const mx = sx + (ex - sx) * 0.75, my = sy + (ey - sy) * 0.75;
     return (
       <g key={`arm${side}`}>
         <path d={`M${pt(sx, sy)} L${pt(ex, ey)} L${pt(hx, hy)}`} fill="none" stroke={INK} strokeWidth={27} strokeLinecap="round" strokeLinejoin="round" />
-        <path d={`M${pt(sx, sy)} L${pt(ex, ey)} L${pt(hx, hy)}`} fill="none" stroke={sleeve} strokeWidth={19} strokeLinecap="round" strokeLinejoin="round" />
-        <path d={`M${pt(hx - Math.cos(a2) * 10, hy + Math.sin(a2) * 10)} L${pt(hx + Math.cos(a2) * 10, hy - Math.sin(a2) * 10)}`} stroke="#f7f3ea" strokeWidth={6} strokeLinecap="round" />
+        {top === "tee" ? (
+          <g>
+            <path d={`M${pt(sx, sy)} L${pt(ex, ey)} L${pt(hx, hy)}`} fill="none" stroke={front ? skin : SKIN_SH} strokeWidth={17} strokeLinecap="round" strokeLinejoin="round" />
+            <path d={`M${pt(sx, sy)} L${pt(mx, my)}`} fill="none" stroke={INK} strokeWidth={30} strokeLinecap="round" />
+            <path d={`M${pt(sx, sy)} L${pt(mx, my)}`} fill="none" stroke={sleeve} strokeWidth={23} strokeLinecap="round" />
+          </g>
+        ) : <path d={`M${pt(sx, sy)} L${pt(ex, ey)} L${pt(hx, hy)}`} fill="none" stroke={sleeve} strokeWidth={19} strokeLinecap="round" strokeLinejoin="round" />}
+        {top === "suit" && <path d={`M${pt(hx - Math.cos(a2) * 10, hy + Math.sin(a2) * 10)} L${pt(hx + Math.cos(a2) * 10, hy - Math.sin(a2) * 10)}`} stroke="#f7f3ea" strokeWidth={6} strokeLinecap="round" />}
+        {(top === "hoodie" || top === "sweater") && <path d={`M${pt(hx - Math.cos(a2) * 11, hy + Math.sin(a2) * 11)} L${pt(hx + Math.cos(a2) * 11, hy - Math.sin(a2) * 11)}`} stroke={L.suitDark} strokeWidth={8} strokeLinecap="round" />}
         <circle cx={hx + Math.sin(a2) * 11} cy={hy + Math.cos(a2) * 11} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
         {front && pose.hold && hold(pose.hold, hx + Math.sin(a2) * 11, hy + Math.cos(a2) * 11)}
       </g>
@@ -191,6 +202,35 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
     if (k === "cash") return (
       <g transform={`translate(${P(hx)},${P(hy)}) rotate(-20)`}>
         {[-14, 0, 14].map((r, i) => <rect key={i} x={-6} y={-40} width={30} height={46} rx={2} transform={`rotate(${r})`} fill="#9cc49a" stroke={INK} strokeWidth={3} />)}
+        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+      </g>
+    );
+    if (k === "box") return (
+      <g transform={`translate(${P(hx)},${P(hy)}) rotate(-6)`}>
+        <rect x={-46} y={-34} width={92} height={70} rx={4} fill="#c99a62" stroke={INK} strokeWidth={4} />
+        <path d="M-46,-14 H46 M-8,-34 V-14 M8,-34 V-14" stroke="#9a6e3e" strokeWidth={4} />
+        <rect x={-8} y={-34} width={16} height={70} fill="rgba(240,220,180,0.55)" />
+        <circle cx={-40} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+      </g>
+    );
+    if (k === "marker") return (
+      <g transform={`translate(${P(hx)},${P(hy)}) rotate(30)`}>
+        <rect x={-6} y={-40} width={12} height={36} rx={3} fill="#d8303a" stroke={INK} strokeWidth={3} />
+        <rect x={-6} y={-48} width={12} height={10} rx={2} fill="#f2f2f2" stroke={INK} strokeWidth={3} />
+        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+      </g>
+    );
+    if (k === "flashlight") return (
+      <g transform={`translate(${P(hx)},${P(hy)}) rotate(-80)`}>
+        <rect x={-7} y={-46} width={14} height={44} rx={4} fill="#3a3a48" stroke={INK} strokeWidth={3.5} />
+        <rect x={-10} y={-56} width={20} height={12} rx={3} fill="#c8c8d0" stroke={INK} strokeWidth={3.5} />
+        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+      </g>
+    );
+    if (k === "phone") return (
+      <g transform={`translate(${P(hx)},${P(hy)}) rotate(-8)`}>
+        <rect x={-12} y={-46} width={26} height={44} rx={5} fill="#22222c" stroke={INK} strokeWidth={3.5} />
+        <rect x={-8} y={-41} width={18} height={33} rx={2} fill="#7fd0ff" />
         <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
       </g>
     );
@@ -245,14 +285,57 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
         </g>
       );
     }
+    if (L.hat === "cap") {
+      const by = hy - 48, top = hy - 112;
+      return (
+        <g>
+          <path d={`M${pt(hx - 92, by)} Q${pt(hx - 96, top)} ${pt(hx, top - 4)} Q${pt(hx + 96, top)} ${pt(hx + 92, by)} Z`} fill={L.hatCol} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+          <path d={`M${pt(hx, top - 4)} L${pt(hx + 6, by)}`} stroke="rgba(0,0,0,0.18)" strokeWidth={4} />
+          <circle cx={hx} cy={top - 4} r={7} fill={L.band} stroke={INK} strokeWidth={3} />
+          <path d={`M${pt(hx + 20 + fc * 20, by - 6)} Q${pt(hx + 100 + fc * 30, by - 10)} ${pt(hx + 124 + fc * 22, by + 8)} Q${pt(hx + 80, by + 16)} ${pt(hx + 10, by + 6)} Z`} fill={L.band} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+          <path d={`M${pt(hx - 60, top + 26)} Q${pt(hx - 30, top + 10)} ${pt(hx, top + 10)}`} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={6} strokeLinecap="round" />
+        </g>
+      );
+    }
     return null;
   };
+  // ---- hair without a hat (modern cast): a back layer behind the head and a front cap with a fringe ----
+  const hs = L.hairStyle, hcx = headC.x, hcy = headC.y;
+  const swingP = Math.sin(2 * Math.PI * (pose.phase ?? 0) * 2) * walk * 6 + (pose.bob ?? 0) * 0.6;
+  const hairBack = !hs ? null : hs === "bob" ? (
+    <path d={`M${pt(hcx - 104, hcy - 20)} Q${pt(hcx - 118, hcy + 70)} ${pt(hcx - 84, hcy + 92)} L${pt(hcx + 84, hcy + 92)} Q${pt(hcx + 118, hcy + 70)} ${pt(hcx + 104, hcy - 20)} Z`} fill={L.hair} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+  ) : hs === "ponytail" ? (
+    <g transform={`rotate(${P(swingP)} ${P(hcx - 88)} ${P(hcy - 52)})`}>
+      <path d={`M${pt(hcx - 80, hcy - 66)} Q${pt(hcx - 150, hcy - 70)} ${pt(hcx - 150, hcy + 10)} Q${pt(hcx - 148, hcy + 70)} ${pt(hcx - 120, hcy + 96)} Q${pt(hcx - 122, hcy + 30)} ${pt(hcx - 92, hcy - 20)} Z`} fill={L.hair} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+      <ellipse cx={hcx - 92} cy={hcy - 60} rx={13} ry={10} fill={L.band} stroke={INK} strokeWidth={3.5} />
+    </g>
+  ) : hs === "curly" ? (
+    <g>{[-1, 1].map((sd) => [0, 1, 2].map((i) => <circle key={`${sd}${i}`} cx={hcx + sd * (96 + i * 2)} cy={hcy - 40 + i * 38} r={26} fill={L.hair} stroke={INK} strokeWidth={5} />))}</g>
+  ) : null;
+  const hairFront = !hs || L.hat === "cap" ? (hs && L.hat === "cap" ? (
+    <g>{[-1, 1].map((sd) => <path key={sd} d={`M${pt(hcx + sd * 80, hcy - 60)} Q${pt(hcx + sd * 100, hcy - 30)} ${pt(hcx + sd * 94, hcy + 4)} Q${pt(hcx + sd * 82, hcy - 26)} ${pt(hcx + sd * 62, hcy - 52)} Z`} fill={L.hair} stroke={INK} strokeWidth={3.5} strokeLinejoin="round" />)}</g>
+  ) : null) : (
+    <g>
+      <path d={hs === "messy"
+        ? `M${pt(hcx - 99, hcy - 6)} A100,100 0 0 1 ${pt(hcx + 99, hcy - 6)} L${pt(hcx + 84, hcy - 30)} L${pt(hcx + 70, hcy - 52)} L${pt(hcx + 52, hcy - 40)} L${pt(hcx + 34, hcy - 62)} L${pt(hcx + 12, hcy - 46)} L${pt(hcx - 10, hcy - 66)} L${pt(hcx - 30, hcy - 46)} L${pt(hcx - 52, hcy - 64)} L${pt(hcx - 70, hcy - 40)} L${pt(hcx - 88, hcy - 38)} Z`
+        : hs === "curly"
+        ? `M${pt(hcx - 99, hcy - 10)} A100,100 0 0 1 ${pt(hcx + 99, hcy - 10)} Q${pt(hcx + 80, hcy - 44)} ${pt(hcx + 50, hcy - 46)} Q${pt(hcx + 30, hcy - 70)} ${pt(hcx, hcy - 52)} Q${pt(hcx - 30, hcy - 70)} ${pt(hcx - 50, hcy - 46)} Q${pt(hcx - 80, hcy - 44)} ${pt(hcx - 99, hcy - 10)} Z`
+        : `M${pt(hcx - 99, hcy - 8)} A100,100 0 0 1 ${pt(hcx + 99, hcy - 8)} Q${pt(hcx + 90, hcy - 40)} ${pt(hcx + 60, hcy - 54)} Q${pt(hcx + 10, hcy - 46)} ${pt(hcx - 28, hcy - 70)} Q${pt(hcx - 70, hcy - 50)} ${pt(hcx - 99, hcy - 8)} Z`}
+        fill={L.hair} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+      <path d={`M${pt(hcx - 46, hcy - 82)} Q${pt(hcx - 10, hcy - 96)} ${pt(hcx + 30, hcy - 88)}`} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={6} strokeLinecap="round" />
+    </g>
+  );
   const eyeX = 34, eyeY = fy - 18;
   const lx = pose.lookX ?? 0, ly = pose.lookY ?? 0, bl = pose.blink ?? 0;
   const browY = eyeY - 30 + e.brow;
   const mouthK: MouthK = pose.mouth ?? e.mouth;
   const face = (
     <g style={{ ["--skin" as string]: skin } as React.CSSProperties}>
+      {L.stubble && <path d={`M${pt(hcx - 80, hcy + 34)} Q${pt(hcx - 58, hcy + 97)} ${pt(hcx, hcy + 99)} Q${pt(hcx + 58, hcy + 97)} ${pt(hcx + 80, hcy + 34)} Q${pt(hcx + 52, hcy + 80)} ${pt(hcx, hcy + 82)} Q${pt(hcx - 52, hcy + 80)} ${pt(hcx - 80, hcy + 34)} Z`} fill={L.stubble} opacity={0.38} />}
+      {L.lashes && bl < 0.6 && !["happy", "squint", "closed"].includes(e.eyes) && [-1, 1].map((sd) => {
+        const ex2 = fx + sd * eyeX * (1 - Math.abs(fc) * 0.15);
+        return <path key={`la${sd}`} d={`M${pt(ex2 + sd * 6, eyeY - 8)} l${sd * 9},-6 M${pt(ex2 + sd * 2, eyeY - 10)} l${sd * 6},-8`} stroke={INK} strokeWidth={3.5} strokeLinecap="round" />;
+      })}
       {(e.blush ?? 0) > 0 && [-1, 1].map((sd) => <ellipse key={sd} cx={fx + sd * 50} cy={eyeY + 26} rx={17} ry={9} fill={BLUSH} opacity={e.blush} />)}
       {[-1, 1].map((sd) => (
         <Eye key={sd} k={pose.wink && sd > 0 ? "happy" : e.eyes} x={fx + sd * eyeX * (1 - Math.abs(fc) * 0.15)} y={eyeY} side={sd} lx={lx} ly={ly} blink={bl} />
@@ -290,9 +373,11 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
           <path d={`M${pt(headC.x + sd * (R - 2) - fc * 10, headC.y)} q${-sd * 6},8 0,16`} fill="none" stroke={SKIN_SH} strokeWidth={4} strokeLinecap="round" />
         </g>
       ))}
+      {hairBack}
       <circle cx={headC.x} cy={headC.y} r={R} fill={`url(#skin${id})`} stroke={INK} strokeWidth={6.5} />
+      {hairFront}
       {/* hair at the sides under the hat */}
-      {L.hat !== "none" && [-1, 1].map((sd) => (
+      {(L.hat === "bowler" || L.hat === "homburg") && [-1, 1].map((sd) => (
         <path key={`h${sd}`} d={`M${pt(headC.x + sd * 74, headC.y - 66)} Q${pt(headC.x + sd * 98, headC.y - 30)} ${pt(headC.x + sd * 92, headC.y + (L.sideburns ? 22 : -2))} Q${pt(headC.x + sd * 80, headC.y - 24)} ${pt(headC.x + sd * 60, headC.y - 56)} Z`}
           fill={L.hair} stroke={INK} strokeWidth={3.5} strokeLinejoin="round" />
       ))}
@@ -338,10 +423,27 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
         {!across && arm(-1, aB, eB, false)}
         {legEl(0, false)}
         {legEl(1, true)}
+        {L.top === "hoodie" && <path d={`M${pt(-tw - 4, torsoTop + 16)} Q${pt(-tw, torsoTop - 34)} ${pt(0, torsoTop - 30)} Q${pt(tw, torsoTop - 34)} ${pt(tw + 4, torsoTop + 16)} Z`} fill={L.suitDark} stroke={INK} strokeWidth={6} strokeLinejoin="round" />}
         <path d={torso} fill={`url(#suit${id})`} />
         <g clipPath={`url(#${clip})`}>
           <rect x={-bw - 10} y={torsoTop - 10} width={2 * bw + 20} height={200} fill={`url(#pin${id})`} />
           <rect x={-bw - 10} y={torsoTop - 10} width={2 * bw + 20} height={200} fill={`url(#chk${id})`} />
+          {(L.top ?? "suit") !== "suit" && (
+            <g>
+              {L.top === "tee" && <path d={`M${pt(cx - 22, torsoTop - 4)} Q${pt(cx, torsoTop + 22)} ${pt(cx + 22, torsoTop - 4)} Z`} fill={skin} stroke={INK} strokeWidth={3.5} />}
+              {L.top === "sweater" && <path d={`M${pt(cx - 26, torsoTop - 4)} Q${pt(cx, torsoTop + 18)} ${pt(cx + 26, torsoTop - 4)}`} fill="none" stroke={L.suitDark} strokeWidth={9} />}
+              {L.top === "hoodie" && (
+                <g>
+                  <path d={`M${pt(cx - 16, torsoTop - 2)} L${pt(cx, torsoTop + 22)} L${pt(cx + 16, torsoTop - 2)} Z`} fill={L.shirt} stroke={INK} strokeWidth={3} />
+                  {[-1, 1].map((sd) => <path key={sd} d={`M${pt(cx + sd * 10, torsoTop + 10)} L${pt(cx + sd * 13, torsoTop + 46)}`} stroke="#f4efe6" strokeWidth={3.5} strokeLinecap="round" />)}
+                  <path d={`M${pt(cx - 34, torsoBot - 36)} L${pt(cx + 34, torsoBot - 36)} L${pt(cx + 44, torsoBot - 6)} L${pt(cx - 44, torsoBot - 6)} Z`} fill={L.suitDark} stroke={INK} strokeWidth={3} strokeLinejoin="round" />
+                </g>
+              )}
+              {L.print && <g transform={`translate(${P(cx)},${P(torsoTop + 52)})`}><circle r={15} fill={L.print} stroke={INK} strokeWidth={3} /><path d="M-7,-2 L0,6 L8,-6" fill="none" stroke="#fff" strokeWidth={3.5} strokeLinecap="round" /></g>}
+              <path d={`M${pt(-bw, torsoBot - 6)} L${pt(bw, torsoBot - 6)}`} stroke="rgba(0,0,0,0.2)" strokeWidth={6} />
+            </g>
+          )}
+          {(L.top ?? "suit") === "suit" && <g>
           {/* waistcoat V, shirt V, tie */}
           <path d={`M${pt(cx - 30, vTop)} L${pt(cx, vBot + 12)} L${pt(cx + 30, vTop)} Z`} fill={L.vest} stroke={INK} strokeWidth={3} />
           <path d={`M${pt(cx - 18, vTop)} L${pt(cx, vBot - 6)} L${pt(cx + 18, vTop)} Z`} fill={L.shirt} stroke={INK} strokeWidth={3} />
@@ -354,6 +456,7 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
           {L.chain && <path d={`M${pt(cx + 8, vBot + 6)} Q${pt(cx + 26, vBot + 22)} ${pt(cx + 38, vBot + 4)}`} fill="none" stroke="#e6c25a" strokeWidth={2.8} />}
           {/* pocket square */}
           <path d={`M${pt(cx - 40, vTop + 30)} l10,-8 l6,8 l6,-6 l2,8 Z`} fill="#f4efe0" stroke={INK} strokeWidth={2} />
+          </g>}
           <path d={`M${pt(-bw, torsoBot - 12)} L${pt(bw, torsoBot - 12)}`} stroke="rgba(0,0,0,0.18)" strokeWidth={3} />
         </g>
         <path d={torso} fill="none" stroke={INK} strokeWidth={6} strokeLinejoin="round" />
