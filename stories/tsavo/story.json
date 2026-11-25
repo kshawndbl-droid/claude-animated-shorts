@@ -1,0 +1,103 @@
+{
+ "engine": "kokoro",
+ "voice": "bm_fable",
+ "speed": 1.2,
+ "lines": [
+  {
+   "text": "In 1898, in Kenya, the men building a railway bridge began to vanish... at night.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "The bridge over the Tsavo River was led by British engineer John Henry Patterson.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Then the attacks began. Two huge lions, both without manes, crept into camp after dark.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "They dragged men from their tents and disappeared into the bush.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "The workers built thorn fences and kept fires burning all night.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "The lions leaped over the fences... or crawled right through them.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Patterson set traps. He waited in trees, night after night, rifle ready. Nothing.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Terrified, hundreds of workers fled. Work on the bridge stopped.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Even Britain's Prime Minister spoke about the lions in Parliament.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Then, on December 9th, 1898, Patterson waited on a platform in the dark... and fired.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "The next morning, the first lion lay dead. It took eight men to carry it.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "On December 29th, he tracked down the second lion. He fired nine shots before it fell.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Patterson claimed the lions had killed 135 people.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "But in 2009, scientists tested the lions' bones and fur. They had likely eaten about 35 people, though they may have killed more.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "For 25 years, their skins lay on Patterson's floor as rugs.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Today, the man-eaters of Tsavo are on display at the Field Museum in Chicago, where you can still look them in the eye.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  }
+ ]
+}

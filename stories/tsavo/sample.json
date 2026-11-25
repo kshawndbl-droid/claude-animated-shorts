@@ -1,0 +1,37 @@
+{
+ "engine": "kokoro",
+ "voice": "bm_fable",
+ "speed": 1.2,
+ "lines": [
+  {
+   "text": "In 1898, in Kenya, the men building a railway bridge began to vanish... at night.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Then the attacks began. Two huge lions, both without manes, crept into camp after dark.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "They dragged men from their tents and disappeared into the bush.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "Then, on December 9th, 1898, Patterson waited on a platform in the dark... and fired.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  },
+  {
+   "text": "The next morning, the first lion lay dead. It took eight men to carry it.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.35
+  }
+ ]
+}
