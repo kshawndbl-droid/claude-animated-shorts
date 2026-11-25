@@ -42,6 +42,12 @@ export const POISSON: Look = {
   mustache: "walrus", glasses: true, stout: 1, brows: "#6e6862", sideburns: true,
 };
 
+/** v2 body (opt-in per film): longer, tapered illustrated arms with sleeves, cuffs and mitten hands with a thumb,
+ *  tapered legs, eased gestures with a little overshoot. The heads are untouched. */
+export const FIGCFG = { v2: false };
+export const ARM_UP = () => (FIGCFG.v2 ? 39 : 34), ARM_LO = () => (FIGCFG.v2 ? 35 : 30);
+const backOut = (k: number) => { const c = 1.5; const u = k - 1; return 1 + (c + 1) * u * u * u + c * u * u; };
+
 export type Gesture = "none" | "present" | "shrug" | "point" | "rub" | "wave" | "hips" | "offer" | "shake" | "tip" | "chin" | "cross" | "facepalm" | "write";
 export type Pose = {
   expr?: string; ex?: Partial<Expr>; mouth?: MouthK | null; blink?: number; lookX?: number; lookY?: number; facing?: number;
@@ -136,17 +142,20 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
   const bob = walk * 5 * Math.abs(Math.cos(2 * Math.PI * (pose.phase ?? 0) * 2)) + (pose.bob ?? 0);
   const hipY = -LEG - 2 + bob * 0.4, torsoTop = -150 + bob, torsoBot = hipY + 8;
   const tw = 46 + stout * 16, bw = 52 + stout * 24; // half widths top / bottom
-  const lean = pose.lean ?? 0, tilt = (pose.headTilt ?? 0) + lean * 0.5;
+  const gq = pose.gesture ?? "none", gLean = FIGCFG.v2 ? (["point", "present", "offer", "wave", "shake"].includes(gq) ? 3 : gq === "facepalm" ? -2 : 0) * Math.max(0, Math.min(1, pose.gk ?? 1)) : 0;
+  const lean = (pose.lean ?? 0) + gLean, tilt = (pose.headTilt ?? 0) + lean * 0.5;
   const headC = { x: fc * 4, y: -246 + bob };
   const fx = headC.x + fc * 26, fy = headC.y + 8;
   const skin = L.skin ?? SKIN;
-  const gK = Math.max(0, Math.min(1, pose.gk ?? 1));
+  const v2 = FIGCFG.v2, UP = ARM_UP(), LO = ARM_LO();
+  const gK0 = Math.max(0, Math.min(1, pose.gk ?? 1)), gK = v2 && gK0 < 1 ? backOut(gK0) : gK0;
   // ---- arms: shoulder angles (deg, 0 = hanging, + = forward/up toward the facing side) ----
   const swing = walk * 30 * Math.sin(2 * Math.PI * (pose.phase ?? 0));
   // resting arms hang slightly away from the body, so both arms read clearly beside the torso (the back arm used to
   // hang straight down behind the torso and vanish); a slow independent sway keeps the two arms from moving as one
-  const out = (18 + 14 * stout) * (1 - 0.5 * walk), ph = (pose.talk ?? 0) + (pose.bob ?? 0) * 0.05;
-  let aB = -swing - out + 2.5 * Math.sin(ph * 1.7), aF = swing + 6 + 6 * stout + 2 * Math.sin(ph * 1.3 + 1), eB = 8, eF = 12;
+  const out = (v2 ? 9 + 10 * stout : 18 + 14 * stout) * (1 - 0.5 * walk), ph = (pose.talk ?? 0) + (pose.bob ?? 0) * 0.05;
+  let aB = -swing - out + (v2 ? 3.5 : 2.5) * Math.sin(ph * 1.7), aF = swing + (v2 ? 4 : 6) + 6 * stout + (v2 ? 3 : 2) * Math.sin(ph * 1.3 + 1),
+    eB = v2 ? 14 + walk * 10 * Math.max(0, -Math.sin(2 * Math.PI * (pose.phase ?? 0))) : 8, eF = v2 ? 18 + walk * 14 * Math.max(0, Math.sin(2 * Math.PI * (pose.phase ?? 0))) : 12;
   // gestures: [back angle, back elbow, front angle, front elbow]; + swings toward screen right, so a symmetric gesture
   // mirrors the signs between the two arms
   const G: Record<Gesture, [number, number, number, number]> = {
@@ -159,12 +168,13 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
   aB = lerp(aB, g[0], gK); eB = lerp(eB, g[1], gK); aF = lerp(aF, g[2], gK); eF = lerp(eF, g[3], gK);
   const arm = (side: number, a: number, el: number, front: boolean) => {
     const sx = side * (tw - 8), sy = torsoTop + 14;
-    const up = 34, lo = 30;
+    const up = UP, lo = LO;
     // side = -1 back (screen left), +1 front (screen right). Positive angle swings the hand toward screen right/up.
     const a1 = rad(a), ex = sx + Math.sin(a1) * up * (side < 0 ? 1 : 1), ey = sy + Math.cos(a1) * up;
     const a2 = a1 + rad(el), hx = ex + Math.sin(a2) * lo, hy = ey + Math.cos(a2) * lo;
     const sleeve = front ? L.suit : L.suitDark, top = L.top ?? "suit";
     const mx = sx + (ex - sx) * 0.75, my = sy + (ey - sy) * 0.75;
+    if (v2) return arm2(side, sx, sy, ex, ey, hx, hy, front, a2);
     return (
       <g key={`arm${side}`}>
         <path d={`M${pt(sx, sy)} L${pt(ex, ey)} L${pt(hx, hy)}`} fill="none" stroke={INK} strokeWidth={27} strokeLinecap="round" strokeLinejoin="round" />
@@ -182,13 +192,75 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
       </g>
     );
   };
+  // ---- v2 arm: two tapered segments (ink pass, then fill pass, so the elbow reads as one limb), sleeve, cuff, mitten ----
+  const seg = (ax: number, ay: number, bx: number, by: number, wa: number, wb: number, fill: string, ink: boolean, k: string) => {
+    const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, o = ink ? 4.5 : 0;
+    const A = wa + o, B = wb + o;
+    return (
+      <g key={k}>
+        <path d={`M${pt(ax + nx * A, ay + ny * A)} L${pt(bx + nx * B, by + ny * B)} L${pt(bx - nx * B, by - ny * B)} L${pt(ax - nx * A, ay - ny * A)} Z`} fill={fill} />
+        <circle cx={ax} cy={ay} r={A} fill={fill} /><circle cx={bx} cy={by} r={B} fill={fill} />
+      </g>
+    );
+  };
+  let armDeg = 90;
+  /** a mitten hand: palm, thumb on the forward side, two finger creases; origin at the wrist, pointing along deg */
+  const mitt = (x: number, y: number, deg: number, front: boolean, point = false, centered = false) => {
+    const col = front ? skin : SKIN_SH;
+    return (
+      <g transform={`translate(${P(x)},${P(y)}) rotate(${P(deg - 90)})${centered ? " translate(0,-11)" : ""}`}>
+        {point && <rect x={-4} y={14} width={8.5} height={24} rx={4.2} fill={col} stroke={INK} strokeWidth={4} />}
+        <path d={point ? "M-10.5,0 Q-12.5,13 -7,20 Q0,25 7,20 Q12.5,13 10.5,0 Z" : "M-10.5,-1 Q-13,15 -6.5,23.5 Q0,28 7,23.5 Q13,15 10.5,-1 Z"} fill={col} stroke={INK} strokeWidth={4.5} strokeLinejoin="round" />
+        {!point && <path d="M-3.5,17 L-3,24 M2.5,17 L3,24" stroke="rgba(42,34,48,0.55)" strokeWidth={2.2} strokeLinecap="round" />}
+        <ellipse cx={10.5} cy={8} rx={4.8} ry={8.5} transform="rotate(-28 10.5 8)" fill={col} stroke={INK} strokeWidth={4} />
+        <path d="M-6,3 Q0,6 6,3" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={2.5} strokeLinecap="round" />
+      </g>
+    );
+  };
+  const arm2 = (side: number, sx: number, sy: number, ex: number, ey: number, hx: number, hy: number, front: boolean, a2: number) => {
+    const top = L.top ?? "suit", sleeve = front ? L.suit : L.suitDark, sk = front ? skin : SKIN_SH;
+    const ws = 12.5 + 2 * stout, we = 10.5 + stout, ww = 8.6;
+    const dl = Math.hypot(hx - ex, hy - ey) || 1, ux = (hx - ex) / dl, uy = (hy - ey) / dl;
+    const deg = (Math.atan2(uy, ux) * 180) / Math.PI;
+    armDeg = deg;
+    const tee = top === "tee", mxs = sx + (ex - sx) * 0.58, mys = sy + (ey - sy) * 0.58;
+    const cuffA = { x: hx - ux * 7, y: hy - uy * 7 };
+    const sp = { x: hx + ux * 1, y: hy + uy * 1 };
+    const isPoint = front && (pose.gesture === "point" || pose.gesture === "present" && false) && gK0 > 0.5;
+    // elbow crease on the inside of the bend
+    const v1x = ex - sx, v1y = ey - sy, bend = v1x * uy - v1y * ux;
+    return (
+      <g key={`arm${side}`}>
+        {seg(sx, sy, ex, ey, ws + (tee ? 0 : 1.5), we + (tee ? 0 : 1), INK, true, "i1")}
+        {seg(ex, ey, hx, hy, we + (tee ? 0 : 1), ww + (tee ? 0 : 1.2), INK, true, "i2")}
+        {tee && seg(sx, sy, mxs, mys, ws + 3, ws + 1.5, INK, true, "i3")}
+        {seg(sx, sy, ex, ey, ws + (tee ? 0 : 1.5), we + (tee ? 0 : 1), tee ? sk : sleeve, false, "f1")}
+        {seg(ex, ey, hx, hy, we + (tee ? 0 : 1), ww + (tee ? 0 : 1.2), tee ? sk : sleeve, false, "f2")}
+        {tee && seg(sx, sy, mxs, mys, ws + 3, ws + 1.5, sleeve, false, "f3")}
+        {tee && <path d={`M${pt(mxs - uy * 0, mys)} m0,0`} />}
+        {!tee && Math.abs(bend) > 120 && <path d={`M${pt(ex - (v1x / Math.hypot(v1x, v1y)) * 9, ey - (v1y / Math.hypot(v1x, v1y)) * 9)} Q${pt(ex + Math.sign(bend) * (-v1y / Math.hypot(v1x, v1y)) * 4, ey + Math.sign(bend) * (v1x / Math.hypot(v1x, v1y)) * 4)} ${pt(ex + ux * 9, ey + uy * 9)}`}
+          fill="none" stroke="rgba(30,20,40,0.35)" strokeWidth={2.6} strokeLinecap="round" />}
+        <path d={`M${pt(sx + (ex - sx) * 0.15 - (ey - sy) / UP * 5, sy + (ey - sy) * 0.15 + (ex - sx) / UP * 5)} L${pt(sx + (ex - sx) * 0.8 - (ey - sy) / UP * 5, sy + (ey - sy) * 0.8 + (ex - sx) / UP * 5)}`}
+          stroke="rgba(255,255,255,0.16)" strokeWidth={4} strokeLinecap="round" />
+        {!tee && <g>
+          <path d={`M${pt(cuffA.x - uy * (ww + 3), cuffA.y + ux * (ww + 3))} L${pt(sp.x - uy * (ww + 3), sp.y + ux * (ww + 3))} L${pt(sp.x + uy * (ww + 3), sp.y - ux * (ww + 3))} L${pt(cuffA.x + uy * (ww + 3), cuffA.y - ux * (ww + 3))} Z`}
+            fill={top === "suit" ? "#f4efe4" : L.suitDark} stroke={INK} strokeWidth={3.5} strokeLinejoin="round" />
+          {(top === "sweater" || top === "hoodie") && [-4, 0, 4].map((o) => <path key={o} d={`M${pt(cuffA.x + ux * 4 - uy * o, cuffA.y + uy * 4 + ux * o)} l${P(ux * 4)},${P(uy * 4)}`} stroke="rgba(0,0,0,0.25)" strokeWidth={1.8} />)}
+        </g>}
+        {front && pose.hold ? hold(pose.hold, hx + Math.sin(a2) * 11, hy + Math.cos(a2) * 11) : mitt(sp.x, sp.y, deg, front, isPoint)}
+      </g>
+    );
+  };
+  const handC = (x: number, y: number, rot: number) => FIGCFG.v2
+    ? mitt(x, y, armDeg - rot, true, false, true)
+    : <circle cx={x} cy={y} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />;
   const hold = (k: string, hx: number, hy: number) => {
     if (k === "letter") return (
       <g transform={`translate(${P(hx)},${P(hy)}) rotate(-12)`}>
         <rect x={-8} y={-44} width={40} height={52} rx={3} fill="#f7f1e0" stroke={INK} strokeWidth={3.5} />
         {[0, 1, 2, 3].map((i) => <line key={i} x1={-2} x2={26 - (i % 2) * 8} y1={-32 + i * 9} y2={-32 + i * 9} stroke="#8a7f70" strokeWidth={2} />)}
         <circle cx={22} cy={-4} r={5} fill="#b3262f" stroke={INK} strokeWidth={2} />
-        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+        {handC(0, 0, -12)}
       </g>
     );
     if (k === "case") return (
@@ -196,13 +268,13 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
         <rect x={-30} y={8} width={60} height={44} rx={6} fill="#7a4a2a" stroke={INK} strokeWidth={4} />
         <rect x={-30} y={22} width={60} height={5} fill="#5a341c" />
         <path d="M-10,8 v-8 h20 v8" fill="none" stroke={INK} strokeWidth={4} />
-        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+        {handC(0, 0, 0)}
       </g>
     );
     if (k === "cash") return (
       <g transform={`translate(${P(hx)},${P(hy)}) rotate(-20)`}>
         {[-14, 0, 14].map((r, i) => <rect key={i} x={-6} y={-40} width={30} height={46} rx={2} transform={`rotate(${r})`} fill="#9cc49a" stroke={INK} strokeWidth={3} />)}
-        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+        {handC(0, 0, -20)}
       </g>
     );
     if (k === "box") return (
@@ -210,28 +282,28 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
         <rect x={-46} y={-34} width={92} height={70} rx={4} fill="#c99a62" stroke={INK} strokeWidth={4} />
         <path d="M-46,-14 H46 M-8,-34 V-14 M8,-34 V-14" stroke="#9a6e3e" strokeWidth={4} />
         <rect x={-8} y={-34} width={16} height={70} fill="rgba(240,220,180,0.55)" />
-        <circle cx={-40} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+        {handC(-40, 0, -6)}
       </g>
     );
     if (k === "marker") return (
       <g transform={`translate(${P(hx)},${P(hy)}) rotate(30)`}>
         <rect x={-6} y={-40} width={12} height={36} rx={3} fill="#d8303a" stroke={INK} strokeWidth={3} />
         <rect x={-6} y={-48} width={12} height={10} rx={2} fill="#f2f2f2" stroke={INK} strokeWidth={3} />
-        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+        {handC(0, 0, 30)}
       </g>
     );
     if (k === "flashlight") return (
       <g transform={`translate(${P(hx)},${P(hy)}) rotate(-80)`}>
         <rect x={-7} y={-46} width={14} height={44} rx={4} fill="#3a3a48" stroke={INK} strokeWidth={3.5} />
         <rect x={-10} y={-56} width={20} height={12} rx={3} fill="#c8c8d0" stroke={INK} strokeWidth={3.5} />
-        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+        {handC(0, 0, -80)}
       </g>
     );
     if (k === "phone") return (
       <g transform={`translate(${P(hx)},${P(hy)}) rotate(-8)`}>
         <rect x={-12} y={-46} width={26} height={44} rx={5} fill="#22222c" stroke={INK} strokeWidth={3.5} />
         <rect x={-8} y={-41} width={18} height={33} rx={2} fill="#7fd0ff" />
-        <circle cx={0} cy={0} r={11} fill={skin} stroke={INK} strokeWidth={4.5} />
+        {handC(0, 0, -8)}
       </g>
     );
     return null;
@@ -243,8 +315,10 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
     const col = front ? (L.trousers ?? L.suit) : L.suitDark;
     return (
       <g key={`leg${i}`}>
+        {v2 ? <g>{seg(hx, hipY - 8, fxp, fyp - 9, 14 + stout * 2, 10.5, INK, true, "li")}{seg(hx, hipY - 8, fxp, fyp - 9, 14 + stout * 2, 10.5, col, false, "lf")}
+          <path d={`M${pt(fxp - 10, fyp - 15)} L${pt(fxp + 10, fyp - 15)}`} stroke="rgba(0,0,0,0.22)" strokeWidth={3} strokeLinecap="round" /></g> : <g>
         <path d={`M${pt(hx, hipY - 6)} L${pt(fxp, fyp - 8)}`} stroke={INK} strokeWidth={30} strokeLinecap="round" />
-        <path d={`M${pt(hx, hipY - 6)} L${pt(fxp, fyp - 8)}`} stroke={col} strokeWidth={22} strokeLinecap="round" />
+        <path d={`M${pt(hx, hipY - 6)} L${pt(fxp, fyp - 8)}`} stroke={col} strokeWidth={22} strokeLinecap="round" /></g>}
         <path d={`M${pt(fxp - 14, fyp - 2)} Q${pt(fxp - 14, fyp - 18)} ${pt(fxp + 4, fyp - 16)} Q${pt(fxp + 22, fyp - 14)} ${pt(fxp + 24, fyp - 2)} Z`}
           fill={L.shoes} stroke={INK} strokeWidth={4.5} strokeLinejoin="round" />
         <path d={`M${pt(fxp - 4, fyp - 12)} Q${pt(fxp + 8, fyp - 15)} ${pt(fxp + 16, fyp - 9)}`} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth={3} strokeLinecap="round" />
@@ -391,7 +465,7 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
     </g>
   );
   // does the back hand end up over the chest? then that arm is in front of the body
-  const across = (() => { const a1 = rad(aB), a2 = a1 + rad(eB); return -(tw - 8) + Math.sin(a1) * 34 + Math.sin(a2) * 41 > -(tw - 22); })();
+  const across = (() => { const a1 = rad(aB), a2 = a1 + rad(eB); return -(tw - 8) + Math.sin(a1) * UP + Math.sin(a2) * (LO + 11) > -(tw - 22); })();
   const flipT = flip ? -1 : 1;
   return (
     <g transform={`translate(${P(x)},${P(y)}) scale(${P(flipT * s / 1)},${P(s)})`}>

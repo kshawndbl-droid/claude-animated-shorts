@@ -2,15 +2,25 @@
 // crate and at night (torchlight, slits of light, sounds from outside), with its own sets, cast drawings and spy-jazz score.
 import React from "react";
 import { AbsoluteFill, Audio, interpolate, staticFile, useCurrentFrame, Easing } from "remotion";
-import { Look, Pose } from "../eiffel/figure";
+import { Look, Pose, FIGCFG } from "../eiffel/figure";
 import { V3, setCfg, Haze, blinkAt, walker, Motes, Sparkle, clamp01, ramp } from "../eiffel/StyleTest";
+import { LivePlate, Fx } from "./live";
 import { Subtitles, defaultStyle } from "../../src/subtitles/Subtitles";
 import {
   FPS, END, WORDS, W, KEY, hand, sans, serif, useMarkerFont, Cam, at, PlateC, shadowAt, AF, Svg, push, ShotP, handAt,
-  REG_B, REG_B_SUIT, REG_B_VEST, JOHN_B, HANDLER2, REPORTER, DAUGHTER, WIFE,
+  REG_B, REG_B_SUIT, REG_B_VEST, JOHN_B, HANDLER2, DAUGHTER, WIFE,
   Crate, Bottle, Pillow, Tin, Torch, Hammer, Saw, Bulb, Grawlix, Card, Heat, Sweat, Cake, Newspaper, CrateInside, INK,
 } from "./common";
 
+/** signs of life for each set (plate px); tuned per plate */
+const FX: Record<string, Fx> = {
+  b_bedsit: { dust: 18, flicker: 0.4, rain: [405, 505, 285, 665], sway: 22 },
+  b_workshop: { dust: 26, flicker: 0.5, cone: [471, 470, 1000, 300, "#ffd890"], sway: 22 },
+  b_runway: { fog: 0.55, flicker: 0.95, sway: 20 },
+  b_newsroom: { dust: 18, flicker: 0.35, shafts: [560, 240, -22], sway: 18 },
+  b_home: { dust: 16, flicker: 0.15, dapple: [120, 1000, 960, 900], shafts: [700, 150, 24], sway: 20 },
+  b_apron: { heat: 1330, flicker: 0.3, sway: 14 },
+};
 export const B_FRAMES = Math.round(END * FPS);
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 const REG_B_WORK: Look = { ...REG_B, top: "tee", suit: "#d88a3a", suitDark: "#b87028", trousers: "#3e4a5a", hat: "cap", hatCol: "#3e4a5a", band: "#2a3442" };
@@ -67,7 +77,7 @@ const S_Loading: React.FC<ShotP> = ({ T, a, b }) => {
   const bx = lerp(250, 700, k), by = lerp(1720, 1300, k);
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_runway.png" t={t} dur={dur} c={c} bright={0.85} />
+      <LivePlate name="b_runway" T={T} t={t} dur={dur} c={c} bright={0.85} fx={FX.b_runway} />
       <Haze top="rgba(60,80,160,0.18)" vig={0.5} />
       <Svg>
         <path d="M150,1800 L800,1240 L840,1280 L190,1840 Z" fill="#3a3a48" stroke={INK} strokeWidth={6} />
@@ -86,7 +96,7 @@ const S_Bedsit: React.FC<ShotP> = ({ T, a, b }) => {
   const pose: Pose = { expr: x > 0 ? "worried" : "smile", facing: -0.5, gesture: x > 0 ? "facepalm" : "point", gk: x > 0 ? ramp(T, W("stuck"), 0.3) : 1, blink: blinkAt(T, 32), lookX: -1, lookY: -0.4 };
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_bedsit.png" t={t} dur={dur} c={c} bright={0.9} />
+      <LivePlate name="b_bedsit" T={T} t={t} dur={dur} c={c} bright={0.9} fx={FX.b_bedsit} />
       <Haze top="rgba(120,140,200,0.12)" vig={0.4} />
       <Svg>
         <g transform={`translate(${at(250, 1000, t, dur, c).x},${at(250, 1000, t, dur, c).y}) rotate(-3)`}>
@@ -116,7 +126,7 @@ const S_Jar: React.FC<ShotP> = ({ T, a, b }) => {
   const coin = clamp01((T - W("broke") - 0.05) / 0.5);
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_bedsit.png" t={t} dur={dur} c={{ z0: 1.5, z1: 1.6, cx: 540, cy: 1150 }} blur={3.4} bright={0.85} />
+      <LivePlate name="b_bedsit" T={T} t={t} dur={dur} c={{ z0: 1.5, z1: 1.6, cx: 540, cy: 1150 }} blur={3.4} bright={0.85} fx={FX.b_bedsit} />
       <Haze top="rgba(120,140,200,0.12)" vig={0.4} />
       <Svg>
         <AF id="bj" look={REG_B} x={x} y={y} s={s} pose={pose} shadow={false} />
@@ -150,7 +160,7 @@ const S_Job: React.FC<ShotP> = ({ T, a, b }) => {
   const pose: Pose = { expr: "smile", facing: 0.6, gesture: lifting ? "offer" : "present", gk: 1, hold: lifting ? "box" : null, blink: blinkAt(T, 35), lookX: 1, lean: lifting ? 6 : 0 };
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_runway.png" t={t} dur={dur} c={c} bright={0.8} />
+      <LivePlate name="b_runway" T={T} t={t} dur={dur} c={c} bright={0.8} fx={FX.b_runway} />
       <Haze top="rgba(60,80,160,0.18)" vig={0.45} />
       <Svg>
         <path d="M380,1850 L1000,1300 L1040,1340 L420,1890 Z" fill="#3a3a48" stroke={INK} strokeWidth={6} />
@@ -168,23 +178,27 @@ const S_Job: React.FC<ShotP> = ({ T, a, b }) => {
 };
 // 6. the idea, seen from inside an empty crate: Reg's face peers down into it, and a bulb lights
 const S_Peek: React.FC<ShotP> = ({ T, a, b }) => {
-  const t = T - a, dur = b - a, p = push(t, dur);
+  // the idea: in the night cargo area Reg leans over an empty crate, looks in... and slowly looks up with a grin
+  const t = T - a, dur = b - a, c: Cam = { z0: 1.08, z1: 1.24, cx: 540, cy: 1250 };
   const bad = T > W("bad") - 0.1, bri = T > W("brilliant") - 0.1;
-  const pose: Pose = { expr: bri ? "smug" : bad ? "worried" : "surprised", ex: bad && !bri ? { mouth: "frown" } : {}, facing: 0, blink: blinkAt(T, 36), lookY: 0.8, lookX: 0, gesture: bri ? "rub" : "none", gk: 1 };
+  const up = Easing.inOut(Easing.cubic)(clamp01((T - W("brilliant") + 0.35) / 0.5));
+  const pose: Pose = { expr: bri ? "smug" : bad ? "worried" : "surprised", ex: bad && !bri ? { mouth: "frown" } : {}, facing: bri ? 0.1 : 0.4, blink: blinkAt(T, 36),
+    lookY: lerp(0.9, 0, up), lookX: bri ? 0 : 0.3, gesture: bri ? "rub" : "offer", gk: bri ? ramp(T, W("brilliant") - 0.2, 0.35) : 1, lean: lerp(9, 0, up), headTilt: lerp(-6, 4, up) };
+  const R = at(570, 1760, t, dur, c), K = at(540, 1930, t, dur, c), z = R.z;
   return (
-    <CrateInside t={T} light={0.55}>
+    <AbsoluteFill>
+      <LivePlate name="b_runway" T={T} t={t} dur={dur} c={c} bright={0.8} fx={FX.b_runway} />
+      <Haze top="rgba(60,80,160,0.18)" vig={0.5} />
       <Svg>
-        <rect x={140} y={0} width={800} height={760} fill="#1e2a48" />
-        <circle cx={300} cy={160} r={4} fill="#fff" /><circle cx={820} cy={260} r={3} fill="#fff" /><circle cx={640} cy={90} r={3} fill="#fff" />
-        <g transform={`translate(540,${430 - 246 * (2.8 + 0.2 * p)}) rotate(180,0,0) scale(${2.8 + 0.2 * p})`}>
-          <AF id="bpk" look={REG_B_WORK} x={0} y={0} s={1} pose={{ ...pose, lookY: 0 }} shadow={false} />
+        <AF id="bpk" look={REG_B_WORK} x={R.x} y={R.y} s={2.2 * z} pose={pose} shadow={false} />
+        <g transform={`translate(${K.x},${K.y}) scale(${z})`}>
+          <path d="M-280,-330 L-230,-372 L230,-372 L280,-330 Z" fill="#2a1a12" stroke={INK} strokeWidth={7} strokeLinejoin="round" />
+          <Crate x={0} y={0} w={560} h={330} label={false} arrows={false} />
         </g>
-        <rect x={140} y={740} width={800} height={30} fill="#3a2414" />
-        <rect x={0} y={0} width={140} height={1920} fill="#5a3a22" /><rect x={940} y={0} width={140} height={1920} fill="#5a3a22" />
-        <rect x={0} y={760} width={1080} height={1160} fill="#5a3a22" opacity={0.0} />
-        <Bulb x={880} y={200} k={(T - W("brilliant") + 0.15) / 0.6} s={0.9} />
+        <Bulb x={R.x + 290 * z} y={R.y - 760 * z} k={(T - W("brilliant") + 0.15) / 0.6} s={0.9} />
+        <Motes t={T} n={16} seed={36} />
       </Svg>
-    </CrateInside>
+    </AbsoluteFill>
   );
 };
 // 7. John's workshop: sawing planks while Reg holds the board
@@ -198,7 +212,7 @@ const S_Saw: React.FC<ShotP> = ({ T, a, b }) => {
   const B = at(580, 1620, t, dur, c);
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_workshop.png" t={t} dur={dur} c={c} bright={0.85} />
+      <LivePlate name="b_workshop" T={T} t={t} dur={dur} c={c} bright={0.85} fx={FX.b_workshop} />
       <Haze top="rgba(255,190,120,0.14)" vig={0.45} />
       <Svg>
         <rect x={B.x - 260 * B.z} y={B.y - 20 * B.z} width={520 * B.z} height={42 * B.z} rx={4} fill="#c9955a" stroke={INK} strokeWidth={6} />
@@ -219,7 +233,7 @@ const S_LidTest: React.FC<ShotP> = ({ T, a, b }) => {
   const blink = blinkAt(T, 39, [W("opened")]);
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_workshop.png" t={t} dur={dur} c={{ z0: 1.5, z1: 1.6, cx: 540, cy: 1400 }} blur={3} bright={0.8} />
+      <LivePlate name="b_workshop" T={T} t={t} dur={dur} c={{ z0: 1.5, z1: 1.6, cx: 540, cy: 1400 }} blur={3} bright={0.8} fx={FX.b_workshop} />
       <Haze top="rgba(255,190,120,0.14)" vig={0.45} />
       <Svg>
         <g transform={`translate(540,${1520 + 10 * p})`}>
@@ -261,7 +275,7 @@ const S_Toss: React.FC<ShotP> = ({ T, a, b }) => {
   };
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_workshop.png" t={t} dur={dur} c={c} bright={0.85} />
+      <LivePlate name="b_workshop" T={T} t={t} dur={dur} c={c} bright={0.85} fx={FX.b_workshop} />
       <Haze top="rgba(255,190,120,0.14)" vig={0.45} />
       <Svg>
         <Crate x={C.x} y={C.y} w={460 * C.z} h={260 * C.z} lid={1} />
@@ -286,7 +300,7 @@ const S_TagShot: React.FC<ShotP> = ({ T, a, b }) => {
   const t = T - a, dur = b - a, p = push(t, dur);
   return (
     <AbsoluteFill style={{ background: "#2a1a12" }}>
-      <PlateC src="mailed/b_workshop.png" t={t} dur={dur} c={{ z0: 1.6, z1: 1.7, cx: 540, cy: 1000 }} blur={6} bright={0.6} />
+      <LivePlate name="b_workshop" T={T} t={t} dur={dur} c={{ z0: 1.6, z1: 1.7, cx: 540, cy: 1000 }} blur={6} bright={0.6} fx={FX.b_workshop} />
       <Svg>
         <Tag x={540} y={1050 + 10 * p} s={2.1 + 0.1 * p} rot={6 * Math.sin(T * 1.8)} lines={["TO: A CUSTOMER", "PERTH, W.A."]}
           stamps={[{ t: "C.O.D.", k: (T - W("cash") + 0.05) / 0.3, c: "#c0303a" }, { t: "FREIGHT", k: (T - W("delivery") - 0.2) / 0.3, c: "#2a4a8a" }]} />
@@ -342,7 +356,7 @@ const S_DarkHold: React.FC<ShotP> = ({ T, a, b }) => {
               <Crate key={i} x={x} y={y} w={w} h={h} label={false} arrows={i % 2 === 0} />)}
             <path d="M0,1500 L1080,1460" stroke="#3a3048" strokeWidth={8} strokeDasharray="30 20" />
             <defs><clipPath id="dhc"><rect x={0} y={0} width={1080} height={cy - 150} /></clipPath></defs>
-            {!stand && <g clipPath="url(#dhc)"><AF id="bdh" look={REG_B} x={cx} y={cy + 40 - 320 * rise} s={s} pose={rp} shadow={false} /></g>}
+            {!stand && rise > 0.01 && <g clipPath="url(#dhc)"><AF id="bdh" look={REG_B} x={cx} y={lerp(cy + 320, cy - 280, rise)} s={s} pose={rp} shadow={false} /></g>}
             <Crate x={cx} y={cy} w={480} h={280} cod={1} lid={lid} />
             {stand && <AF id="bdh2" look={REG_B} x={rx} y={cy + 20} s={s} pose={rp} shadow={false} />}
           </Svg>
@@ -364,7 +378,7 @@ const S_Apron: React.FC<ShotP> = ({ T, a, b }) => {
   const hp: Pose = { expr: k > 0.9 ? "happy" : "stern", facing: 0.6, gesture: k > 0 && k < 1 ? "point" : "offer", gk: 1, blink: blinkAt(T, 42), lookX: 1, lean: k > 0 && k < 1 ? -8 : 0 };
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_apron.png" t={t} dur={dur} c={c} bright={1.12} />
+      <LivePlate name="b_apron" T={T} t={t} dur={dur} c={c} bright={1.12} fx={FX.b_apron} />
       <Haze top="rgba(255,250,220,0.3)" vig={0.2} />
       <Svg>
         <g transform={`translate(${CT.x},${CT.y})`}>
@@ -450,7 +464,7 @@ const S_Away: React.FC<ShotP> = ({ T, a, b }) => {
   const rp: Pose = { phase: wk.phase, walk: wk.walk, expr: "sly", facing: 0.7, blink: blinkAt(T, 46), lookX: -0.8 };
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_runway.png" t={t} dur={dur} c={c} bright={1.0} />
+      <LivePlate name="b_runway" T={T} t={t} dur={dur} c={c} bright={1.0} fx={FX.b_runway} />
       <AbsoluteFill style={{ background: "linear-gradient(rgba(255,170,110,0.35), rgba(255,200,150,0.08) 60%, rgba(60,40,80,0.2))" }} />
       <Haze top="rgba(255,180,120,0.1)" vig={0.4} />
       <Svg>
@@ -495,10 +509,18 @@ const S_Home: React.FC<ShotP> = ({ T, a, b }) => {
   const dp: Pose = { phase: wk.phase, walk: wk.walk, expr: "laugh", facing: -0.6, gesture: "wave", gk: 1, talk: T * 1.4, blink: blinkAt(T, 48), lookX: -1, lookY: -0.4 };
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_home.png" t={t} dur={dur} c={c} />
+      <LivePlate name="b_home" T={T} t={t} dur={dur} c={c} fx={FX.b_home} />
       <Haze top="rgba(255,220,170,0.08)" vig={0.3} />
       <Svg>
-        <Cake x={at(820, 1560, t, dur, c).x} y={at(820, 1560, t, dur, c).y} s={0.8} t={T} />
+        {(() => { const F = at(790, 1800, t, dur, c), z = F.z; return (
+          <g transform={`translate(${F.x},${F.y}) scale(${z})`}>
+            <ellipse cx={0} cy={4} rx={170} ry={16} fill="rgba(40,25,20,0.25)" />
+            {[-120, 120].map((lx) => <rect key={lx} x={lx - 11} y={-235} width={22} height={235} rx={6} fill="#8a5a32" stroke={INK} strokeWidth={6} />)}
+            <rect x={-160} y={-262} width={320} height={34} rx={8} fill="#a8703e" stroke={INK} strokeWidth={7} />
+            <path d="M-150,-252 H150" stroke="rgba(255,255,255,0.25)" strokeWidth={5} />
+            <path d="M-150,-228 Q-110,-196 -70,-228 Q-30,-196 10,-228 Q50,-196 90,-228 Q120,-200 150,-228" fill="#f6efe2" stroke={INK} strokeWidth={4} />
+            <Cake x={0} y={-262} s={0.8} t={T} />
+          </g>); })()}
         {shadowAt(R.x, R.y, s * R.z)}{shadowAt(D.x, D.y, 0.85 * D.z)}
         <AF id="bho" look={REG_B_SUIT} x={R.x} y={R.y} s={s * R.z} pose={rp} shadow={false} />
         <AF id="bhd" look={DAUGHTER} x={D.x} y={D.y} s={0.85 * D.z} flip pose={dp} shadow={false} />
@@ -512,27 +534,62 @@ const S_Home: React.FC<ShotP> = ({ T, a, b }) => {
 };
 // 19. London: John's call reaches a newspaper; the typewriter rattles, the story goes worldwide
 const S_Newsroom: React.FC<ShotP> = ({ T, a, b }) => {
-  const t = T - a, dur = b - a, c: Cam = { z0: 1.2, z1: 1.34, cx: 540, cy: 1600 };
-  const X = at(560, 1810, t, dur, c), s = 1.5;
-  const type = T > W("newspaper") - 0.1;
-  const pose: Pose = { expr: type ? "amazed" : "surprised", facing: -0.3, gesture: type ? "write" : "chin", gk: 1, blink: blinkAt(T, 49), lookX: type ? -0.4 : 0.4, lookY: type ? 0.6 : 0, talk: T * 2 };
-  const hp = handAt(X.x, X.y, s * X.z, 40, 135, 1, true);
+  // John, worried, calls a newspaper from his office desk; then the story goes worldwide
+  const t = T - a, dur = b - a, c: Cam = { z0: 1.15, z1: 1.3, cx: 540, cy: 1450 };
+  const X = at(600, 1630, t, dur, c), s = 2.0 * X.z;
+  const call = T > W("called") - 0.35, talkHard = T > W("newspaper") - 0.1;
+  const pose: Pose = { expr: talkHard ? "amazed" : call ? "worried" : "worried", ex: call && !talkHard ? { mouth: "wobble" } : {}, facing: 0.25, blink: blinkAt(T, 49),
+    lookX: talkHard ? -0.5 : 0.2, lookY: talkHard ? 0 : 0.3, gesture: call ? "chin" : "rub", gk: call ? ramp(T, W("called") - 0.35, 0.35) : 1,
+    gesture2: undefined, talk: call ? T * 2 : undefined, headTilt: call ? 6 : 0 };
+  const hp = handAt(X.x, X.y, s, 40, 135, 1);
+  const ear = { x: X.x + 96 * s, y: X.y - 250 * s };
+  const D = at(540, 1775, t, dur, c), dz = D.z;
+  const base = { x: D.x - 250 * dz, y: D.y - 330 * dz };
+  const lifted = call && ramp(T, W("called") - 0.35, 0.35) > 0.6;
+  const mouth = { x: X.x + 52 * s, y: X.y - 168 * s };
+  const hx = lifted ? (ear.x + mouth.x) / 2 : base.x, hy = lifted ? (ear.y + mouth.y) / 2 : base.y - 52 * dz;
+  const ang = lifted ? (Math.atan2(ear.y - mouth.y, ear.x - mouth.x) * 180) / Math.PI + 90 : 90;
+  const hl = Math.hypot(ear.x - mouth.x, ear.y - mouth.y) / 120;
   const world = T > W("worldwide") - 0.1;
+  const ring = !call && Math.sin(T * 40) > 0 ? 1 : 0;
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_newsroom.png" t={t} dur={dur} c={c} />
+      <LivePlate name="b_newsroom" T={T} t={t} dur={dur} c={c} fx={FX.b_newsroom} />
       <Haze top="rgba(255,230,190,0.08)" vig={0.35} />
       <Svg>
-        {shadowAt(X.x, X.y, s * X.z)}
-        <AF id="bre" look={REPORTER} x={X.x} y={X.y} s={s * X.z} flip pose={pose} shadow={false} />
-        {!type && <g transform={`translate(${hp.x},${hp.y}) rotate(70) scale(${s * X.z / 3.4})`}>
-          <path d="M-70,-18 Q0,-40 70,-18 L76,16 Q40,6 30,22 L-30,22 Q-40,6 -76,16 Z" fill="#2a2230" stroke={INK} strokeWidth={5} /></g>}
-        <g transform={`translate(${X.x - 80 * X.z},${X.y - 120 * X.z}) scale(${X.z})`}>
-          <rect x={-170} y={-80} width={340} height={120} rx={20} fill="#3a3a48" stroke={INK} strokeWidth={6} />
-          <rect x={-120} y={-200 - (type ? 60 * clamp01((T - W("newspaper")) / 1.5) : 0)} width={240} height={140} fill="#fffaf0" stroke={INK} strokeWidth={5} />
-          {Array.from({ length: 5 }, (_, i) => <path key={i} d={`M-100,${-170 + i * 22 - (type ? 60 * clamp01((T - W("newspaper")) / 1.5) : 0)} H${-100 + 200 * clamp01((T - W("newspaper") - i * 0.25) / 0.25)}`} stroke="#4a4a58" strokeWidth={6} />)}
+        <AF id="bjo" look={JOHN_B} x={X.x} y={X.y} s={s} pose={pose} shadow={false} />
+        {/* the desk */}
+        <g transform={`translate(${D.x},${D.y}) scale(${dz})`}>
+          <rect x={-420} y={-300} width={840} height={520} fill="#7a4e2c" stroke={INK} strokeWidth={8} />
+          <rect x={-450} y={-330} width={900} height={40} rx={8} fill="#9a6638" stroke={INK} strokeWidth={8} />
+          {[-1, 1].map((k) => <g key={k}><rect x={k * 230 - 150} y={-250} width={300} height={90} rx={6} fill="#6a4226" stroke={INK} strokeWidth={5} />
+            <rect x={k * 230 - 30} y={-212} width={60} height={14} rx={7} fill="#d8b46a" stroke={INK} strokeWidth={4} /></g>)}
+          <g transform="translate(150,-330) rotate(-4)"><rect x={-90} y={-14} width={180} height={14} fill="#f4efe4" stroke={INK} strokeWidth={4} />
+            <rect x={-80} y={-26} width={170} height={12} fill="#ebe4d4" stroke={INK} strokeWidth={4} /></g>
         </g>
-        {world && [0, 1, 2].map((i) => { const k = clamp01((T - W("worldwide") + 0.1 - i * 0.2) / 0.5); return <Newspaper key={i} x={300 + i * 240} y={700 - i * 60} s={0.55 * Easing.out(Easing.back(1.5))(k)}
+        {/* black rotary telephone on the desk */}
+        <g transform={`translate(${base.x + (ring ? 3 : 0)},${base.y}) scale(${dz})`}>
+          <path d="M-95,0 L-70,-60 Q0,-80 70,-60 L95,0 Z" fill="#1e1c24" stroke={INK} strokeWidth={7} strokeLinejoin="round" />
+          <circle cx={0} cy={-30} r={30} fill="#efe8d8" stroke={INK} strokeWidth={5} />
+          {Array.from({ length: 10 }, (_, i) => <circle key={i} cx={21 * Math.cos(i * 0.55 + 0.6)} cy={-30 + 21 * Math.sin(i * 0.55 + 0.6)} r={4} fill="#1e1c24" />)}
+          <rect x={-70} y={-74} width={20} height={16} rx={4} fill="#1e1c24" stroke={INK} strokeWidth={4} />
+          <rect x={50} y={-74} width={20} height={16} rx={4} fill="#1e1c24" stroke={INK} strokeWidth={4} />
+        </g>
+        {/* the coiled cord from the phone to the handset */}
+        {lifted && (() => { const x0 = base.x + 80 * dz, y0 = base.y - 10 * dz, x1 = hx + (lifted ? 0 : 60 * dz), y1 = hy + (lifted ? 60 * hl : 0);
+          const pts = Array.from({ length: 41 }, (_, i) => { const u = i / 40, sag = Math.sin(Math.PI * u) * 90 * dz;
+            return `${(x0 + (x1 - x0) * u + Math.sin(u * 60) * 7 * dz).toFixed(1)},${(y0 + (y1 - y0) * u + sag + Math.cos(u * 60) * 7 * dz).toFixed(1)}`; });
+          return <polyline points={pts.join(" ")} fill="none" stroke="#1e1c24" strokeWidth={5 * dz} strokeLinejoin="round" />; })()}
+        {/* the handset: on the cradle, then at his ear */}
+        <g transform={`translate(${hx},${hy}) rotate(${ang}) scale(${lifted ? hl : dz})`}>
+          <path d="M-14,-62 Q-24,-62 -24,-44 L-24,44 Q-24,62 -14,62 L14,62 Q26,62 26,44 L26,-44 Q26,-62 14,-62 Z" fill="none" />
+          <rect x={-12} y={-56} width={24} height={112} rx={10} fill="#1e1c24" stroke={INK} strokeWidth={6} />
+          <ellipse cx={0} cy={-60} rx={26} ry={18} fill="#1e1c24" stroke={INK} strokeWidth={6} />
+          <ellipse cx={0} cy={60} rx={26} ry={18} fill="#1e1c24" stroke={INK} strokeWidth={6} />
+          <path d="M-6,-20 V20" stroke="rgba(255,255,255,0.2)" strokeWidth={5} strokeLinecap="round" />
+        </g>
+        {ring > 0 && !call && <text x={base.x + 120 * dz} y={base.y - 120 * dz} fontFamily={hand} fontSize={40} fill="#fffaf0">)))</text>}
+        {world && [0, 1, 2].map((i) => { const k = clamp01((T - W("worldwide") + 0.1 - i * 0.2) / 0.5); return <Newspaper key={i} x={300 + i * 240} y={620 - i * 60} s={0.55 * Easing.out(Easing.back(1.5))(k)}
           rot={-12 + i * 12 + 540 * (1 - k)} head={["MAN POSTS HIMSELF", "HUMAN CARGO!", "BOXED ATHLETE"][i]} />; })}
         <Card k={(T - W("london", 2) + 0.1) / 0.35} text="MEANWHILE, LONDON" y={330} />
       </Svg>
@@ -547,7 +604,7 @@ const S_Shrug: React.FC<ShotP> = ({ T, a, b }) => {
     wink: T > W("of", 3) + 0.15 && T < W("of", 3) + 0.6, blink: blinkAt(T, 50), lookX: fr ? 0 : 0.5 };
   return (
     <AbsoluteFill>
-      <PlateC src="mailed/b_home.png" t={t} dur={dur} c={{ z0: 1.5, z1: 1.62, cx: 540, cy: 1200 }} blur={3.2} />
+      <LivePlate name="b_home" T={T} t={t} dur={dur} c={{ z0: 1.5, z1: 1.62, cx: 540, cy: 1200 }} blur={3.2} fx={FX.b_home} />
       <Haze top="rgba(255,220,170,0.08)" vig={0.36} />
       <Svg>
         <AF id="bsh" look={REG_B_SUIT} x={420} y={1900 + 20 * p} s={3.5 + 0.2 * p} pose={pose} shadow={false} />
@@ -568,10 +625,11 @@ const subS = { ...sub, moves: [{ from: 0, to: 4.3, y: 0.86 }, { from: 4.3, to: 6
   { from: 12.8, to: 17.5, y: 0.62 }, { from: 17.5, to: 20.8, y: 0.86 }, { from: 20.8, to: 23.4, y: 0.62 }, { from: 23.4, to: 25.6, y: 0.3 }, { from: 25.6, to: 31.9, y: 0.62 },
   { from: 31.9, to: 35.1, y: 0.86 }, { from: 35.1, to: 37.6, y: 0.86 }, { from: 37.6, to: 43.4, y: 0.25 }, { from: 43.4, to: 47.8, y: 0.62 }, { from: 47.8, to: 52.4, y: 0.86 },
   { from: 52.4, to: 57.6, y: 0.86 }, { from: 57.6, to: 59.6, y: 0.86 }, { from: 59.6, to: 61.5, y: 0.62 }, { from: 61.5, to: 65.3, y: 0.55 }, { from: 65.3, to: 68.3, y: 0.62 },
-  { from: 68.3, to: 73.3, y: 0.62 }] };
+  { from: 68.3, to: 73.3, y: 0.87 }] };
 
 export const ShortB: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }) => {
   setCfg(V3);
+  FIGCFG.v2 = true;
   useMarkerFont();
   const f = useCurrentFrame(), T = f / FPS;
   let k = SHOTS.findIndex(([s0], i) => T >= s0 && T < (SHOTS[i + 1]?.[0] ?? 1e9));

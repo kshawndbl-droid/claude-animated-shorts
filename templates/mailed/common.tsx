@@ -2,7 +2,7 @@
 // Same production approach as the Paris Short: figure.tsx cast, inked painted plates, breathing figures, push-ins.
 import React from "react";
 import { AbsoluteFill, Easing, useCurrentFrame, delayRender, continueRender, staticFile } from "remotion";
-import { Figure, Look, Pose, INK } from "../eiffel/figure";
+import { Figure, Look, Pose, INK, ARM_UP, ARM_LO } from "../eiffel/figure";
 import { Plate, camXY, GroundDefs, clamp01 } from "../eiffel/StyleTest";
 import { Word } from "../../src/subtitles/Subtitles";
 import words from "../../stories/mailed-himself/final/words.json";
@@ -60,8 +60,8 @@ const rad = (d: number) => (d * Math.PI) / 180;
 /** where a figure's hand is on screen for a given arm angle / elbow (same arm maths as figure.tsx); side +1 = front arm */
 export const handAt = (x: number, y: number, s: number, a: number, el: number, side = 1, flip = false, stout = 0, bob = 1.2) => {
   const tw = 46 + stout * 16, sx = side * (tw - 8), sy = -150 + bob + 14;
-  const a1 = rad(a), ex = sx + Math.sin(a1) * 34, ey = sy + Math.cos(a1) * 34;
-  const a2 = a1 + rad(el), hx = ex + Math.sin(a2) * 30, hy = ey + Math.cos(a2) * 30;
+  const a1 = rad(a), ex = sx + Math.sin(a1) * ARM_UP(), ey = sy + Math.cos(a1) * ARM_UP();
+  const a2 = a1 + rad(el), hx = ex + Math.sin(a2) * ARM_LO(), hy = ey + Math.cos(a2) * ARM_LO();
   return { x: x + (flip ? -hx : hx) * s, y: y + hy * s };
 };
 
@@ -80,8 +80,8 @@ export const REG_B_VEST: Look = { ...REG_B, top: "tee", suit: "#f2eee4", suitDar
 /** John McSorley: British javelin thrower friend */
 export const JOHN_A: Look = { ...base, suit: "#8a4a32", suitDark: "#6e3a26", shirt: "#f4efe6", shoes: "#2a1e1a", trousers: "#4a4038",
   hair: "#3a2418", brows: "#2a1810", top: "sweater", hairStyle: "curly", glasses: true };
-export const JOHN_B: Look = { ...base, suit: "#7a6a52", suitDark: "#5e5040", shirt: "#f4efe6", shoes: "#2a1e1a", trousers: "#3e4250",
-  hair: "#c06a2a", brows: "#9a4e1e", top: "tee", hairStyle: "messy", stubble: "#9a6a4a" };
+export const JOHN_B: Look = { ...base, suit: "#9a4a3a", suitDark: "#7a3628", shirt: "#f4efe6", shoes: "#2a1e1a", trousers: "#4a4238",
+  hair: "#6a4426", brows: "#4a2e18", top: "sweater", hairStyle: "short" };
 /** cargo handlers in overalls with caps */
 export const HANDLER1: Look = { ...base, suit: "#3e6a8a", suitDark: "#2f5470", shirt: "#f4efe6", shoes: "#2a1e1a", trousers: "#3e6a8a",
   hat: "cap", hatCol: "#3e6a8a", band: "#2a4a60", hair: "#2a1a12", brows: "#2a1a12", top: "tee", hairStyle: "short", stout: 1, skin: undefined };
@@ -341,7 +341,11 @@ export const CrateInside: React.FC<{ t: number; light?: number; hot?: number; ch
         <circle cx={60} cy={i * 220 + 110} r={9} fill="#2a2a30" /><circle cx={1020} cy={i * 220 + 110} r={9} fill="#2a2a30" />
       </g>)}
       {[480, 1440].map((y) => <rect key={y} x={0} y={y - 18} width={1080} height={36} fill="#2a1a10" opacity={0.6} />)}
-      <rect x={0} y={0} width={1080} height={1920} fill="url(#torchglow)" />
+      <rect x={0} y={0} width={1080} height={1920} fill="url(#torchglow)" opacity={0.9 + 0.07 * Math.sin(t * 7.3) + 0.05 * Math.sin(t * 13.1)} />
+      {/* dust drifting in the torchlight */}
+      {Array.from({ length: 26 }, (_, i) => { const a = Math.abs(Math.sin(i * 12.99 + 3) * 43758.5) % 1, b = Math.abs(Math.sin(i * 78.23 + 5) * 12543.1) % 1;
+        const x = 200 + ((a * 700 + t * (5 + 8 * b) + 30 * Math.sin(t * 0.5 + i)) % 700), y = 400 + ((b * 1100 - t * (8 + 10 * a)) % 1100 + 1100) % 1100;
+        return <circle key={`m${i}`} cx={x} cy={y} r={1.5 + 2.5 * ((i * 7) % 5) / 5} fill="#ffe8c0" opacity={(0.15 + 0.35 * Math.abs(Math.sin(t * 1.4 + i))) * light} />; })}
       <rect x={0} y={0} width={1080} height={1920} fill={`rgba(255,80,20,${0.22 * hot})`} />
       {/* slits of light between the planks */}
       {Array.from({ length: 8 }, (_, i) => <rect key={`s${i}`} x={0} y={i * 220 + 214} width={1080} height={6} fill={`rgba(255,230,170,${0.25 + 0.15 * Math.sin(t * 2 + i)})`} />)}
