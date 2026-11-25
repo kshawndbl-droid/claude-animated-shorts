@@ -146,10 +146,10 @@ def reference(voice):
     return p
 
 
-def speak(text, voice, mood, emotion=None, engine="chatterbox"):
+def speak(text, voice, mood, emotion=None, engine="chatterbox", speed=1.0):
     m = MOODS.get(mood or "serious")
-    if engine == "kokoro":
-        return onyx_locked(text) if voice == "onyx-locked" else kokoro(text, voice, m["speed"])
+    if engine == "kokoro":  # speed: optional story-level multiplier, done natively by Kokoro (no time-stretch artefacts)
+        return onyx_locked(text) if voice == "onyx-locked" else kokoro(text, voice, m["speed"] * speed)
     sys.path.insert(0, HERE)
     import voice_chatterbox as C
     ex = m["emotion"] if emotion is None else emotion
@@ -166,7 +166,7 @@ def render_lines(story, voice, n=None):
     lines = story["lines"][:n] if n else story["lines"]
     buf, t, rows = [np.zeros(int(SR * 0.3), np.float32)], 0.3, []
     for ln, m in zip(lines, moods):
-        a = speak(ln["text"], ln.get("voice", voice), m or main, ln.get("emotion"), story.get("engine", "chatterbox"))
+        a = speak(ln["text"], ln.get("voice", voice), m or main, ln.get("emotion"), story.get("engine", "chatterbox"), story.get("speed", 1.0))
         rows.append(dict(start=round(t, 3), end=round(t + len(a) / SR, 3), text=ln["text"], mood=m or main))
         g = ln.get("gap", 0.3)
         buf += [a, np.zeros(int(SR * g), np.float32)]

@@ -5,6 +5,8 @@ import { Sheet } from "../../templates/eiffel/Sheet";
 import { StyleTest, TEST_FRAMES } from "../../templates/eiffel/StyleTest";
 import { FullShort, FULL_FRAMES } from "../../templates/eiffel/FullShort";
 import { Crickets, CRICKETS_FRAMES } from "../../templates/reddit/Crickets";
+import { ShortA, A_FRAMES } from "../../templates/mailed/ShortA";
+import { ShortB, B_FRAMES } from "../../templates/mailed/ShortB";
 
 export const EiffelRoot: React.FC = () => (
   <>
@@ -14,5 +16,7 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="EiffelBgTest4" component={StyleTest} durationInFrames={TEST_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true, bg: "v4" as const }} />
     <Composition id="EiffelFull" component={FullShort} durationInFrames={FULL_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="RedditCrickets" component={Crickets} durationInFrames={CRICKETS_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
+    <Composition id="MailedA" component={ShortA} durationInFrames={A_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
+    <Composition id="MailedB" component={ShortB} durationInFrames={B_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
   </>
 );
