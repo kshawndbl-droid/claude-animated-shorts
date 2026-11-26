@@ -11,6 +11,7 @@ import { TsavoTest, TSAVO_TEST_FRAMES } from "../../templates/tsavo/TsavoTest";
 import { Tsavo3DTest, TSAVO3D_FRAMES } from "../../templates/tsavo3d/Tsavo3DTest";
 import { EnvTest, EnvTest2, EnvTest3, ENVTEST_FRAMES } from "../../templates/tsavo3d/EnvTest";
 import { ToonWalkTest, ToonStandTest, TOON_WALK_FRAMES, TOON_STAND_FRAMES } from "../../templates/tsavo3d/ToonTest";
+import { PartC, PARTC_FRAMES } from "../../templates/tsavo3d/PartC";
 import { ShortB, B_FRAMES } from "../../templates/mailed/ShortB";
 
 export const EiffelRoot: React.FC = () => (
@@ -26,6 +27,7 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="LionTest" component={LionTest} durationInFrames={60} fps={30} width={1080} height={1920} />
     <Composition id="TsavoTest" component={TsavoTest} durationInFrames={TSAVO_TEST_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="EnvTest3" component={EnvTest3} durationInFrames={ENVTEST_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="PartC" component={PartC} durationInFrames={PARTC_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="EnvTest2" component={EnvTest2} durationInFrames={ENVTEST_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="EnvTest" component={EnvTest} durationInFrames={ENVTEST_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="ToonWalkTest" component={ToonWalkTest} durationInFrames={TOON_WALK_FRAMES} fps={30} width={1080} height={1920} />

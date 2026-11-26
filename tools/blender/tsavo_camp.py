@@ -44,13 +44,13 @@ SHOTS = {
     "chartest": dict(n=1, light="dusk", keys=[(1, (-1.5, 0.5, 1.0), (10.0, 4.5, 1.3), 28)],
                      focus=(1.8, 1.7, 0.8), fstop=5.6),
     # Part C. Night of 9 Dec 1898: Patterson's raised platform (machan) by the camp under the moon, slow low push-in
-    "platform": dict(n=107, light="night", keys=[(1, (22.5, -15.5, 1.2), (14, -2, 3.4), 24), (107, (20.6, -12.2, 1.5), (14, -2, 3.5), 28)],
+    "platform": dict(n=107, light="night", keys=[(1, (18.6, -9.6, 1.3), (14, -2, 3.3), 26), (107, (17.4, -8.0, 1.6), (14, -2, 3.4), 30)],
                      focus=(14, -2, 3.2), fstop=4.0),
     # on the platform beside Patterson, looking down over the dark grass toward the camp fires (still plate)
     "aim": dict(n=1, light="night", keys=[(1, (16.2, -3.9, 4.15), (8.5, 3.5, 0.6), 30)], focus=(9.5, 3.0, 0.5), fstop=5.6),
     # the next morning: eight men carry the lion along the line (low sun = early morning); slow pan with them
-    "carry": dict(n=111, light="dusk", exposure=-0.1, keys=[(1, (2.0, -12.0, 1.35), (12.0, -5.0, 1.0), 26), (111, (2.6, -12.3, 1.35), (12.6, -7.6, 1.0), 26)],
-                  focus=(8.2, -8.7, 0.8), fstop=5.6),
+    "carry": dict(n=111, light="dusk", exposure=-0.1, keys=[(1, (0.0, -13.0, 1.4), (12.0, -5.5, 1.0), 26), (111, (0.5, -13.3, 1.4), (12.4, -8.2, 1.0), 26)],
+                  focus=(7.6, -8.2, 0.8), fstop=5.6),
     # 29 Dec: tracking Patterson through the tall grass at first light, low among the stalks
     "track": dict(n=114, light="dusk", exposure=-0.1, keys=[(1, (-7.6, -15.2, 0.85), (-5.6, -11.0, 0.8), 28), (114, (-4.6, -15.0, 0.85), (-2.6, -10.8, 0.8), 28)],
                   focus=(-5.0, -11.0, 0.6), fstop=4.0),
@@ -709,7 +709,7 @@ def build():
     parts = [near, far, lowc]
     # each shot gets a dense patch of grass where its camera looks closest
     dense = {"envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9)), "track": ((-9, 0), (-15, -9)),
-             "shots": ((-1, 8), (-11, -4)), "platform": ((9, 19), (-7, 2))}.get(SHOT)
+             "shots": ((-1, 8), (-11, -4)), "platform": ((9, 19), (-7, 2)), "carry": ((5.8, 14), (-14, -2))}.get(SHOT)
     if SHOT in ("platform", "aim"):
         machan((14.0, -2.0))
     if dense:
