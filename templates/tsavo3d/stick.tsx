@@ -139,9 +139,9 @@ const taper = (ax: number, ay: number, bx: number, by: number, wa: number, wb: n
  *  Units: metres, nose to rump ~2.4 m, ~1.1 m at the shoulder. */
 export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP; flip?: boolean; id: string; shade?: number }> = ({ x, y, ppm, pose, flip = false, id, shade = 1 }) => {
   const w = pose.walk ?? 0, ph = (pose.phase ?? 0) * Math.PI * 2, cr = pose.crouch ?? 0;
-  const FUR = "#c58e4e", DARK = "#94602e", PALE = "#e9cfa0", FAR = "#8a5a2c";
+  const FUR = "#d8bb8a", DARK = "#a8865a", PALE = "#efe2c4", FAR = "#a5875c";
   const drop = 0.18 * cr, bob = w * 0.02 * Math.sin(ph * 2);
-  const sh = { x: 0.55, y: -1.0 + drop * 0.9 + bob }, hp = { x: -0.62, y: -0.95 + drop + bob };
+  const sh = { x: 0.55, y: -1.04 + drop * 0.9 + bob }, hp = { x: -0.62, y: -0.95 + drop + bob };
   const legs = [
     { r: hp, o: 0.0, front: false, near: false }, { r: sh, o: 0.25, front: true, near: false },
     { r: hp, o: 0.5, front: false, near: true }, { r: sh, o: 0.75, front: true, near: true },
@@ -161,7 +161,7 @@ export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP
     const nrm = (ax: number, ay: number, bx: number, by: number) => { const dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l]; };
     const [n1x, n1y] = nrm(rx, ry, L.j.jx, L.j.jy), [n2x, n2y] = nrm(L.j.jx, L.j.jy, fx, fy);
     const nj = [(n1x + n2x) / 2, (n1y + n2y) / 2];
-    const wR = L.front ? 0.21 : 0.26, wJ = L.front ? 0.1 : 0.095, wF = L.front ? 0.08 : 0.07;
+    const wR = L.front ? 0.18 : 0.23, wJ = L.front ? 0.1 : 0.095, wF = L.front ? 0.08 : 0.07;
     return `M${P(rx + n1x * wR)},${P(ry + n1y * wR)} Q${P(L.j.jx + nj[0] * wJ * 1.6)},${P(L.j.jy + nj[1] * wJ * 1.6)} ${P(fx + n2x * wF)},${P(fy + n2y * wF)}
       L${P(fx - n2x * wF)},${P(fy - n2y * wF)} Q${P(L.j.jx - nj[0] * wJ * 1.6)},${P(L.j.jy - nj[1] * wJ * 1.6)} ${P(rx - n1x * wR)},${P(ry - n1y * wR)} Z`;
   };
@@ -186,15 +186,15 @@ export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP
     C${by(hp.x + 0.45)},${by(hp.y - 0.1)} ${by(sh.x - 0.45)},${by(sh.y - 0.1)} ${by(sh.x - 0.12)},${by(sh.y - 0.24)}
     C${by(sh.x + 0.08)},${by(sh.y - 0.3)} ${by(hx - 0.25)},${by(hy - 0.22)} ${by(hx - 0.02)},${by(hy - 0.14)}
     L${by(hx + 0.08)},${by(hy + 0.26)}
-    C${by(sh.x + 0.4)},${by(sh.y + 0.3)} ${by(sh.x + 0.32)},${by(sh.y + 0.5)} ${by(sh.x + 0.05)},${by(sh.y + 0.52)}
-    C${by(sh.x - 0.3)},${by(sh.y + 0.52)} ${by(hp.x + 0.55)},${by(hp.y + 0.3)} ${by(hp.x + 0.28)},${by(hp.y + 0.34)}
+    C${by(sh.x + 0.36)},${by(sh.y + 0.28)} ${by(sh.x + 0.3)},${by(sh.y + 0.44)} ${by(sh.x + 0.05)},${by(sh.y + 0.45)}
+    C${by(sh.x - 0.3)},${by(sh.y + 0.45)} ${by(hp.x + 0.55)},${by(hp.y + 0.3)} ${by(hp.x + 0.28)},${by(hp.y + 0.34)}
     C${by(hp.x + 0.05)},${by(hp.y + 0.44)} ${by(hp.x - 0.24)},${by(hp.y + 0.38)} ${by(hp.x - 0.3)},${by(hp.y + 0.14)} Z`;
   const tb = { x: hp.x - 0.28, y: hp.y - 0.04 };
   const tail = `M${P(tb.x)},${P(tb.y)} C${P(tb.x - 0.35)},${P(tb.y + 0.05)} ${P(tb.x - 0.45)},${P(tb.y + 0.45 + swish)} ${P(tb.x - 0.62)},${P(tb.y + 0.52 + swish * 1.4)}`;
   return (
     <g transform={`translate(${P(x)},${P(y)}) scale(${P((flip ? -1 : 1) * ppm)},${P(ppm)})`} style={shade !== 1 ? { filter: `brightness(${shade})` } : undefined}>
       <defs>
-        <linearGradient id={`lb${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ae7a3e" /><stop offset="0.3" stopColor={FUR} /><stop offset="0.78" stopColor={FUR} /><stop offset="1" stopColor={PALE} /></linearGradient>
+        <linearGradient id={`lb${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#c6a575" /><stop offset="0.3" stopColor={FUR} /><stop offset="0.78" stopColor={FUR} /><stop offset="1" stopColor={PALE} /></linearGradient>
         <radialGradient id={`lg${id}`}><stop offset="0" stopColor="#fff6b0" stopOpacity={0.95} /><stop offset="0.4" stopColor="#ffcf3a" stopOpacity={0.5} /><stop offset="1" stopColor="#ffb000" stopOpacity={0} /></radialGradient>
       </defs>
       <ellipse cx={0} cy={0} rx={1.1} ry={0.075} fill="rgba(10,5,10,0.35)" />
@@ -208,10 +208,10 @@ export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP
       {/* muscle lines: shoulder blade, haunch, a darker line along the back */}
       <path d={`M${P(sh.x - 0.14)},${P(sh.y - 0.12)} q0.1,0.22 0.0,0.44`} stroke={DARK} strokeWidth={0.026} fill="none" strokeLinecap="round" opacity={0.6} />
       <path d={`M${P(hp.x + 0.2)},${P(hp.y - 0.1)} q-0.16,0.2 -0.02,0.44`} stroke={DARK} strokeWidth={0.026} fill="none" strokeLinecap="round" opacity={0.6} />
-      <g transform={`translate(${P(hx)},${P(hy)}) rotate(${P(6 * cr - 10 * roar)}) scale(1.42,1.45)`}>
+      <g transform={`translate(${P(hx)},${P(hy)}) rotate(${P(6 * cr - 10 * roar)}) scale(1.3,1.3)`}>
         {/* ear: small, round, dark backed */}
-        <ellipse cx={-0.06} cy={-0.18} rx={0.06} ry={0.068} fill={DARK} stroke={INK} strokeWidth={0.022} />
-        <ellipse cx={-0.05} cy={-0.17} rx={0.028} ry={0.036} fill="#a87a4a" />
+        <ellipse cx={-0.07} cy={-0.2} rx={0.085} ry={0.1} fill={FUR} stroke={INK} strokeWidth={0.022} />
+        <ellipse cx={-0.06} cy={-0.19} rx={0.05} ry={0.065} fill="#4a3222" />
         {/* skull + broad, deep muzzle + heavy chin */}
         <path d={`M-0.15,0.03 C-0.17,-0.14 0.0,-0.2 0.14,-0.16 C0.23,-0.13 0.28,-0.08 0.37,-0.07 C0.44,-0.06 0.46,0.01 0.45,0.08
           C0.44,${P(0.14 + 0.02 * roar)} 0.38,${P(0.16 + 0.02 * roar)} 0.31,${P(0.16 + 0.02 * roar)} L0.31,${P(0.18 + 0.12 * roar)} C0.22,${P(0.24 + 0.12 * roar)} 0.06,${P(0.24 + 0.1 * roar)} 0.0,${P(0.19 + 0.06 * roar)}
