@@ -69,7 +69,7 @@ type ShotP = { T: number; a: number; b: number };
 
 const S_Lab: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 122), cam = camLab as CamJ;
-  const P = project(cam, f, [-1.0, 2.9, 0]), Q = project(cam, f, [2.75, 2.15, 0]);
+  const P = project(cam, f, [-1.0, 2.9, 0]), Q = project(cam, f, [2.3, 2.05, 0]);
   // leaning into the microscope, then straightening up and looking over at the samples as "bones and fur" is said
   const up = sm((T - (W("tested") - 0.1)) / 0.5);
   const lean: [number, number] = [70 - 50 * up, 55 - 30 * up], far: [number, number] = [62 - 40 * up, 60 - 30 * up];
@@ -146,7 +146,7 @@ const S_Study: React.FC<ShotP> = ({ T, a }) => {
 };
 
 // the case and its two mounted lions (shared by both museum shots); the case front glass is at y = 3.32
-const LION1: [number, number, number] = [-0.7, 3.95, 0.52], LION2: [number, number, number] = [1.4, 4.9, 0.52];
+const LION1: [number, number, number] = [-0.25, 3.95, 0.52], LION2: [number, number, number] = [1.4, 4.9, 0.52];
 const Glass: React.FC<{ cam: CamJ; f: number; T: number }> = ({ cam, f, T }) => {
   const c = [[-2.05, 3.32, 0.5], [2.25, 3.32, 0.5], [2.25, 3.32, 3.0], [-2.05, 3.32, 3.0]].map((p) => project(cam, f, p as [number, number, number]));
   const sx = (T * 0.05) % 1;
@@ -197,15 +197,15 @@ const S_MuseumClose: React.FC<ShotP> = ({ T, a, b }) => {
   const t = T - a, f = plateFrame(t, 100), cam = camMuseumClose as CamJ;
   const V = project(cam, f, [-1.0, 2.25, 0]);
   const glint = sm((T - W("eye") + 0.1) / 0.25) * (1 - sm((T - W("eye") - 0.6) / 0.4));
-  const E = project(cam, f, [LION2[0] - 1.12, LION2[1], LION2[2] + 1.02]);
+  const CL: [number, number, number] = [1.55, 4.4, 0.52];
+  const L = project(cam, f, CL), E = project(cam, f, [CL[0] - 1.27, CL[1], CL[2] + 1.1]);
   return (
     <AbsoluteFill>
       <Plate shot="museumclose" f={f} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
-        <Lions cam={cam} f={f} T={T} />
+        <FlatLion id="mc" x={L.x} y={L.y} ppm={L.ppm} flip pose={{ crouch: 0.0, eyes: "normal", tail: 0.2, look: 0.6 }} shade={0.95} />
         {glint > 0 && <circle cx={E.x} cy={E.y} r={10 + 30 * glint} fill="#fff6d8" opacity={0.55 * glint} />}
         <Glass cam={cam} f={f} T={T} />
-        <Toon x={V.x} y={V.y} ppm={V.ppm} look={VISITOR} pose={{ t: T, lookX: 0.6, blink: false, tilt: 4 }} shade={0.4} />
       </svg>
     </AbsoluteFill>
   );
