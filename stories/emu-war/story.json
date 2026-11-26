@@ -1,0 +1,110 @@
+{
+ "title": "The Great Emu War, 1932",
+ "engine": "chatterbox",
+ "mood": "funny",
+ "lines": [
+  {
+   "text": "In nineteen thirty-two, Australia went to war... against birds.",
+   "mood": "funny",
+   "emotion": 0.75,
+   "gap": 0.35
+  },
+  {
+   "text": "And the birds won.",
+   "mood": "funny",
+   "emotion": 0.9,
+   "gap": 0.6
+  },
+  {
+   "text": "About twenty thousand emus had invaded the wheat farms of Western Australia.",
+   "mood": "serious",
+   "emotion": 0.55,
+   "gap": 0.3
+  },
+  {
+   "text": "They ate the crops, and smashed straight through the fences.",
+   "mood": "action",
+   "emotion": 0.7,
+   "gap": 0.4
+  },
+  {
+   "text": "So the farmers, many of them ex-soldiers, asked the army for help.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "The army sent three men. Two machine guns. Ten thousand bullets.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "What could possibly go wrong?",
+   "mood": "funny",
+   "emotion": 0.9,
+   "gap": 0.6
+  },
+  {
+   "text": "On day one, the emus took one look at the guns... and scattered in every direction.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.4
+  },
+  {
+   "text": "Two days later, about a thousand emus walked straight toward an ambush.",
+   "mood": "action",
+   "emotion": 0.7,
+   "gap": 0.3
+  },
+  {
+   "text": "This was it. The big moment. And then... the gun jammed.",
+   "mood": "funny",
+   "emotion": 1.0,
+   "gap": 0.6
+  },
+  {
+   "text": "The soldiers tried shooting from a truck. The emus simply outran it.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.4
+  },
+  {
+   "text": "Each flock even had a lookout, one tall bird keeping watch. Big brain move.",
+   "mood": "funny",
+   "emotion": 0.85,
+   "gap": 0.5
+  },
+  {
+   "text": "After less than a week, the army pulled out, and politicians joked that the emus deserved medals.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.6
+  },
+  {
+   "text": "Round two went a bit better. But in the end: nearly ten thousand bullets... for fewer than a thousand birds.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.5
+  },
+  {
+   "text": "The commander even said these birds could take bullets like tanks.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.5
+  },
+  {
+   "text": "The farmers asked for the army three more times. The answer? No.",
+   "mood": "funny",
+   "emotion": 0.85,
+   "gap": 0.6
+  },
+  {
+   "text": "Today, hundreds of thousands of emus still roam Australia. Undefeated.",
+   "mood": "happy",
+   "emotion": 0.8,
+   "gap": 0.3
+  }
+ ],
+ "voice": "am_puck"
+}
