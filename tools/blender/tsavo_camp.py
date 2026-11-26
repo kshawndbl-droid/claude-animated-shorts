@@ -25,16 +25,25 @@ rnd = random.Random(1898)
 # shot: frames, light, camera keys (frame, location, aim, lens), focus, f-stop
 SHOTS = {
     # Patterson by the line at dusk, tents behind him and the bridge girders far down the track: slow low push-in
-    "patterson": dict(n=165, light="dusk", keys=[(1, (3.0, -6.5, 1.0), (2.2, 14, 1.9), 30), (165, (2.85, -4.6, 0.95), (2.2, 14, 1.85), 32)],
+    # Part A opening: night, high over the river valley, the unfinished bridge under the moon; a slow drift toward it
+    "bridgenight": dict(n=100, light="night", keys=[(1, (16, 30, 10.5), (4.0, 66, 1.5), 30), (100, (13.5, 36, 9.0), (4.0, 66, 1.5), 31)],
+                        focus=(4.0, 66, 0), fstop=11.0),
+    # Part A: a lit tent at night, low and close on its door flap, which is thrown open and swings, then hangs still
+    "flap": dict(n=55, light="night", keys=[(1, (-5.3, 8.4, 0.95), (-6.3, 11.4, 1.0), 30), (55, (-5.45, 8.9, 0.95), (-6.3, 11.4, 1.0), 33)],
+                 focus=(-6.25, 11.4, 1.0), fstop=2.8),
+    # Part A: from inside the camp toward the gap in the thorn fence and the black bush beyond, where the lions vanish
+    "bush": dict(n=65, light="night", keys=[(1, (-0.6, 6.2, 1.15), (6.5, -4.5, 0.55), 30), (65, (-0.3, 5.6, 1.1), (6.8, -4.8, 0.55), 31)],
+                 focus=(4.0, -0.8, 0.5), fstop=4.0),
+    "patterson": dict(n=170, light="dusk", keys=[(1, (3.0, -6.5, 1.0), (2.2, 14, 1.9), 30), (165, (2.85, -4.6, 0.95), (2.2, 14, 1.85), 32)],
                       focus=(2.2, 0.0, 1.0), fstop=4.0),
     # night falls over the camp: a high wide crane down over the boma, the fires and the glowing tents
-    "campnight": dict(n=45, light="night", keys=[(1, (16, -12, 9.5), (-1, 12, 0.5), 26), (45, (15, -10.5, 7.8), (-1, 12, 0.6), 26)],
+    "campnight": dict(n=100, light="night", keys=[(1, (16.5, -12.5, 10.5), (-1, 12, 0.5), 26), (100, (14.5, -9.8, 7.0), (-1, 12, 0.6), 27)],
                       focus=(-1, 12, 0.5), fstop=11.0),
     # outside the thorn fence, low in the grass, looking at the camp fires: where the lions wait
-    "grass": dict(n=66, light="night", keys=[(1, (-2.6, -17.5, 1.05), (-2.0, 10, 0.9), 30), (66, (-2.6, -16.6, 0.98), (-2.0, 10, 0.9), 32)],
+    "grass": dict(n=98, light="night", keys=[(1, (-2.6, -17.5, 1.05), (-2.0, 10, 0.9), 30), (98, (-2.6, -16.6, 0.98), (-2.0, 10, 0.9), 32)],
                   focus=(-2.4, -12.5, 0.5), fstop=2.8),
     # inside the camp: the camera trucks along the row of tents while the lions creep past
-    "creep": dict(n=63, light="night", keys=[(1, (7.6, 1.6, 1.2), (-4.0, 9.5, 1.0), 26), (63, (7.6, 3.6, 1.2), (-4.0, 11.5, 1.0), 26)],
+    "creep": dict(n=80, light="night", keys=[(1, (7.6, 1.6, 1.2), (-4.0, 9.5, 1.0), 26), (80, (7.6, 3.6, 1.2), (-4.0, 11.5, 1.0), 26)],
                   focus=(-0.5, 8.0, 0.6), fstop=4.0),
     # living-environment test: a slow sideways truck at dusk past grass close to the lens, the camp and its fire smoke in
     # the middle distance, acacias and the bridge far off, so near, middle and far layers slide at different speeds
@@ -322,7 +331,9 @@ def tent(loc, rot, lit, canvas, pole, glow):
     v = [bm.verts.new(p) for p in [(-w / 2, -d / 2, 0), (w / 2, -d / 2, 0), (0, -d / 2, h), (-w / 2, d / 2, 0), (w / 2, d / 2, 0), (0, d / 2, h)]]
     bm.faces.new((v[0], v[2], v[5], v[3]))
     bm.faces.new((v[1], v[4], v[5], v[2]))
-    bm.faces.new((v[0], v[1], v[2]))
+    is_flap = SHOT == "flap" and abs(x + 8.4) < 0.01 and abs(y - 11.5) < 0.01
+    if not is_flap:  # the flap shot's tent has an open doorway with a hinged flap instead of a closed end
+        bm.faces.new((v[0], v[1], v[2]))
     bm.faces.new((v[3], v[5], v[4]))
     bm.to_mesh(me)
     bm.free()
@@ -351,6 +362,8 @@ def tent(loc, rot, lit, canvas, pole, glow):
             r.rotation_euler = (0, sx * -0.95, 0)
             r.data.materials.append(pole)
             r.parent = o
+    if is_flap:
+        door_flap(o, w, d, h, canvas)
     if lit and LIGHT == "night":
         L = ts.link(bpy.data.objects.new("tentlamp", bpy.data.lights.new("tentlamp", "POINT")))
         L.location = (x, y, 1.2)
@@ -433,6 +446,34 @@ def props(wood, sack):
         o.scale = (0.12, 5.0, 0.12)
         o.location.x += (i % 3) * 0.2
         o.data.materials.append(steel)
+
+
+def door_flap(o, w, d, h, canvas):
+    """one half of the front door of a tent, hinged on its outer edge: thrown open around frame 6, swinging back and
+    forth less and less, then hanging still half open (the shot never shows what happened inside)"""
+    import bmesh
+    me = bpy.data.meshes.new("flap")
+    bm = bmesh.new()
+    # a half-triangle of canvas: hinge along the sloping outer edge is approximated by a vertical hinge at x = -w*0.42
+    v = [bm.verts.new(p) for p in [(0, 0, 0), (w * 0.42, 0, 0), (w * 0.42, 0, h * 0.97), (0, 0, h * 0.17)]]
+    bm.faces.new(v)
+    bm.to_mesh(me)
+    bm.free()
+    f = ts.link(bpy.data.objects.new("flap", me))
+    f.parent = o
+    f.location = (-w * 0.42, -d / 2 - 0.03, 0)
+    f.modifiers.new("sub", "SUBSURF").levels = 2
+    sol = f.modifiers.new("sol", "SOLIDIFY"); sol.thickness = 0.01
+    f.data.materials.append(canvas)
+    for fr, ang in [(1, 0), (5, 0), (8, -1.35), (13, -0.55), (18, -1.05), (24, -0.7), (31, -0.92), (40, -0.8), (55, -0.82)]:
+        f.rotation_euler.z = ang
+        f.keyframe_insert("rotation_euler", frame=fr)
+    # the closed door's other half
+    g = ts.link(bpy.data.objects.new("flap2", me.copy()))
+    g.parent = o
+    g.location = (w * 0.42, -d / 2 - 0.02, 0)
+    g.scale.x = -1
+    g.data.materials.append(canvas)
 
 
 def bridge(steel, stone):
@@ -695,7 +736,7 @@ def build():
     lowc = veg.fine_grass("grass_low", 700, ((-7, 2), (-15.5, -11)), rnd, hs=(0.45, 0.9))
     parts = [near, far, lowc]
     # each shot gets a dense patch of grass where its camera looks closest
-    dense = {"envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9))}.get(SHOT)
+    dense = {"envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "bush": ((3, 11), (-9, -1)), "grass": ((-8, 3), (-16, -9))}.get(SHOT)
     if dense:
         parts.append(veg.fine_grass("grass_dense", int(16 * (dense[0][1] - dense[0][0]) * (dense[1][1] - dense[1][0])), dense, rnd,
                                     skip=lambda x, y: track(x, y) or math.hypot(x + 2.5, y - 10.5) < 12.8))
