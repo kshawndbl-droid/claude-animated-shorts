@@ -87,6 +87,40 @@ def linear_all():
                 ts.set_linear(x)
 
 
+HAZE = {"dusk": ((0.95, 0.42, 0.2), 0.85), "night": ((0.03, 0.045, 0.1), 1.0)}
+RIVER_Y = 66.0
+
+
+def river_y(x):
+    """centre line of the Tsavo river valley, meandering gently across the plain"""
+    return RIVER_Y + 3.0 * math.sin(x / 23.0) + 1.5 * math.sin(x / 9.0 + 1.0)
+
+
+def add_haze(m, near=60.0, far=1400.0, top=1.0):
+    """aerial perspective: blend the surface toward the horizon sky colour with distance from the camera"""
+    if m is None or not m.use_nodes:
+        return m
+    nd, ln = m.node_tree.nodes, m.node_tree.links
+    out = next(n for n in nd if n.type == "OUTPUT_MATERIAL")
+    if not out.inputs[0].links:
+        return m
+    src = out.inputs[0].links[0].from_socket
+    cd = nd.new("ShaderNodeCameraData")
+    mr = nd.new("ShaderNodeMapRange")
+    mr.interpolation_type = "SMOOTHSTEP"
+    mr.inputs["From Min"].default_value, mr.inputs["From Max"].default_value = near, far
+    mr.inputs["To Max"].default_value = top
+    ln.new(cd.outputs["View Distance"], mr.inputs[0])
+    em = nd.new("ShaderNodeEmission")
+    col, st = HAZE[LIGHT]
+    em.inputs["Color"].default_value = (*col, 1)
+    em.inputs["Strength"].default_value = st
+    mx = nd.new("ShaderNodeMixShader")
+    ln.new(mr.outputs[0], mx.inputs[0]); ln.new(src, mx.inputs[1]); ln.new(em.outputs[0], mx.inputs[2])
+    ln.new(mx.outputs[0], out.inputs[0])
+    return m
+
+
 def mat(name, rgb, rough=0.8, emit=0.0):
     return ts.flat_mat(name, rgb, rough=rough, emit=emit)
 
@@ -96,8 +130,14 @@ def ground():
     g = bpy.context.object
     g.modifiers.new("sub", "SUBSURF").levels = 0
     bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.subdivide(number_cuts=90)
+    bpy.ops.mesh.subdivide(number_cuts=150)
     bpy.ops.object.mode_set(mode="OBJECT")
+    # the Tsavo river valley crossing the line: sloping banks down to a flat bed
+    for v in g.data.vertices:
+        w = g.matrix_world @ v.co
+        dy = abs(w.y - river_y(w.x))
+        k = min(1.0, max(0.0, (9.5 - dy) / 4.5))
+        v.co.z -= 4.6 * k * k * (3 - 2 * k)
     d = g.modifiers.new("hills", "DISPLACE")
     t = bpy.data.textures.new("hills", "CLOUDS")
     t.noise_scale = 22
@@ -109,7 +149,9 @@ def ground():
     for v in g.data.vertices:
         w = g.matrix_world @ v.co
         r = math.hypot(w.x, w.y - 8)
-        vg.add([v.index], min(1.0, max(0.0, (r - 22) / 30)), "REPLACE")
+        edge = min(1.0, max(0.0, (130 - max(abs(w.x), abs(w.y - 40))) / 25))
+        river = min(1.0, abs(w.y - river_y(w.x)) / 14)
+        vg.add([v.index], min(1.0, max(0.0, (r - 22) / 30)) * edge * river, "REPLACE")
     d.vertex_group = "far"
     m = ts.tex_mat("redearth", os.path.join(A, "ambientcg", "Ground054"), "Ground054_1K-JPG", scale=60, tint=(1.0, 0.62, 0.42))
     b = m.node_tree.nodes["Principled BSDF"]
@@ -135,25 +177,139 @@ def ground():
         ln.new(dim.outputs[0], cmb.inputs[i])
     ln.new(cmb.outputs[0], mul.inputs[7])
     ln.new(mul.outputs[2], b.inputs["Base Color"])
-    g.data.materials.append(m)
+    g.data.materials.append(add_haze(m))
+    far_land(m)
     return g
+
+
+def far_land(near_mat):
+    """the plain going on to the horizon: a huge ground sheet just under the detailed one, darker scrub patches on it"""
+    import bmesh
+    me = bpy.data.meshes.new("farland")
+    bm = bmesh.new()
+    uv = bm.loops.layers.uv.new("UVMap")
+    O_, (ix0, ix1, iy0, iy1) = 3500, (-127.0, 127.0, -87.0, 167.0)
+    outer = [bm.verts.new(p_) for p_ in ((-O_, -O_, -0.06), (O_, -O_, -0.06), (O_, O_, -0.06), (-O_, O_, -0.06))]
+    inner = [bm.verts.new(p_) for p_ in ((ix0, iy0, -0.06), (ix1, iy0, -0.06), (ix1, iy1, -0.06), (ix0, iy1, -0.06))]
+    for i in range(4):  # a frame of four quads around the detailed ground (it has the river valley cut into it)
+        f_ = bm.faces.new((outer[i], outer[(i + 1) % 4], inner[(i + 1) % 4], inner[i]))
+        for lp in f_.loops:
+            lp[uv].uv = (lp.vert.co.x / 7000 + 0.5, lp.vert.co.y / 7000 + 0.5)
+    bm.normal_update()
+    bm.to_mesh(me)
+    bm.free()
+    for p_ in me.polygons:
+        if p_.normal.z < 0:
+            p_.flip()
+    f = ts.link(bpy.data.objects.new("farland", me))
+    m = ts.tex_mat("farearth", os.path.join(A, "ambientcg", "Ground054"), "Ground054_1K-JPG", scale=900, tint=(0.9, 0.55, 0.36))
+    nd, ln = m.node_tree.nodes, m.node_tree.links
+    b = m.node_tree.nodes["Principled BSDF"]
+    b.inputs["Specular IOR Level"].default_value = 0.08
+    tc = nd.new("ShaderNodeTexCoord")
+    no = nd.new("ShaderNodeTexNoise"); no.inputs["Scale"].default_value = 140.0; no.inputs["Detail"].default_value = 6
+    ln.new(tc.outputs["Object"], no.inputs["Vector"])
+    mk = mask(nd, ln, no.outputs["Fac"], 0.52, 0.6)
+    src = b.inputs["Base Color"].links[0].from_socket
+    mx = nd.new("ShaderNodeMix"); mx.data_type = "RGBA"
+    ln.new(mk, mx.inputs[0]); ln.new(src, mx.inputs[6]); mx.inputs[7].default_value = (0.16, 0.15, 0.07, 1)
+    ln.new(mx.outputs[2], b.inputs["Base Color"])
+    f.data.materials.append(add_haze(m, 40, 1800))
+    return f
+
+
+def hills():
+    """a ring of low hills and a few higher ranges on the far horizon (Tsavo is ringed by hills), soft in the haze"""
+    import bmesh
+    from mathutils import noise
+    me = bpy.data.meshes.new("hills")
+    bm = bmesh.new()
+    NA, NR = 260, 14
+    rows = []
+    for j in range(NR):
+        r = 650 + j * 95
+        row = []
+        for i in range(NA):
+            a = i / NA * math.tau
+            x, y = math.sin(a) * r, math.cos(a) * r + 40
+            prof = math.sin(math.pi * j / (NR - 1))
+            ridge = 0.5 + 0.5 * noise.noise(Vector((math.cos(a) * 3.0, math.sin(a) * 3.0, j * 0.12)))
+            big = max(0.0, noise.noise(Vector((math.cos(a) * 1.3 + 5, math.sin(a) * 1.3, 0.4))))
+            h = prof * (25 + 70 * ridge + 260 * big ** 1.5)
+            row.append(bm.verts.new((x, y, h - 2)))
+        rows.append(row)
+    for j in range(NR - 1):
+        for i in range(NA):
+            bm.faces.new((rows[j][i], rows[j][(i + 1) % NA], rows[j + 1][(i + 1) % NA], rows[j + 1][i]))
+    bm.to_mesh(me)
+    bm.free()
+    o = ts.link(bpy.data.objects.new("hills", me))
+    for p_ in me.polygons:
+        p_.use_smooth = True
+    m = mat("hillmat", (0.28, 0.17, 0.14), rough=0.95)
+    o.data.materials.append(add_haze(m, 300, 1900, 0.88))
+    return o
+
+
+def far_trees():
+    """scattered acacias and bush across the plain beyond the camp: cheap trunk + flat canopy, fading into the haze"""
+    import bmesh
+    me = bpy.data.meshes.new("fartrees")
+    bm = bmesh.new()
+    n = 0
+    while n < 260:
+        a, r = rnd.uniform(0, math.tau), 70 + 520 * rnd.random() ** 1.6
+        x, y = math.sin(a) * r, math.cos(a) * r + 30
+        if (abs(x - 4) < 8 and y > 0) or abs(y - river_y(x)) < 13:
+            continue
+        n += 1
+        s_ = rnd.uniform(0.7, 1.6)
+        if rnd.random() < 0.6:  # tree
+            res = bmesh.ops.create_cone(bm, cap_ends=False, segments=5, radius1=0.18 * s_, radius2=0.08 * s_, depth=3.4 * s_)
+            for v in res["verts"]:
+                v.co += Vector((x, y, 1.7 * s_))
+            for k in range(rnd.randint(1, 3)):
+                c = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=rnd.uniform(1.8, 2.8) * s_)
+                ox, oy = rnd.uniform(-1.2, 1.2) * s_, rnd.uniform(-1.0, 1.0) * s_
+                for v in c["verts"]:
+                    v.co.x = v.co.x * 1.3 + x + ox
+                    v.co.y = v.co.y + y + oy
+                    v.co.z = v.co.z * 0.3 + (3.5 + rnd.uniform(-0.2, 0.4)) * s_
+        else:  # low bush clump
+            for k in range(rnd.randint(2, 4)):
+                c = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=rnd.uniform(0.8, 1.5) * s_)
+                ox, oy = rnd.uniform(-1.5, 1.5), rnd.uniform(-1.5, 1.5)
+                for v in c["verts"]:
+                    v.co.x += x + ox
+                    v.co.y += y + oy
+                    v.co.z = v.co.z * 0.6 + 0.5 * s_
+    bm.to_mesh(me)
+    bm.free()
+    o = ts.link(bpy.data.objects.new("fartrees", me))
+    m = mat("farleaf", (0.18, 0.2, 0.09), rough=0.9)
+    o.data.materials.append(add_haze(m, 60, 1300, 0.95))
+    o.visible_shadow = False
+    return o
 
 
 def railway():
     sleeper = mat("sleeper", (0.22, 0.15, 0.1))
     steel = ts.flat_mat("rail", (0.32, 0.3, 0.3), rough=0.35, metal=0.8)
-    for i in range(130):
+    end = river_y(4.0)
+    for i in range(int((end + 12) / 0.75)):
         y = -12 + i * 0.75
-        bpy.ops.mesh.primitive_cube_add(size=1, location=(4.0, y, 0.05))
+        on_span = y > end - 9.5
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(4.0, y, 0.72 if on_span else 0.05))
         s = bpy.context.object
         s.scale = (2.4, 0.22, 0.1)
         s.rotation_euler.z = rnd.uniform(-0.03, 0.03)
         s.data.materials.append(sleeper)
     for x in (3.45, 4.55):
-        bpy.ops.mesh.primitive_cube_add(size=1, location=(x, 36, 0.15))
-        r = bpy.context.object
-        r.scale = (0.08, 98, 0.12)
-        r.data.materials.append(steel)
+        for (y0, y1, z) in ((-12, end - 9.5, 0.15), (end - 9.5, end, 0.82)):
+            bpy.ops.mesh.primitive_cube_add(size=1, location=(x, (y0 + y1) / 2, z))
+            r = bpy.context.object
+            r.scale = (0.08, y1 - y0, 0.12)
+            r.data.materials.append(steel)
 
 
 def tent(loc, rot, lit, canvas, pole, glow):
@@ -280,35 +436,85 @@ def props(wood, sack):
 
 
 def bridge(steel, stone):
-    """the unfinished girder bridge far down the line: stone piers and a lattice truss with a gap in the middle"""
-    y0 = 62
-    for px in (-14, 0, 14):
-        bpy.ops.mesh.primitive_cube_add(size=1, location=(4 + px, y0, 2.5))
+    """the unfinished Tsavo bridge where the line crosses the river: masonry abutments and a pier standing in the
+    river, a finished lattice-girder span resting on them, and the far span still only timber falsework"""
+    x0, yb = 4.0, river_y(4.0)
+    y_near, y_mid, y_far = yb - 9.5, yb, yb + 9.5
+    rock = ts.tex_mat("masonry", os.path.join(A, "ambientcg", "Rock030"), "Rock030_1K-JPG", scale=1.5, tint=(0.95, 0.78, 0.62))
+    add_haze(rock, 60, 1400)
+    for (yy, w_, depth) in ((y_near, 3.2, 2.0), (y_mid, 2.6, 2.0), (y_far, 3.2, 2.0)):
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(x0, yy, -2.25))
         p = bpy.context.object
-        p.scale = (2.2, 3.2, 9)
-        p.location.z = -2
-        p.data.materials.append(stone)
-    for seg in (-1, 1):
-        if seg == 1:
-            continue  # the far span is not built yet
-        x0 = 4 + seg * 7
-        for side in (-1.2, 1.2):
-            for z in (2.6, 6.0):
-                bpy.ops.mesh.primitive_cube_add(size=1, location=(x0, y0 + side, z))
-                b = bpy.context.object
-                b.scale = (14, 0.25, 0.3)
-                b.data.materials.append(steel)
-            for i in range(8):
-                bpy.ops.mesh.primitive_cube_add(size=1, location=(x0 - 6 + i * 1.75, y0 + side, 4.3))
-                b = bpy.context.object
-                b.scale = (0.18, 0.18, 4.6)
-                b.rotation_euler.y = 0.55 if i % 2 else -0.55
-                b.data.materials.append(steel)
-    # scaffolding poles on the empty span
-    pole = mat("scaff", (0.4, 0.3, 0.2))
-    for i in range(7):
-        bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.1, depth=7, location=(5 + i * 1.8, y0 + rnd.choice((-1.4, 1.4)), 1.5))
-        bpy.context.object.data.materials.append(pole)
+        p.scale = (w_ + 0.6, depth, 4.9)
+        bev = p.modifiers.new("bev", "BEVEL"); bev.width = 0.06
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        p.data.materials.append(rock)
+        # a capstone course
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(x0, yy, 0.25))
+        c = bpy.context.object
+        c.scale = (w_ + 0.9, depth + 0.3, 0.3)
+        c.data.materials.append(rock)
+    # the finished span: two lattice girders along the line, cross girders and a deck with the rails
+    L = y_mid - y_near
+    for side in (-1.25, 1.25):
+        for z in (0.55, 3.0):
+            bpy.ops.mesh.primitive_cube_add(size=1, location=(x0 + side, (y_near + y_mid) / 2, z))
+            bc = bpy.context.object
+            bc.scale = (0.22, L + 0.8, 0.28)
+            bc.data.materials.append(steel)
+        for i in range(9):
+            yy = y_near + 0.4 + i * (L - 0.8) / 8
+            bpy.ops.mesh.primitive_cube_add(size=1, location=(x0 + side, yy + (L - 0.8) / 16, 1.78))
+            dgn = bpy.context.object
+            dgn.scale = (0.12, 0.12, 2.9)
+            dgn.rotation_euler.x = 0.5 if i % 2 else -0.5
+            dgn.data.materials.append(steel)
+    for i in range(6):
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(x0, y_near + 0.5 + i * (L - 1) / 5, 0.5))
+        cg = bpy.context.object
+        cg.scale = (2.7, 0.18, 0.2)
+        cg.data.materials.append(steel)
+    for i in range(6):  # top bracing
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(x0, y_near + 1 + i * (L - 2) / 5, 3.0))
+        tb = bpy.context.object
+        tb.scale = (2.5, 0.12, 0.12)
+        tb.data.materials.append(steel)
+    # the far span: timber falsework trestles in the river, no girders yet
+    wood = mat("falsework", (0.32, 0.22, 0.14))
+    for k in range(3):
+        yy = y_mid + 2.4 + k * 2.4
+        for side in (-1.0, 1.0):
+            bpy.ops.mesh.primitive_cube_add(size=1, location=(x0 + side, yy, -2.0))
+            t_ = bpy.context.object
+            t_.scale = (0.2, 0.2, 4.6)
+            t_.data.materials.append(wood)
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(x0, yy, 0.2))
+        cap = bpy.context.object
+        cap.scale = (2.6, 0.25, 0.22)
+        cap.data.materials.append(wood)
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(x0, yy, -1.8))
+        br = bpy.context.object
+        br.scale = (0.12, 0.12, 2.9)
+        br.rotation_euler.y = 1.0
+        br.data.materials.append(wood)
+    # the river: a slow brown-green stream on the valley floor
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, RIVER_Y, -4.15))
+    rv = bpy.context.object
+    rv.scale = (300, 9, 1)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    me = rv.data
+    for v in me.vertices:
+        v.co.y = v.co.y + (river_y(v.co.x) - RIVER_Y)
+    sub = rv.modifiers.new("sub", "SUBSURF")
+    sub.subdivision_type = "SIMPLE"; sub.levels = 5
+    water = ts.flat_mat("water", (0.06, 0.07, 0.05), rough=0.08, metal=0.0)
+    rv.data.materials.append(add_haze(water, 60, 1400))
+    # trees along the banks, greener where there is water
+    leaf = veg.leaf_mat("bankleaf", None)
+    barkm = mat("bankbark", (0.2, 0.15, 0.1))
+    for i, xx in enumerate((-46, -30, -19, 14, 22, 33, 48, 62, -60)):
+        side = 1 if i % 2 else -1
+        veg.acacia(f"bank{i}", (xx, river_y(xx) + side * rnd.uniform(9.5, 12)), rnd.uniform(1.1, 1.5), rnd, barkm, leaf)
 
 
 def sky_and_light(sc):
@@ -447,7 +653,7 @@ def build():
     thorn_fence((-2.5, 10.5), 12.5, (math.radians(-60), 0.28), thorn)
     bark = mat("bark", (0.2, 0.15, 0.1))
     leaf = veg.leaf_mat("acacialeaf", None)
-    for i, (x, y, s) in enumerate([(-16, 2, 1.0), (10, 20, 1.2), (-20, 26, 1.3), (22, 40, 1.5), (-6, 48, 1.4), (14, 70, 1.6), (-30, 60, 1.8),
+    for i, (x, y, s) in enumerate([(-16, 2, 1.0), (10, 20, 1.2), (-20, 26, 1.3), (22, 40, 1.5), (-6, 48, 1.4), (14, 82, 1.6), (-30, 49, 1.8),
                                    (30, 8, 1.1), (-11, -10, 1.0), (9, 3, 0.8), (-24, 12, 1.1), (40, 28, 1.4), (-40, 40, 1.6), (26, 95, 1.9), (-14, 110, 2.0)]):
         veg.acacia(f"acacia{i}", (x, y), s, rnd, bark, leaf)
     # shrubs and bushes (Poly Haven CC0): Searsia (an African shrub), wild rooibos, scrub, dry fallen branches
@@ -475,7 +681,11 @@ def build():
     steel = ts.flat_mat("girder", (0.25, 0.2, 0.18), rough=0.5, metal=0.6)
     stone = mat("pier", (0.55, 0.45, 0.38))
     bridge(steel, stone)
-    track = lambda x, y: abs(x - 4.0) < 1.6
+    hills()
+    far_trees()
+    for m_ in (leaf, bark, steel):
+        add_haze(m_)
+    track = lambda x, y: abs(x - 4.0) < 1.6 or abs(y - river_y(x)) < 10.5
     incamp = lambda x, y: math.hypot(x + 2.5, y - 10.5) < 11.0 and rnd.random() < 0.85
     gm = veg.grass_mat()
     # fine savanna grass: dense close to the camp, thinner far away (beyond ~35 m it reads as texture anyway)

@@ -10,6 +10,7 @@ import camEnv from "../../stories/tsavo/sets/envtest.json";
 const FPS = 30, N = 150;
 export const ENVTEST_FRAMES = N;
 export const EnvTest2: React.FC = () => <EnvTest set="envtest2" leaves />;
+export const EnvTest3: React.FC = () => <EnvTest set="envtest3" leaves />;
 type CamJ = { frames: Record<string, { m: number[][]; lens: number; sensor: number }> };
 const cam = camEnv as CamJ;
 const project = (f: number, p: [number, number, number]) => {
