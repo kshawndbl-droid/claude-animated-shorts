@@ -117,7 +117,7 @@ def crickets(a, b, gain):
     return g * gain * c
 
 
-sfx += crickets(0, 21.9, 0.09) + crickets(21.6, 39.9, 0.07) + crickets(44.0, 50.0, 0.08)
+# no crickets (user 2026-11-26: "just get rid of the crickets")
 wind = bp(rng.standard_normal(N), 200, 900) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.07 * t))
 sfx += wind * 0.05 * (env(0, 39.9, 2) + env(44, 50.2, 1))
 # fire crackle under the thorn fences and in the study
