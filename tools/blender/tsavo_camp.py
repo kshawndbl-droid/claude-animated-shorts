@@ -26,11 +26,11 @@ rnd = random.Random(1898)
 SHOTS = {
     # Patterson by the line at dusk, tents behind him and the bridge girders far down the track: slow low push-in
     # Part A opening: night, high over the river valley, the unfinished bridge under the moon; a slow drift toward it
-    "bridgenight": dict(n=100, light="night", keys=[(1, (16, 30, 10.5), (4.0, 66, 1.5), 30), (100, (13.5, 36, 9.0), (4.0, 66, 1.5), 31)],
+    "bridgenight": dict(n=100, light="night", keys=[(1, (13, 44, 7.5), (1.8, 66, 0.5), 30), (100, (11.2, 48, 6.2), (2.0, 66, 0.5), 32)],
                         focus=(4.0, 66, 0), fstop=11.0),
     # Part A: a lit tent at night, low and close on its door flap, which is thrown open and swings, then hangs still
-    "flap": dict(n=55, light="night", keys=[(1, (-5.3, 8.4, 0.95), (-6.3, 11.4, 1.0), 30), (55, (-5.45, 8.9, 0.95), (-6.3, 11.4, 1.0), 33)],
-                 focus=(-6.25, 11.4, 1.0), fstop=2.8),
+    "flap": dict(n=55, light="night", keys=[(1, (-11.2, 2.9, 0.95), (-12.05, 6.9, 1.0), 30), (55, (-11.35, 3.4, 0.95), (-12.05, 6.9, 1.0), 33)],
+                 focus=(-12.05, 6.9, 1.0), fstop=2.8),
     # Part A: from inside the camp toward the gap in the thorn fence and the black bush beyond, where the lions vanish
     "bush": dict(n=65, light="night", keys=[(1, (-0.6, 6.2, 1.15), (6.5, -4.5, 0.55), 30), (65, (-0.3, 5.6, 1.1), (6.8, -4.8, 0.55), 31)],
                  focus=(4.0, -0.8, 0.5), fstop=4.0),
@@ -331,7 +331,7 @@ def tent(loc, rot, lit, canvas, pole, glow):
     v = [bm.verts.new(p) for p in [(-w / 2, -d / 2, 0), (w / 2, -d / 2, 0), (0, -d / 2, h), (-w / 2, d / 2, 0), (w / 2, d / 2, 0), (0, d / 2, h)]]
     bm.faces.new((v[0], v[2], v[5], v[3]))
     bm.faces.new((v[1], v[4], v[5], v[2]))
-    is_flap = SHOT == "flap" and abs(x + 8.4) < 0.01 and abs(y - 11.5) < 0.01
+    is_flap = SHOT == "flap" and abs(x + 12.5) < 0.01 and abs(y - 9.0) < 0.01
     if not is_flap:  # the flap shot's tent has an open doorway with a hinged flap instead of a closed end
         bm.faces.new((v[0], v[1], v[2]))
     bm.faces.new((v[3], v[5], v[4]))
@@ -363,12 +363,12 @@ def tent(loc, rot, lit, canvas, pole, glow):
             r.data.materials.append(pole)
             r.parent = o
     if is_flap:
-        door_flap(o, w, d, h, canvas)
+        door_flap(o, w, d, h, glow if (lit and LIGHT == "night") else canvas)
     if lit and LIGHT == "night":
         L = ts.link(bpy.data.objects.new("tentlamp", bpy.data.lights.new("tentlamp", "POINT")))
         L.location = (x, y, 1.2)
         L.data.color = (1.0, 0.62, 0.3)
-        L.data.energy = 60
+        L.data.energy = 60 if not is_flap else 160
         L.data.shadow_soft_size = 0.3
     return o
 
@@ -462,7 +462,6 @@ def door_flap(o, w, d, h, canvas):
     f = ts.link(bpy.data.objects.new("flap", me))
     f.parent = o
     f.location = (-w * 0.42, -d / 2 - 0.03, 0)
-    f.modifiers.new("sub", "SUBSURF").levels = 2
     sol = f.modifiers.new("sol", "SOLIDIFY"); sol.thickness = 0.01
     f.data.materials.append(canvas)
     for fr, ang in [(1, 0), (5, 0), (8, -1.35), (13, -0.55), (18, -1.05), (24, -0.7), (31, -0.92), (40, -0.8), (55, -0.82)]:
