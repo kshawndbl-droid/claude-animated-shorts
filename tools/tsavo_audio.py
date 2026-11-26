@@ -137,10 +137,7 @@ def growl(at, dur, gain):
     place(sfx, reverb(x, 1.5, 0.4), at, gain)
 
 
-growl(13.4, 1.8, 0.35)
-growl(16.9, 1.4, 0.3)
-growl(26.2, 1.2, 0.28)
-growl(83.45, 1.6, 0.22)
+# no growls (user 2026-11-26: they sounded bad)
 
 # --- stingers / hits
 def hit(at, gain, f0=38):
@@ -171,7 +168,7 @@ music *= 1 - 0.9 * env(49.95, 50.6, 0.1)   # silence after the shot
 for k in range(9):
     shot(58.25 + k * 0.15 + rng.uniform(0, 0.04), 0.22, dist=True)
 # morning birds
-for at in np.arange(50.9, 54.3, 0.55):
+for at in []:  # no birds (user: whistling)
     tt = np.arange(int(0.18 * SR)) / SR
     f = 2600 + 900 * np.sin(np.pi * tt / 0.18) + rng.uniform(-300, 300)
     place(sfx, np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * tt / 0.18) * 0.5, at + rng.uniform(0, 0.2), 0.12)
@@ -195,11 +192,11 @@ for w in W:
     a, b = int(max(0, w["s"] - 0.08) * SR), int(min(LEN, w["e"] + 0.15) * SR)
     speech[a:b] = 1
 speech = lp(speech, 3, order=1)
-duck = 1 - 0.55 * np.clip(speech, 0, 1)
+duck = 1 - 0.75 * np.clip(speech, 0, 1)
 
 voice = load(voice_p)[:N]
 voice = np.pad(voice, (0, N - len(voice)))
-bed = (music * duck * 0.55 + sfx * (1 - 0.3 * np.clip(speech, 0, 1)))
+bed = 0.6 * (music * duck * 0.55 + sfx * (1 - 0.6 * np.clip(speech, 0, 1)))
 fade = np.clip((LEN - t) / 1.0, 0, 1)
 mix = (voice * 1.0 + bed) * fade
 mix /= max(1.0, np.max(np.abs(mix)) / 0.95)
