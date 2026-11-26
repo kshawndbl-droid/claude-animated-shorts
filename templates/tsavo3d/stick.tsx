@@ -20,7 +20,7 @@ export type StickPose = {
   hold?: "rifle" | "plank" | null;
 };
 
-const H = 1.75, HEAD_R = 0.25, NECK_Y = -1.13, HIP_Y = -0.78, SH_Y = -1.07, SH_X = 0.15, HIP_X = 0.08, UP = 0.3, LO = 0.29, THIGH = 0.4, SHIN = 0.38;
+const H = 1.55, HEAD_R = 0.25, NECK_Y = -0.99, HIP_Y = -0.63, SH_Y = -0.93, SH_X = 0.15, HIP_X = 0.08, UP = 0.22, LO = 0.21, THIGH = 0.32, SHIN = 0.31;
 const LW = 0.032;
 
 /** two-bone limb from a root: angle a from straight down (+ toward facing), bend b at the middle joint */
@@ -119,58 +119,118 @@ export const Stick: React.FC<{ x: number; y: number; ppm: number; look: StickLoo
   };
 
 export type LionP = { phase?: number; walk?: number; crouch?: number; eyes?: "glow" | "normal" | "narrow"; tail?: number; look?: number; roar?: number };
-/** flat lion to match the cast: a lean bean body in tawny flat colour with a darker back, a round head with a pale
- *  muzzle, small round ears, NO mane (Tsavo), stick-ish legs with round paws and a tufted tail. Units: metres, ~2.6 m long. */
+
+/** two-bone IK: root -> target with segment lengths l1, l2; bend = +1 puts the joint forward (+x), -1 backward */
+const ik = (rx: number, ry: number, tx: number, ty: number, l1: number, l2: number, bend: number) => {
+  const dx = tx - rx, dy = ty - ry, d = Math.min(l1 + l2 - 1e-4, Math.max(Math.abs(l1 - l2) + 1e-4, Math.hypot(dx, dy)));
+  const a = Math.atan2(dy, dx), off = Math.acos((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d));
+  const ang = a - bend * off;
+  return { jx: rx + Math.cos(ang) * l1, jy: ry + Math.sin(ang) * l1 };
+};
+/** a tapered limb segment with round ends (filled), drawn as an outline pass then a fill pass */
+const taper = (ax: number, ay: number, bx: number, by: number, wa: number, wb: number) => {
+  const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+  return `M${P(ax + nx * wa)},${P(ay + ny * wa)} L${P(bx + nx * wb)},${P(by + ny * wb)} A${P(wb)},${P(wb)} 0 0 1 ${P(bx - nx * wb)},${P(by - ny * wb)} L${P(ax - nx * wa)},${P(ay - ny * wa)} A${P(wa)},${P(wa)} 0 0 1 ${P(ax + nx * wa)},${P(ay + ny * wa)} Z`;
+};
+
+/** flat lion to match the cast: a side-profile maneless male with a real lion silhouette (deep chest, tucked belly,
+ *  strong haunches, long muzzle), tapered legs planted by IK so the paws stay on the ground, a tufted tail, warm tawny
+ *  fills with a lighter belly and a darker back. Units: metres, nose to rump ~2.3 m, ~1.1 m at the shoulder. */
 export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP; flip?: boolean; id: string; shade?: number }> = ({ x, y, ppm, pose, flip = false, id, shade = 1 }) => {
   const w = pose.walk ?? 0, ph = (pose.phase ?? 0) * Math.PI * 2, cr = pose.crouch ?? 0;
-  const bodyY = -0.86 + 0.26 * cr + w * 0.015 * Math.sin(ph * 2);
-  const legLen = 0.8 - 0.26 * cr;
-  const FUR = "#c99550", DARK = "#9c6a34", PALE = "#ecd3a4";
-  const legs = [[-0.55, 0], [-0.45, 0.5], [0.45, 0.25], [0.58, 0.75]].map(([lx, o], i) => {
-    const s = Math.sin(ph + o * Math.PI * 2), lift = Math.max(0, Math.cos(ph + o * Math.PI * 2));
-    const a = 24 * w * s, b = (lx < 0 ? 1 : -1) * (10 + 30 * cr + 28 * w * lift);
-    const l = limb(lx, bodyY + 0.12, a, b, legLen * 0.52, legLen * 0.5);
-    return { ...l, x0: lx, near: i % 2 === 1 };
+  const FUR = "#d29a52", DARK = "#a86e34", PALE = "#f1dcb2", FAR = "#9a6634";
+  const drop = 0.17 * cr, bob = w * 0.02 * Math.sin(ph * 2);
+  const sh = { x: 0.52, y: -0.98 + drop * 0.9 + bob }, hp = { x: -0.6, y: -0.96 + drop + bob };
+  // legs: paws on the ground, swinging forward in the swing phase (lifted) and sliding back in stance
+  const legs = [
+    { r: hp, o: 0.0, front: false, near: false }, { r: sh, o: 0.25, front: true, near: false },
+    { r: hp, o: 0.5, front: false, near: true }, { r: sh, o: 0.75, front: true, near: true },
+  ].map((L) => {
+    const u = (((pose.phase ?? 0) + L.o) % 1 + 1) % 1;
+    const swing = u > 0.62, k = swing ? (u - 0.62) / 0.38 : u / 0.62;
+    const off = w * (swing ? -0.28 + 0.56 * (0.5 - 0.5 * Math.cos(Math.PI * k)) : 0.28 - 0.56 * k);
+    const lift = swing ? w * 0.14 * Math.sin(Math.PI * k) : 0;
+    const fx = L.r.x + (L.front ? 0.06 : 0.02) + off + (L.near ? 0.04 : -0.04), fy = -lift;
+    const l1 = L.front ? 0.45 : 0.47, l2 = L.front ? 0.45 : 0.45;
+    const j = ik(L.r.x, L.r.y + 0.08, fx, fy - 0.06, l1, l2, L.front ? -1 : 1);
+    return { ...L, fx, fy, j };
   });
-  const swish = Math.sin((pose.tail ?? 0) * 2.2) * 0.12;
-  const eyes = pose.eyes ?? "normal";
-  const hx = 0.95, hy = bodyY - 0.12 + 0.1 * cr;
-  const legEl = (l: typeof legs[number], k: number) => (
-    <g key={k}>
-      <path d={`M${P(l.x0)},${P(bodyY + 0.12)} L${P(l.mx)},${P(l.my)} L${P(l.ex)},${P(l.ey - 0.04)}`} stroke={INK} strokeWidth={0.13} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <path d={`M${P(l.x0)},${P(bodyY + 0.12)} L${P(l.mx)},${P(l.my)} L${P(l.ex)},${P(l.ey - 0.04)}`} stroke={l.near ? FUR : DARK} strokeWidth={0.09} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <ellipse cx={l.ex + 0.04} cy={l.ey - 0.04} rx={0.08} ry={0.05} fill={l.near ? FUR : DARK} stroke={INK} strokeWidth={0.022} />
-    </g>
-  );
+  // limb shapes: big upper parts (shoulder / thigh) that merge into the body, slim lower legs, round paws
+  const shapes = (L: typeof legs[number]) => {
+    const rx = L.r.x + (L.front ? -0.02 : 0.06), ry = L.r.y + (L.front ? 0.06 : 0.1);
+    return {
+      up: taper(rx, ry, L.j.jx, L.j.jy, L.front ? 0.18 : 0.23, 0.085),
+      lo: taper(L.j.jx, L.j.jy, L.fx, L.fy - 0.06, 0.075, 0.06),
+      paw: { cx: L.fx + 0.05, cy: L.fy - 0.045 },
+    };
+  };
+  /** silhouette group: every shape gets an ink outline first, then all fills on top, so overlaps merge into one shape */
+  const sil = (ls: typeof legs, col: string, extra: React.ReactNode[] = [], extraFill: React.ReactNode[] = []) => {
+    const sh_ = ls.map(shapes);
+    return (
+      <g>
+        {sh_.map((q, i) => <g key={`o${i}`} stroke={INK} strokeWidth={0.06} strokeLinejoin="round" fill={INK}>
+          <path d={q.up} /><path d={q.lo} /><ellipse cx={q.paw.cx} cy={q.paw.cy} rx={0.11} ry={0.055} /></g>)}
+        {extra}
+        {sh_.map((q, i) => <g key={`f${i}`} fill={col}>
+          <path d={q.up} /><path d={q.lo} /><ellipse cx={q.paw.cx} cy={q.paw.cy} rx={0.11} ry={0.055} /></g>)}
+        {extraFill}
+        {sh_.map((q, i) => [0.03, 0.08].map((t) => <path key={`t${i}${t}`} d={`M${P(q.paw.cx - 0.02 + t)},${P(q.paw.cy + 0.04)} v-0.035`} stroke={INK} strokeWidth={0.012} strokeLinecap="round" />))}
+      </g>
+    );
+  };
+  const swish = Math.sin((pose.tail ?? 0) * 2.0) * 0.14;
+  const eyes = pose.eyes ?? "normal", roar = pose.roar ?? 0;
+  // head sits forward of the shoulder; lower and further forward when stalking
+  const hx = sh.x + 0.42 + 0.06 * cr, hy = sh.y - 0.2 + 0.24 * cr;
+  const by = (v: number) => P(v);
+  const body = `M${by(hp.x - 0.28)},${by(hp.y + 0.12)}
+    C${by(hp.x - 0.32)},${by(hp.y - 0.12)} ${by(hp.x - 0.12)},${by(hp.y - 0.2)} ${by(hp.x + 0.15)},${by(hp.y - 0.14)}
+    C${by(hp.x + 0.45)},${by(hp.y - 0.04)} ${by(sh.x - 0.45)},${by(sh.y - 0.06)} ${by(sh.x - 0.1)},${by(sh.y - 0.19)}
+    C${by(sh.x + 0.1)},${by(sh.y - 0.22)} ${by(sh.x + 0.3)},${by(hy + 0.0)} ${by(hx - 0.05)},${by(hy + 0.02)}
+    L${by(hx + 0.02)},${by(hy + 0.22)}
+    C${by(sh.x + 0.32)},${by(sh.y + 0.25)} ${by(sh.x + 0.25)},${by(sh.y + 0.42)} ${by(sh.x + 0.05)},${by(sh.y + 0.44)}
+    C${by(sh.x - 0.3)},${by(sh.y + 0.46)} ${by(hp.x + 0.55)},${by(hp.y + 0.24)} ${by(hp.x + 0.28)},${by(hp.y + 0.3)}
+    C${by(hp.x + 0.05)},${by(hp.y + 0.42)} ${by(hp.x - 0.22)},${by(hp.y + 0.36)} ${by(hp.x - 0.28)},${by(hp.y + 0.12)} Z`;
+  const tb = { x: hp.x - 0.26, y: hp.y - 0.04 };
+  const tail = `M${P(tb.x)},${P(tb.y)} C${P(tb.x - 0.35)},${P(tb.y + 0.05)} ${P(tb.x - 0.45)},${P(tb.y + 0.45 + swish)} ${P(tb.x - 0.62)},${P(tb.y + 0.5 + swish * 1.4)}`;
   return (
     <g transform={`translate(${P(x)},${P(y)}) scale(${P((flip ? -1 : 1) * ppm)},${P(ppm)})`} style={shade !== 1 ? { filter: `brightness(${shade})` } : undefined}>
-      <defs><radialGradient id={`lg${id}`}><stop offset="0" stopColor="#fff6b0" stopOpacity={0.95} /><stop offset="0.4" stopColor="#ffcf3a" stopOpacity={0.5} /><stop offset="1" stopColor="#ffb000" stopOpacity={0} /></radialGradient></defs>
-      <ellipse cx={0} cy={0} rx={1.0} ry={0.08} fill="rgba(10,5,10,0.35)" />
-      {legs.filter((l) => !l.near).map(legEl)}
-      {/* tail */}
-      <path d={`M-0.8,${P(bodyY - 0.05)} Q-1.25,${P(bodyY - 0.3 + swish)} -1.35,${P(bodyY + 0.15 + swish)}`} stroke={INK} strokeWidth={0.075} fill="none" strokeLinecap="round" />
-      <path d={`M-0.8,${P(bodyY - 0.05)} Q-1.25,${P(bodyY - 0.3 + swish)} -1.35,${P(bodyY + 0.15 + swish)}`} stroke={FUR} strokeWidth={0.04} fill="none" strokeLinecap="round" />
-      <ellipse cx={-1.36} cy={bodyY + 0.2 + swish} rx={0.06} ry={0.09} fill="#4a2a18" stroke={INK} strokeWidth={0.02} />
-      {/* body */}
-      <path d={`M-0.8,${P(bodyY)} C-0.85,${P(bodyY - 0.34)} -0.2,${P(bodyY - 0.32)} 0.1,${P(bodyY - 0.27)} C0.5,${P(bodyY - 0.4)} 0.85,${P(bodyY - 0.34)} 0.82,${P(bodyY)}
-        C0.82,${P(bodyY + 0.3)} 0.5,${P(bodyY + 0.34)} 0.2,${P(bodyY + 0.2)} C-0.1,${P(bodyY + 0.24)} -0.75,${P(bodyY + 0.3)} -0.8,${P(bodyY)} Z`} fill={FUR} stroke={INK} strokeWidth={0.03} strokeLinejoin="round" />
-      <path d={`M-0.7,${P(bodyY - 0.16)} C-0.3,${P(bodyY - 0.27)} 0.3,${P(bodyY - 0.27)} 0.7,${P(bodyY - 0.18)}`} stroke={DARK} strokeWidth={0.07} fill="none" strokeLinecap="round" opacity={0.7} />
-      <path d={`M-0.4,${P(bodyY + 0.14)} Q0.1,${P(bodyY + 0.22)} 0.55,${P(bodyY + 0.14)}`} stroke={PALE} strokeWidth={0.05} fill="none" strokeLinecap="round" opacity={0.7} />
-      {legs.filter((l) => l.near).map(legEl)}
-      {/* head */}
-      <g transform={`translate(${P(hx)},${P(hy)}) rotate(${P(6 * cr - 4 * (pose.roar ?? 0))})`}>
-        {[-0.13, 0.08].map((ex, i) => <g key={i}><circle cx={ex} cy={-0.24} r={0.075} fill={FUR} stroke={INK} strokeWidth={0.022} /><circle cx={ex} cy={-0.235} r={0.035} fill="#7a4a2a" /></g>)}
-        <circle cx={0} cy={0} r={0.27} fill={FUR} stroke={INK} strokeWidth={0.028} />
-        <ellipse cx={0.15} cy={0.09} rx={0.17} ry={0.12} fill={PALE} stroke={INK} strokeWidth={0.022} />
-        {(pose.roar ?? 0) > 0.1 && <ellipse cx={0.18} cy={0.2} rx={0.1} ry={0.05 + 0.08 * (pose.roar ?? 0)} fill="#5a1a22" stroke={INK} strokeWidth={0.02} />}
-        <path d="M0.2,0.02 L0.32,0.02 L0.26,0.08 Z" fill="#3a2024" stroke={INK} strokeWidth={0.014} strokeLinejoin="round" />
-        <path d="M0.26,0.08 v0.04 M0.26,0.12 q-0.05,0.03 -0.09,0 M0.26,0.12 q0.05,0.03 0.09,0" stroke={INK} strokeWidth={0.016} fill="none" strokeLinecap="round" />
-        {[0.02, 0.18].map((ex, i) => <g key={i}>
-          {eyes === "glow" && <circle cx={ex} cy={-0.07} r={0.13} fill={`url(#lg${id})`} />}
-          <ellipse cx={ex} cy={-0.07} rx={0.045} ry={eyes === "narrow" ? 0.022 : 0.04} fill={eyes === "glow" ? "#fff3a0" : "#e8b030"} stroke={INK} strokeWidth={0.014} />
-          <ellipse cx={ex + (pose.look ?? 0.4) * 0.012} cy={-0.07} rx={0.011} ry={eyes === "narrow" ? 0.015 : 0.03} fill={INK} />
-          <path d={`M${P(ex - 0.06)},${P(-0.13 + (i ? -0.015 : 0.015))} L${P(ex + 0.06)},${P(-0.13 + (i ? 0.02 : -0.02))}`} stroke={INK} strokeWidth={0.03} strokeLinecap="round" />
-        </g>)}
+      <defs>
+        <linearGradient id={`lb${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#c58c46" /><stop offset="0.3" stopColor={FUR} /><stop offset="0.8" stopColor={FUR} /><stop offset="1" stopColor={PALE} /></linearGradient>
+        <radialGradient id={`lg${id}`}><stop offset="0" stopColor="#fff6b0" stopOpacity={0.95} /><stop offset="0.4" stopColor="#ffcf3a" stopOpacity={0.5} /><stop offset="1" stopColor="#ffb000" stopOpacity={0} /></radialGradient>
+      </defs>
+      <ellipse cx={0} cy={0} rx={1.05} ry={0.07} fill="rgba(10,5,10,0.35)" />
+      {sil(legs.filter((l) => !l.near), FAR)}
+      <path d={tail} stroke={INK} strokeWidth={0.075} fill="none" strokeLinecap="round" />
+      <path d={tail} stroke={FUR} strokeWidth={0.042} fill="none" strokeLinecap="round" />
+      <ellipse cx={tb.x - 0.64} cy={tb.y + 0.55 + swish * 1.4} rx={0.07} ry={0.1} transform={`rotate(${P(20 + swish * 60)},${P(tb.x - 0.64)},${P(tb.y + 0.55 + swish * 1.4)})`} fill="#4a2a18" stroke={INK} strokeWidth={0.022} />
+      {sil(legs.filter((l) => l.near), FUR,
+        [<path key="bo" d={body} fill={INK} stroke={INK} strokeWidth={0.064} strokeLinejoin="round" />],
+        [<path key="bf" d={body} fill={`url(#lb${id})`} />])}
+      {/* shoulder and haunch shading lines */}
+      <path d={`M${P(sh.x - 0.12)},${P(sh.y - 0.05)} q0.08,0.2 0.0,0.38`} stroke={DARK} strokeWidth={0.025} fill="none" strokeLinecap="round" opacity={0.6} />
+      <path d={`M${P(hp.x + 0.18)},${P(hp.y - 0.08)} q-0.14,0.18 -0.02,0.4`} stroke={DARK} strokeWidth={0.025} fill="none" strokeLinecap="round" opacity={0.6} />
+      {/* head in profile: skull, long muzzle, chin, small round ear, a short neck ruff (maneless) */}
+      <g transform={`translate(${P(hx)},${P(hy)}) rotate(${P(8 * cr - 10 * roar)})`}>
+        <path d="M-0.18,0.02 Q-0.22,0.2 -0.08,0.3 L0.0,0.22 Q-0.1,0.12 -0.08,0.0 Z" fill={DARK} stroke={INK} strokeWidth={0.022} strokeLinejoin="round" />
+        <ellipse cx={-0.05} cy={-0.17} rx={0.065} ry={0.075} fill={FUR} stroke={INK} strokeWidth={0.024} />
+        <ellipse cx={-0.045} cy={-0.16} rx={0.03} ry={0.04} fill="#6a3e22" />
+        <path d={`M-0.14,0.02 C-0.16,-0.14 0.02,-0.2 0.14,-0.15 C0.22,-0.12 0.27,-0.06 0.36,-0.05 C0.42,-0.04 0.44,0.02 0.43,0.07
+          C0.42,${P(0.12 + 0.02 * roar)} 0.36,${P(0.13 + 0.02 * roar)} 0.3,${P(0.13 + 0.02 * roar)} L0.3,${P(0.15 + 0.12 * roar)} C0.22,${P(0.2 + 0.12 * roar)} 0.08,${P(0.2 + 0.1 * roar)} 0.02,${P(0.16 + 0.06 * roar)}
+          C-0.08,0.16 -0.14,0.1 -0.14,0.02 Z`} fill={FUR} stroke={INK} strokeWidth={0.028} strokeLinejoin="round" />
+        <path d="M0.2,0.02 C0.28,0.0 0.38,0.0 0.42,0.06 C0.38,0.12 0.26,0.13 0.18,0.1 Z" fill={PALE} />
+        <path d="M0.04,0.14 C0.1,0.19 0.22,0.19 0.28,0.15" stroke={PALE} strokeWidth={0.04} fill="none" strokeLinecap="round" />
+        {roar > 0.1 && <path d={`M0.3,0.13 L0.12,${P(0.14 + 0.06 * roar)} L0.3,${P(0.15 + 0.12 * roar)} Z`} fill="#5a1a22" stroke={INK} strokeWidth={0.016} />}
+        <path d="M0.4,-0.04 Q0.45,-0.02 0.44,0.03 Q0.4,0.04 0.38,0.0 Z" fill="#3a2024" stroke={INK} strokeWidth={0.014} strokeLinejoin="round" />
+        <path d="M0.42,0.05 Q0.4,0.1 0.34,0.11" stroke={INK} strokeWidth={0.014} fill="none" strokeLinecap="round" />
+        {[0, 1, 2].map((i) => <circle key={i} cx={0.28 + i * 0.03} cy={0.055 + (i % 2) * 0.02} r={0.007} fill="#6a4a3a" />)}
+        {/* eye: amber almond with a dark tear line down the muzzle, a heavy brow */}
+        {eyes === "glow" && <circle cx={0.15} cy={-0.07} r={0.14} fill={`url(#lg${id})`} />}
+        <path d={`M0.1,-0.07 Q0.15,${eyes === "narrow" ? -0.095 : -0.115} 0.2,-0.075 Q0.15,${eyes === "narrow" ? -0.05 : -0.035} 0.1,-0.07 Z`} fill={eyes === "glow" ? "#fff3a0" : "#e8b030"} stroke={INK} strokeWidth={0.014} />
+        <ellipse cx={0.16 + (pose.look ?? 0.4) * 0.008} cy={-0.072} rx={0.01} ry={eyes === "narrow" ? 0.012 : 0.025} fill={INK} />
+        <path d="M0.08,-0.135 Q0.16,-0.16 0.23,-0.11" stroke={INK} strokeWidth={0.03} fill="none" strokeLinecap="round" />
+        <path d="M0.2,-0.05 Q0.25,0.0 0.29,0.02" stroke={DARK} strokeWidth={0.016} fill="none" strokeLinecap="round" />
       </g>
     </g>
   );
