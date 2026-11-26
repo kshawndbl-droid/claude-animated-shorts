@@ -123,10 +123,10 @@ export type LionP = { phase?: number; walk?: number; crouch?: number; eyes?: "gl
  *  muzzle, small round ears, NO mane (Tsavo), stick-ish legs with round paws and a tufted tail. Units: metres, ~2.6 m long. */
 export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP; flip?: boolean; id: string; shade?: number }> = ({ x, y, ppm, pose, flip = false, id, shade = 1 }) => {
   const w = pose.walk ?? 0, ph = (pose.phase ?? 0) * Math.PI * 2, cr = pose.crouch ?? 0;
-  const bodyY = -0.68 + 0.22 * cr + w * 0.015 * Math.sin(ph * 2);
-  const legLen = 0.62 - 0.2 * cr;
+  const bodyY = -0.86 + 0.26 * cr + w * 0.015 * Math.sin(ph * 2);
+  const legLen = 0.8 - 0.26 * cr;
   const FUR = "#c99550", DARK = "#9c6a34", PALE = "#ecd3a4";
-  const legs = [[-0.62, 0], [-0.5, 0.5], [0.5, 0.25], [0.62, 0.75]].map(([lx, o], i) => {
+  const legs = [[-0.55, 0], [-0.45, 0.5], [0.45, 0.25], [0.58, 0.75]].map(([lx, o], i) => {
     const s = Math.sin(ph + o * Math.PI * 2), lift = Math.max(0, Math.cos(ph + o * Math.PI * 2));
     const a = 24 * w * s, b = (lx < 0 ? 1 : -1) * (10 + 30 * cr + 28 * w * lift);
     const l = limb(lx, bodyY + 0.12, a, b, legLen * 0.52, legLen * 0.5);
@@ -152,8 +152,8 @@ export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP
       <path d={`M-0.8,${P(bodyY - 0.05)} Q-1.25,${P(bodyY - 0.3 + swish)} -1.35,${P(bodyY + 0.15 + swish)}`} stroke={FUR} strokeWidth={0.04} fill="none" strokeLinecap="round" />
       <ellipse cx={-1.36} cy={bodyY + 0.2 + swish} rx={0.06} ry={0.09} fill="#4a2a18" stroke={INK} strokeWidth={0.02} />
       {/* body */}
-      <path d={`M-0.85,${P(bodyY)} C-0.9,${P(bodyY - 0.3)} -0.2,${P(bodyY - 0.3)} 0.1,${P(bodyY - 0.24)} C0.5,${P(bodyY - 0.34)} 0.85,${P(bodyY - 0.3)} 0.82,${P(bodyY)}
-        C0.82,${P(bodyY + 0.22)} 0.5,${P(bodyY + 0.26)} 0.2,${P(bodyY + 0.16)} C-0.1,${P(bodyY + 0.22)} -0.8,${P(bodyY + 0.26)} -0.85,${P(bodyY)} Z`} fill={FUR} stroke={INK} strokeWidth={0.03} strokeLinejoin="round" />
+      <path d={`M-0.8,${P(bodyY)} C-0.85,${P(bodyY - 0.34)} -0.2,${P(bodyY - 0.32)} 0.1,${P(bodyY - 0.27)} C0.5,${P(bodyY - 0.4)} 0.85,${P(bodyY - 0.34)} 0.82,${P(bodyY)}
+        C0.82,${P(bodyY + 0.3)} 0.5,${P(bodyY + 0.34)} 0.2,${P(bodyY + 0.2)} C-0.1,${P(bodyY + 0.24)} -0.75,${P(bodyY + 0.3)} -0.8,${P(bodyY)} Z`} fill={FUR} stroke={INK} strokeWidth={0.03} strokeLinejoin="round" />
       <path d={`M-0.7,${P(bodyY - 0.16)} C-0.3,${P(bodyY - 0.27)} 0.3,${P(bodyY - 0.27)} 0.7,${P(bodyY - 0.18)}`} stroke={DARK} strokeWidth={0.07} fill="none" strokeLinecap="round" opacity={0.7} />
       <path d={`M-0.4,${P(bodyY + 0.14)} Q0.1,${P(bodyY + 0.22)} 0.55,${P(bodyY + 0.14)}`} stroke={PALE} strokeWidth={0.05} fill="none" strokeLinecap="round" opacity={0.7} />
       {legs.filter((l) => l.near).map(legEl)}

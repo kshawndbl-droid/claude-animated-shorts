@@ -58,7 +58,7 @@ const walkPos = (T: number, t0: number, t1: number, from: [number, number], to: 
 // 1. dusk by the line: Patterson walks up beside the track, points back toward the bridge, then faces us
 const S_Patterson: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 165);
-  const wp = walkPos(T, a + 0.2, W("british") - 0.2, [1.4, 2.6], [2.2, -1.3]);
+  const wp = walkPos(T, a + 0.2, W("british") - 0.2, [1.8, 2.6], [2.7, -0.7]);
   const P = project(camPatterson as CamJ, f, [wp.x, wp.y, 0]);
   const pointing = T > W("led") - 0.1 && T < W("john") - 0.1, named = T > W("john") - 0.1;
   const wk = walkPos(T, a, a + 5.6, [6.0, 6.0], [5.7, 0.6]);
@@ -123,7 +123,7 @@ const S_Grass: React.FC<ShotP> = ({ T, a }) => {
 // 4. inside the camp: the lions creep past the tents, low, toward the firelight
 const S_Creep: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 63);
-  const l1 = walkPos(T, a - 0.6, a + 2.6, [1.6, -1.0], [1.0, 8.5], 1.2), l2 = walkPos(T, a - 0.2, a + 2.6, [-0.6, -2.4], [-1.0, 5.6], 1.2);
+  const l1 = walkPos(T, a - 1.4, a + 2.6, [1.6, -1.0], [1.0, 8.5], 1.2), l2 = walkPos(T, a - 1.0, a + 2.6, [-0.4, -1.4], [-1.0, 6.6], 1.2);
   const A1 = project(camCreep as CamJ, f, [l1.x, l1.y, 0]), A2 = project(camCreep as CamJ, f, [l2.x, l2.y, 0]);
   // facing: moving toward +y reads right-to-left or left-to-right depending on the camera; use the screen direction
   const B1 = project(camCreep as CamJ, f, [l1.x + 0.0, l1.y + 0.5, 0]);
@@ -141,7 +141,7 @@ const S_Creep: React.FC<ShotP> = ({ T, a }) => {
 
 const SHOTS: [number, React.FC<ShotP>][] = [[OFF3, S_Patterson], [12.1, S_Night], [13.6, S_Grass], [15.8, S_Creep]];
 const sub = defaultStyle("serious", { keyWords: KEY, y: 0.86, maxChars: 16 });
-const subS = { ...sub, moves: [{ from: 0, to: 12.1, y: 0.3 }, { from: 12.1, to: 13.6, y: 0.86 }, { from: 13.6, to: 15.8, y: 0.45 }, { from: 15.8, to: 30, y: 0.4 }] };
+const subS = { ...sub, moves: [{ from: 0, to: 12.1, y: 0.86 }, { from: 12.1, to: 13.6, y: 0.86 }, { from: 13.6, to: 15.8, y: 0.45 }, { from: 15.8, to: 30, y: 0.4 }] };
 
 export const Tsavo3DTest: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }) => {
   useMarkerFont();
