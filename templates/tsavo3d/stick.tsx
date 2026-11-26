@@ -134,12 +134,12 @@ const taper = (ax: number, ay: number, bx: number, by: number, wa: number, wb: n
 };
 
 /** flat lion to match the cast: a side-profile maneless MALE (the Tsavo man-eaters): heavy build, deep chest, thick
- *  neck, big blocky head with a broad muzzle, and a short sparse ruff of mane tufts on the cheeks, neck and throat.
+ *  neck, big blocky head with a broad muzzle and heavy jaw. NO mane (the Tsavo lions were maneless).
  *  Each leg is one smooth tapered shape (no round joints), planted by IK so the paws stay on the ground.
  *  Units: metres, nose to rump ~2.4 m, ~1.1 m at the shoulder. */
 export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP; flip?: boolean; id: string; shade?: number }> = ({ x, y, ppm, pose, flip = false, id, shade = 1 }) => {
   const w = pose.walk ?? 0, ph = (pose.phase ?? 0) * Math.PI * 2, cr = pose.crouch ?? 0;
-  const FUR = "#c58e4e", DARK = "#94602e", PALE = "#e9cfa0", FAR = "#8a5a2c", RUFF = "#a36a34", RUFF_D = "#6a4020";
+  const FUR = "#c58e4e", DARK = "#94602e", PALE = "#e9cfa0", FAR = "#8a5a2c";
   const drop = 0.18 * cr, bob = w * 0.02 * Math.sin(ph * 2);
   const sh = { x: 0.55, y: -1.0 + drop * 0.9 + bob }, hp = { x: -0.62, y: -0.95 + drop + bob };
   const legs = [
@@ -191,17 +191,6 @@ export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP
     C${by(hp.x + 0.05)},${by(hp.y + 0.44)} ${by(hp.x - 0.24)},${by(hp.y + 0.38)} ${by(hp.x - 0.3)},${by(hp.y + 0.14)} Z`;
   const tb = { x: hp.x - 0.28, y: hp.y - 0.04 };
   const tail = `M${P(tb.x)},${P(tb.y)} C${P(tb.x - 0.35)},${P(tb.y + 0.05)} ${P(tb.x - 0.45)},${P(tb.y + 0.45 + swish)} ${P(tb.x - 0.62)},${P(tb.y + 0.52 + swish * 1.4)}`;
-  // sparse mane ruff: a ragged collar of short tufts behind the cheek, down the neck and under the throat
-  const ruff = (() => {
-    const pts: string[] = [];
-    const n = 23;
-    for (let i = 0; i <= n; i++) {
-      const a = (-120 + (i / n) * 215) * Math.PI / 180;
-      const r = i % 2 === 0 ? 1.0 : 0.87 + 0.04 * Math.sin(i * 2.3);
-      pts.push(`${P(-0.08 + Math.cos(Math.PI - a) * 0.3 * r)},${P(0.06 + Math.sin(a) * 0.33 * r * (a > 0 ? 1.1 : 1))}`);
-    }
-    return `M${pts.join(" L")} L0.05,0.12 L-0.05,-0.12 Z`;
-  })();
   return (
     <g transform={`translate(${P(x)},${P(y)}) scale(${P((flip ? -1 : 1) * ppm)},${P(ppm)})`} style={shade !== 1 ? { filter: `brightness(${shade})` } : undefined}>
       <defs>
@@ -219,20 +208,15 @@ export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP
       {/* muscle lines: shoulder blade, haunch, a darker line along the back */}
       <path d={`M${P(sh.x - 0.14)},${P(sh.y - 0.12)} q0.1,0.22 0.0,0.44`} stroke={DARK} strokeWidth={0.026} fill="none" strokeLinecap="round" opacity={0.6} />
       <path d={`M${P(hp.x + 0.2)},${P(hp.y - 0.1)} q-0.16,0.2 -0.02,0.44`} stroke={DARK} strokeWidth={0.026} fill="none" strokeLinecap="round" opacity={0.6} />
-      <g transform={`translate(${P(hx)},${P(hy)}) rotate(${P(6 * cr - 10 * roar)}) scale(1.3,1.32)`}>
-        {/* the ruff, behind the head */}
-        <path d={ruff} fill={RUFF} stroke={INK} strokeWidth={0.022} strokeLinejoin="round" />
-        {[[-0.26, -0.02, -0.33, 0.06], [-0.22, 0.12, -0.3, 0.2], [-0.12, 0.24, -0.16, 0.32], [-0.2, -0.14, -0.28, -0.1]].map(([a, b, c, d], i) =>
-          <path key={i} d={`M${a},${b} L${c},${d}`} stroke={RUFF_D} strokeWidth={0.02} strokeLinecap="round" />)}
+      <g transform={`translate(${P(hx)},${P(hy)}) rotate(${P(6 * cr - 10 * roar)}) scale(1.42,1.45)`}>
         {/* ear: small, round, dark backed */}
-        <ellipse cx={-0.06} cy={-0.18} rx={0.06} ry={0.068} fill={RUFF_D} stroke={INK} strokeWidth={0.022} />
+        <ellipse cx={-0.06} cy={-0.18} rx={0.06} ry={0.068} fill={DARK} stroke={INK} strokeWidth={0.022} />
         <ellipse cx={-0.05} cy={-0.17} rx={0.028} ry={0.036} fill="#a87a4a" />
         {/* skull + broad, deep muzzle + heavy chin */}
         <path d={`M-0.15,0.03 C-0.17,-0.14 0.0,-0.2 0.14,-0.16 C0.23,-0.13 0.28,-0.08 0.37,-0.07 C0.44,-0.06 0.46,0.01 0.45,0.08
           C0.44,${P(0.14 + 0.02 * roar)} 0.38,${P(0.16 + 0.02 * roar)} 0.31,${P(0.16 + 0.02 * roar)} L0.31,${P(0.18 + 0.12 * roar)} C0.22,${P(0.24 + 0.12 * roar)} 0.06,${P(0.24 + 0.1 * roar)} 0.0,${P(0.19 + 0.06 * roar)}
           C-0.1,0.18 -0.15,0.12 -0.15,0.03 Z`} fill={FUR} stroke={INK} strokeWidth={0.026} strokeLinejoin="round" />
-        {/* cheek tufts (part of the sparse mane) */}
-        <path d="M-0.1,0.0 L-0.17,0.05 L-0.1,0.08 L-0.16,0.13 L-0.07,0.13 L-0.1,0.19 L0.0,0.16" fill={RUFF} stroke={INK} strokeWidth={0.016} strokeLinejoin="round" />
+        <path d="M-0.12,0.08 C-0.1,0.2 0.0,0.25 0.1,0.22" stroke={DARK} strokeWidth={0.02} fill="none" strokeLinecap="round" opacity={0.55} />
         <path d="M0.2,0.02 C0.29,-0.01 0.4,0.0 0.44,0.07 C0.4,0.14 0.27,0.15 0.18,0.11 Z" fill={PALE} />
         <path d="M0.04,0.17 C0.1,0.22 0.22,0.22 0.29,0.18" stroke={PALE} strokeWidth={0.045} fill="none" strokeLinecap="round" />
         {roar > 0.1 && <path d={`M0.31,0.16 L0.12,${P(0.17 + 0.06 * roar)} L0.31,${P(0.18 + 0.12 * roar)} Z`} fill="#5a1a22" stroke={INK} strokeWidth={0.016} />}
