@@ -35,6 +35,9 @@ SHOTS = {
     # inside the camp: the camera trucks along the row of tents while the lions creep past
     "creep": dict(n=63, light="night", keys=[(1, (7.6, 1.6, 1.2), (-4.0, 9.5, 1.0), 26), (63, (7.6, 3.6, 1.2), (-4.0, 11.5, 1.0), 26)],
                   focus=(-0.5, 8.0, 0.6), fstop=4.0),
+    # character test plate: a still camera inside the camp at dusk looking east across the line, for walks across frame
+    "chartest": dict(n=1, light="dusk", keys=[(1, (-1.5, 0.5, 1.0), (10.0, 4.5, 1.3), 28)],
+                     focus=(1.8, 1.7, 0.8), fstop=5.6),
 }
 SHOT = arg("--shot", "patterson")
 LIGHT = SHOTS[SHOT]["light"]
