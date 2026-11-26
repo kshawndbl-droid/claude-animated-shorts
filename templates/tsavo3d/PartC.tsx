@@ -111,7 +111,7 @@ const Flash: React.FC<{ x: number; y: number; r: number; k: number }> = ({ x, y,
 const Mist: React.FC<{ cam: CamJ; f: number; T: number; c: [number, number]; n?: number }> = ({ cam, f, T, c, n = 14 }) =>
   <g filter="url(#soft)">{Array.from({ length: n }, (_, i) => {
     const p = proj(cam, f, [c[0] - 8 + 16 * rr(i, 1) + 0.25 * T, c[1] - 6 + 14 * rr(i, 2), 0.25 + 0.3 * rr(i, 3)]);
-    return p.z > 1 ? <ellipse key={i} cx={p.x} cy={p.y} rx={2.6 * p.ppm} ry={0.35 * p.ppm} fill="rgb(150,170,210)" opacity={0.08 + 0.05 * Math.sin(T * 0.6 + i)} /> : null;
+    return p.z > 7 ? <ellipse key={i} cx={p.x} cy={p.y} rx={2.6 * p.ppm} ry={0.35 * p.ppm} fill="rgb(150,170,210)" opacity={0.05 + 0.03 * Math.sin(T * 0.6 + i)} /> : null;
   })}</g>;
 
 const NIGHT = 0.55;
@@ -133,7 +133,7 @@ const Platform: React.FC<{ f: number; T: number }> = ({ f, T }) => {
 const Aim: React.FC<{ f: number; T: number }> = ({ f, T }) => {
   const cam = camAim as CamJ, FIRE = 2.2;
   const sh = shake(T, [FIRE], 26);
-  const P = proj(cam, 1, [14.75, -2.35, 3.04]);
+  const P = proj(cam, 1, [14.21, -1.64, 3.04]);
   const raise = sm(T / 0.6);
   const kick = T > FIRE ? Math.exp(-(T - FIRE) * 9) : 0;
   const M = muzzle(P.x, P.y, P.ppm, true);
@@ -162,8 +162,8 @@ const Aim: React.FC<{ f: number; T: number }> = ({ f, T }) => {
 /** next morning: eight men carry the first lion on a litter of two poles (local T 0..3.7) */
 const Carry: React.FC<{ f: number; T: number }> = ({ f, T }) => {
   const sf = held(f, 2), cam = camCarry as CamJ;
-  const D = [0.848, 0.53], R = [0.53, -0.848], B = [7.6, -8.2];
-  const V = 0.75, s = -2.6 + V * T;
+  const D = [0.848, 0.53], R = [0.53, -0.848], B = [6.4, -9.0];
+  const V = 0.75, s = -1.3 + V * T;
   const at = (ss: number, dd: number, z = 0) => proj(cam, sf, [B[0] + ss * R[0] + dd * D[0], B[1] + ss * R[1] + dd * D[1], z]);
   const man = (row: number, i: number) => {
     const o = 1.5 - i, P = at(s + o, row);
@@ -172,14 +172,14 @@ const Carry: React.FC<{ f: number; T: number }> = ({ f, T }) => {
   };
   const pole = (row: number) => { const a = at(s - 2.1, row, 0.6), b = at(s + 2.1, row, 0.6);
     return <path d={`M${a.x},${a.y} L${b.x},${b.y}`} stroke="#6a4a2a" strokeWidth={Math.max(4, 0.06 * a.ppm)} strokeLinecap="round" style={{ filter: `drop-shadow(0 0 1px ${INK})` }} />; };
-  const L = at(s - 0.1, 0, 0.18);
+  const L = at(s - 0.1, 0, 0.62);
   const fade = 1 - sm(T / 0.35);
   return <>
     <Plate shot="carry" f={sf} />
     <Svg>
       {[0, 1, 2, 3].map((i) => man(0.75, i))}
       {pole(0.75)}
-      <g transform={`translate(${L.x},${L.y}) rotate(-2) translate(${-L.x},${-L.y})`}><FlatLion id="carried" x={L.x} y={L.y} ppm={L.ppm * 0.92} pose={{ crouch: 1, eyes: "narrow", tail: 0.2 }} /></g>
+      <g transform={`translate(${L.x},${L.y}) rotate(-2) translate(${-L.x},${-L.y})`}><FlatLion id="carried" x={L.x} y={L.y} ppm={L.ppm} pose={{ crouch: 1, eyes: "narrow", tail: 0.2 }} /></g>
       {pole(-0.75)}
       {[0, 1, 2, 3].map((i) => man(-0.75, i))}
     </Svg>
@@ -206,8 +206,8 @@ const SHOT_T = [0.1, 0.25, 0.39, 0.53, 0.68, 0.82, 0.96, 1.1, 1.24];
 const Shots: React.FC<{ f: number; T: number }> = ({ T }) => {
   const cam = camShots as CamJ;
   const sh = shake(T, SHOT_T, 12);
-  const P = proj(cam, 1, [-0.35, -11.25, 0]);
-  const Lp = proj(cam, 1, [4.6, -7.0, 0]);
+  const P = proj(cam, 1, [0.35, -9.88, 0]);
+  const Lp = proj(cam, 1, [6.4, -7.55, 0]);
   const fall = sm((T - 1.35) / 0.25);
   const last = SHOT_T.filter((s) => s <= T).pop();
   const fl = last !== undefined ? Math.max(0, 1 - (T - last) / 0.07) : 0;
@@ -217,7 +217,7 @@ const Shots: React.FC<{ f: number; T: number }> = ({ T }) => {
     <Plate shot="shots" f={1} />
     <Svg>
       <g opacity={1 - fall * 0.6} transform={`translate(0,${fall * 0.9 * Lp.ppm})`}>
-        <FlatLion id="second" x={Lp.x} y={Lp.y} ppm={Lp.ppm} flip pose={{ crouch: 0.35 + 0.5 * fall, roar: T < 1.3 ? 0.6 + 0.3 * Math.sin(T * 9) : 0, eyes: "normal", look: -0.4 }} />
+        <FlatLion id="second" x={Lp.x} y={Lp.y} ppm={Lp.ppm} flip pose={{ crouch: 0.5 + 0.4 * fall, roar: T < 1.3 ? 0.6 + 0.3 * Math.sin(T * 9) : 0, eyes: "normal", look: -0.4 }} />
       </g>
     </Svg>
     <Plate shot="shots" f={1} fg />
