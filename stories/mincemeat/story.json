@@ -1,0 +1,96 @@
+{
+ "title": "Operation Mincemeat, 1943",
+ "engine": "chatterbox",
+ "mood": "mystery",
+ "voice": "bm_lewis",
+ "sources": [
+  "IWM: The war on paper, Operation Mincemeat",
+  "National WWII Museum: Secret Agents, Secret Armies, Operation Mincemeat (2022)"
+ ],
+ "lines": [
+  {
+   "text": "In nineteen forty-three, British spies came up with a plan so strange it sounds made up. They would fool Hitler... with a dead man.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "His name was Glyndwr Michael, a homeless Welshman who had died after swallowing rat poison.",
+   "mood": "sad",
+   "emotion": 0.4,
+   "gap": 0.4
+  },
+  {
+   "text": "British intelligence gave him a new life. Major William Martin, Royal Marines.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.35
+  },
+  {
+   "text": "They filled his pockets with a whole love story. A photo of his fianc\u00e9e, her letters, a receipt for an engagement ring, theatre ticket stubs.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.35
+  },
+  {
+   "text": "Chained to him, a briefcase with secret letters. The Allies, they said, would invade Greece. Sicily was just a cover.",
+   "mood": "serious",
+   "emotion": 0.55,
+   "gap": 0.3
+  },
+  {
+   "text": "The truth was the exact opposite.",
+   "mood": "mystery",
+   "emotion": 0.6,
+   "gap": 0.4
+  },
+  {
+   "text": "On April thirtieth, a submarine slipped him into the sea off the coast of Spain.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.35
+  },
+  {
+   "text": "A fisherman found him. Spain was neutral... but full of German spies.",
+   "mood": "mystery",
+   "emotion": 0.55,
+   "gap": 0.35
+  },
+  {
+   "text": "The letters were secretly opened, photographed and passed to the Germans. Then sealed again, like nobody touched them.",
+   "mood": "serious",
+   "emotion": 0.55,
+   "gap": 0.35
+  },
+  {
+   "text": "And Hitler bought it. He sent a panzer division all the way from France to Greece.",
+   "mood": "action",
+   "emotion": 0.75,
+   "gap": 0.35
+  },
+  {
+   "text": "In July, the Allies hit Sicily. Hitler was still waiting for Greece.",
+   "mood": "action",
+   "emotion": 0.8,
+   "gap": 0.4
+  },
+  {
+   "text": "In London, the message came back. Mincemeat had been swallowed.",
+   "mood": "serious",
+   "emotion": 0.55,
+   "gap": 0.4
+  },
+  {
+   "text": "The man who never was lies in a grave in Spain. For decades, it only said William Martin.",
+   "mood": "sad",
+   "emotion": 0.4,
+   "gap": 0.4
+  },
+  {
+   "text": "Today it carries his real name too. Glyndwr Michael. A man who helped change the war, without ever knowing it.",
+   "mood": "sad",
+   "emotion": 0.45,
+   "gap": 0.4
+  }
+ ]
+}

@@ -1,0 +1,98 @@
+{
+ "title": "The Pig War, 1859",
+ "engine": "chatterbox",
+ "mood": "funny",
+ "voice": "af_bella",
+ "lines": [
+  {
+   "text": "In eighteen fifty-nine, America and Britain almost went to war... over a pig.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.5
+  },
+  {
+   "text": "San Juan Island sat right between them, and both countries said it was theirs.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.3
+  },
+  {
+   "text": "Then, on June fifteenth, a farmer named Lyman Cutlar found a pig eating his potatoes.",
+   "mood": "funny",
+   "emotion": 0.6,
+   "gap": 0.3
+  },
+  {
+   "text": "He shot it.",
+   "mood": "funny",
+   "emotion": 0.7,
+   "gap": 0.4
+  },
+  {
+   "text": "Problem: the pig belonged to the British Hudson's Bay Company.",
+   "mood": "funny",
+   "emotion": 0.7,
+   "gap": 0.3
+  },
+  {
+   "text": "The British threatened to arrest him. So the Americans called the army.",
+   "mood": "action",
+   "emotion": 0.7,
+   "gap": 0.3
+  },
+  {
+   "text": "Captain George Pickett landed with sixty-four soldiers.",
+   "mood": "action",
+   "emotion": 0.6,
+   "gap": 0.3
+  },
+  {
+   "text": "The British answered with warships.",
+   "mood": "action",
+   "emotion": 0.7,
+   "gap": 0.3
+  },
+  {
+   "text": "By the end of August, four hundred sixty-one Americans and fourteen cannons faced five British warships and over two thousand men.",
+   "mood": "action",
+   "emotion": 0.8,
+   "gap": 0.4
+  },
+  {
+   "text": "All because of one pig.",
+   "mood": "funny",
+   "emotion": 0.7,
+   "gap": 0.5
+  },
+  {
+   "text": "Then a British admiral said no. He would not start a war between two great nations over a squabble about a pig.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.4
+  },
+  {
+   "text": "So both sides just... stayed.",
+   "mood": "funny",
+   "emotion": 0.6,
+   "gap": 0.3
+  },
+  {
+   "text": "For twelve years, two armies shared one island. Their officers even met up for whisky and cigars.",
+   "mood": "happy",
+   "emotion": 0.7,
+   "gap": 0.4
+  },
+  {
+   "text": "In eighteen seventy-two, the German Kaiser finally settled it. The island went to America.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "The total number of casualties in the whole war? One pig.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  }
+ ]
+}
