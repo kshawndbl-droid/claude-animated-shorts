@@ -25,8 +25,8 @@ export type LiveCam = { z0: number; z1: number; cx: number; cy: number; dx?: num
 
 const hash = (i: number, s: number) => Math.abs(Math.sin(i * 12.9898 + s * 78.233) * 43758.5453) % 1;
 
-export const LivePlate: React.FC<{ name: string; t: number; dur: number; T: number; c: LiveCam; blur?: number; bright?: number; fx?: Fx }> =
-  ({ name, t, dur, T, c, blur = 0, bright = 1, fx = {} }) => {
+export const LivePlate: React.FC<{ name: string; t: number; dur: number; T: number; c: LiveCam; blur?: number; bright?: number; fx?: Fx; dir?: string; lightsMap?: Record<string, [number, number, number, string][]> }> =
+  ({ name, t, dur, T, c, blur = 0, bright = 1, fx = {}, dir = "mailed", lightsMap = LIGHTS }) => {
     const u = Easing.inOut(Easing.sin)(clamp01(t / dur)), z = c.z0 + (c.z1 - c.z0) * u;
     const dx = (c.dx ?? 0) * u, dy = (c.dy ?? 0) * u;
     const sway = fx.sway ?? 16;
@@ -34,14 +34,14 @@ export const LivePlate: React.FC<{ name: string; t: number; dur: number; T: numb
     const px = sway * (0.9 * (u - 0.5) * 2 + 0.45 * Math.sin(T * 0.9 + 1.3));
     const py = sway * 0.35 * Math.sin(T * 0.7);
     const id = `lp${name}`;
-    const lights = LIGHTS[name] ?? [];
+    const lights = lightsMap[name] ?? [];
     const fl = fx.flicker ?? 0.5;
     return (
       <AbsoluteFill style={{ overflow: "hidden", filter: `${blur ? `blur(${blur}px) ` : ""}brightness(${bright})` }}>
         <svg width={1080} height={1920} style={{ position: "absolute" }}>
           <defs>
             <filter id={id} x={0} y={0} width={1080} height={1920} filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-              <feImage href={staticFile(`mailed/${name}_d.png`)} x={0} y={0} width={1080} height={1920} preserveAspectRatio="none" result="d" />
+              <feImage href={staticFile(`${dir}/${name}_d.png`)} x={0} y={0} width={1080} height={1920} preserveAspectRatio="none" result="d" />
               <feDisplacementMap in="SourceGraphic" in2="d" scale={px} xChannelSelector="R" yChannelSelector="B" result="a" />
               <feDisplacementMap in="a" in2="d" scale={py} xChannelSelector="B" yChannelSelector="G" />
             </filter>
@@ -65,11 +65,11 @@ export const LivePlate: React.FC<{ name: string; t: number; dur: number; T: numb
           </defs>
           <g transform={`translate(${c.cx + dx},${c.cy + dy}) scale(${z}) translate(${-c.cx},${-c.cy})`}>
             <g filter={`url(#${id})`}>
-              <image href={staticFile(`mailed/${name}.png`)} x={0} y={0} width={1080} height={1920} preserveAspectRatio="xMidYMid slice" />
+              <image href={staticFile(`${dir}/${name}.png`)} x={0} y={0} width={1080} height={1920} preserveAspectRatio="xMidYMid slice" />
             </g>
             {fx.heat !== undefined && (
               <g filter={`url(#${id}h)`}>
-                <image href={staticFile(`mailed/${name}.png`)} x={px * 0.3} y={0} width={1080} height={1920} preserveAspectRatio="xMidYMid slice"
+                <image href={staticFile(`${dir}/${name}.png`)} x={px * 0.3} y={0} width={1080} height={1920} preserveAspectRatio="xMidYMid slice"
                   style={{ clipPath: `inset(${fx.heat}px 0 0 0)` }} opacity={0.85} />
               </g>
             )}

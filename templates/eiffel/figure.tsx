@@ -26,7 +26,7 @@ export const EXPR: Record<string, Expr> = {
 
 export type Look = {
   skin?: string; suit: string; suitDark: string; pin?: string; check?: string; vest: string; shirt: string; tie: string;
-  shoes: string; trousers?: string; hat: "bowler" | "homburg" | "cap" | "none"; hatCol: string; band: string; hair: string;
+  shoes: string; trousers?: string; hat: "bowler" | "homburg" | "cap" | "pith" | "turban" | "none"; hatCol: string; band: string; hair: string;
   mustache?: "pencil" | "walrus"; glasses?: boolean; flower?: string; chain?: boolean; stout?: number; brows: string; sideburns?: boolean;
   /** modern wardrobe (all optional, the 1925 cast is unchanged): top style, hair without a hat, cap, stubble, lashes, a t-shirt print */
   top?: "suit" | "tee" | "hoodie" | "sweater"; hairStyle?: "short" | "messy" | "ponytail" | "bob" | "curly"; stubble?: string; lashes?: boolean; print?: string;
@@ -395,6 +395,32 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
         </g>
       );
     }
+    if (L.hat === "pith") {
+      // colonial pith helmet: a tall dome, a pugaree band and a wide sloping brim
+      const by = hy - 50, top = hy - 150;
+      return (
+        <g>
+          <path d={`M${pt(hx - 86, by)} Q${pt(hx - 92, top + 10)} ${pt(hx, top)} Q${pt(hx + 92, top + 10)} ${pt(hx + 86, by)} Z`} fill={`url(#hatg${id})`} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+          <path d={`M${pt(hx, top)} L${pt(hx, by - 22)}`} stroke="rgba(0,0,0,0.14)" strokeWidth={4} />
+          <circle cx={hx} cy={top + 2} r={8} fill={L.band} stroke={INK} strokeWidth={3} />
+          <path d={`M${pt(hx - 86, by - 22)} Q${pt(hx, by - 30)} ${pt(hx + 86, by - 22)} L${pt(hx + 87, by - 4)} Q${pt(hx, by - 12)} ${pt(hx - 87, by - 4)} Z`} fill={L.band} />
+          <path d={`M${pt(hx - 46, top + 30)} Q${pt(hx - 24, top + 12)} ${pt(hx + 6, top + 12)}`} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={7} strokeLinecap="round" />
+          <path d={`M${pt(hx - 132, by + 16)} Q${pt(hx - 120, by - 12)} ${pt(hx - 88, by - 6)} Q${pt(hx, by + 2)} ${pt(hx + 88, by - 6)} Q${pt(hx + 120, by - 12)} ${pt(hx + 132, by + 16)} Q${pt(hx, by + 30)} ${pt(hx - 132, by + 16)} Z`}
+            fill={L.hatCol} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+        </g>
+      );
+    }
+    if (L.hat === "turban") {
+      // wrapped turban: a rounded wrap with diagonal folds
+      const by = hy - 40, top = hy - 138;
+      return (
+        <g>
+          <path d={`M${pt(hx - 98, by)} Q${pt(hx - 110, top + 20)} ${pt(hx - 20, top)} Q${pt(hx + 40, top - 10)} ${pt(hx + 92, top + 26)} Q${pt(hx + 110, by - 30)} ${pt(hx + 98, by)} Q${pt(hx, by + 14)} ${pt(hx - 98, by)} Z`} fill={L.hatCol} stroke={INK} strokeWidth={6} strokeLinejoin="round" />
+          {[0, 1, 2].map((k) => <path key={k} d={`M${pt(hx - 92 + k * 10, by - 14 - k * 26)} Q${pt(hx, by - 48 - k * 26)} ${pt(hx + 90 - k * 14, by - 34 - k * 22)}`} fill="none" stroke={L.band} strokeWidth={6} strokeLinecap="round" />)}
+          <path d={`M${pt(hx - 50, top + 26)} Q${pt(hx - 26, top + 10)} ${pt(hx + 4, top + 8)}`} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={6} strokeLinecap="round" />
+        </g>
+      );
+    }
     return null;
   };
   // ---- hair without a hat (modern cast): a back layer behind the head and a front cap with a fringe ----
@@ -475,7 +501,7 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
       <circle cx={headC.x} cy={headC.y} r={R} fill={`url(#skin${id})`} stroke={INK} strokeWidth={6.5} />
       {hairFront}
       {/* hair at the sides under the hat */}
-      {(L.hat === "bowler" || L.hat === "homburg") && [-1, 1].map((sd) => (
+      {(L.hat === "bowler" || L.hat === "homburg" || L.hat === "pith") && [-1, 1].map((sd) => (
         <path key={`h${sd}`} d={`M${pt(headC.x + sd * 74, headC.y - 66)} Q${pt(headC.x + sd * 98, headC.y - 30)} ${pt(headC.x + sd * 92, headC.y + (L.sideburns ? 22 : -2))} Q${pt(headC.x + sd * 80, headC.y - 24)} ${pt(headC.x + sd * 60, headC.y - 56)} Z`}
           fill={L.hair} stroke={INK} strokeWidth={3.5} strokeLinejoin="round" />
       ))}
@@ -501,7 +527,7 @@ export const Figure: React.FC<{ look: Look; pose: Pose; x: number; y: number; s:
         </radialGradient>
         <linearGradient id={`hatg${id}`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor={L.hatCol} />
-          <stop offset="1" stopColor="#111014" />
+          <stop offset="1" stopColor={L.hat === "pith" ? "#a89870" : "#111014"} />
         </linearGradient>
         <linearGradient id={`suit${id}`} x1="0" y1="0" x2="1" y2="0.3">
           <stop offset="0" stopColor={L.suit} />

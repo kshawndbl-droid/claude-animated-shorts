@@ -6,6 +6,8 @@ import { StyleTest, TEST_FRAMES } from "../../templates/eiffel/StyleTest";
 import { FullShort, FULL_FRAMES } from "../../templates/eiffel/FullShort";
 import { Crickets, CRICKETS_FRAMES } from "../../templates/reddit/Crickets";
 import { ShortA, A_FRAMES } from "../../templates/mailed/ShortA";
+import { LionTest } from "../../templates/tsavo/LionTest";
+import { TsavoTest, TSAVO_TEST_FRAMES } from "../../templates/tsavo/TsavoTest";
 import { ShortB, B_FRAMES } from "../../templates/mailed/ShortB";
 
 export const EiffelRoot: React.FC = () => (
@@ -18,6 +20,8 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="RedditCrickets" component={Crickets} durationInFrames={CRICKETS_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="MailedA" component={ShortA} durationInFrames={A_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="MailedB" component={ShortB} durationInFrames={B_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
+    <Composition id="LionTest" component={LionTest} durationInFrames={60} fps={30} width={1080} height={1920} />
+    <Composition id="TsavoTest" component={TsavoTest} durationInFrames={TSAVO_TEST_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="MailedBv3" component={ShortB} durationInFrames={B_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true, v3: true }} />
   </>
 );
