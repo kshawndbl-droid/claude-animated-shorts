@@ -35,6 +35,10 @@ SHOTS = {
     # inside the camp: the camera trucks along the row of tents while the lions creep past
     "creep": dict(n=63, light="night", keys=[(1, (7.6, 1.6, 1.2), (-4.0, 9.5, 1.0), 26), (63, (7.6, 3.6, 1.2), (-4.0, 11.5, 1.0), 26)],
                   focus=(-0.5, 8.0, 0.6), fstop=4.0),
+    # living-environment test: a slow sideways truck at dusk past grass close to the lens, the camp and its fire smoke in
+    # the middle distance, acacias and the bridge far off, so near, middle and far layers slide at different speeds
+    "envtest": dict(n=150, light="dusk", keys=[(1, (-1.6, -5.4, 1.45), (0.4, 12, 0.9), 28), (150, (0.2, -5.0, 1.5), (1.6, 12, 0.9), 29)],
+                    focus=(-0.6, 1.2, 0.8), fstop=5.6),
     # character test plate: a still camera inside the camp at dusk looking east across the line, for walks across frame
     "chartest": dict(n=1, light="dusk", keys=[(1, (-1.5, 0.5, 1.0), (10.0, 4.5, 1.3), 28)],
                      focus=(1.8, 1.7, 0.8), fstop=5.6),
@@ -46,6 +50,40 @@ ts.N = max(s["n"] for s in SHOTS.values())
 
 def toon_tint(m, rgb):
     return m
+
+
+def drift(nd, ln, coord, name, speed, scale, detail=5.0):
+    """a noise field sliding at `speed` (units per second) over the shot: returns the noise node (Fac output)"""
+    mp = nd.new("ShaderNodeMapping")
+    ln.new(coord, mp.inputs[0])
+    n = max(SHOTS[SHOT]["n"], 2)
+    mp.inputs["Location"].default_value = (0, 0, 0)
+    mp.inputs["Location"].keyframe_insert("default_value", frame=1)
+    mp.inputs["Location"].default_value = (speed[0] * n / 30, speed[1] * n / 30, 0)
+    mp.inputs["Location"].keyframe_insert("default_value", frame=n)
+    no = nd.new("ShaderNodeTexNoise")
+    no.inputs["Scale"].default_value = scale
+    no.inputs["Detail"].default_value = detail
+    no.inputs["Roughness"].default_value = 0.55
+    ln.new(mp.outputs[0], no.inputs["Vector"])
+    return no
+
+
+def mask(nd, ln, fac, lo, hi):
+    """noise -> soft 0..1 mask between lo and hi"""
+    mr = nd.new("ShaderNodeMapRange")
+    mr.interpolation_type = "SMOOTHSTEP"
+    mr.inputs["From Min"].default_value, mr.inputs["From Max"].default_value = lo, hi
+    ln.new(fac, mr.inputs[0])
+    return mr.outputs[0]
+
+
+def linear_all():
+    for idb in list(bpy.data.objects) + list(bpy.data.worlds) + list(bpy.data.materials) + list(bpy.data.lights):
+        tgt = getattr(idb, "node_tree", None) if not isinstance(idb, bpy.types.Object) else None
+        for x in (idb, tgt):
+            if x is not None and getattr(x, "animation_data", None):
+                ts.set_linear(x)
 
 
 def mat(name, rgb, rough=0.8, emit=0.0):
@@ -75,6 +113,27 @@ def ground():
     m = ts.tex_mat("redearth", os.path.join(A, "ambientcg", "Ground054"), "Ground054_1K-JPG", scale=60, tint=(1.0, 0.62, 0.42))
     b = m.node_tree.nodes["Principled BSDF"]
     b.inputs["Specular IOR Level"].default_value = 0.12
+    # cloud shadows drifting over the ground (the same drift as the sky clouds)
+    nd, ln = m.node_tree.nodes, m.node_tree.links
+    tc = nd.new("ShaderNodeTexCoord")
+    no = drift(nd, ln, tc.outputs["Object"], "cloudshadow", (0.05, 0.03), 0.04, 3.0)
+    sh = mask(nd, ln, no.outputs["Fac"], 0.5, 0.62)
+    dim = nd.new("ShaderNodeMath")
+    dim.operation = "MULTIPLY_ADD"
+    dim.inputs[1].default_value = -0.38 if LIGHT == "dusk" else -0.2
+    dim.inputs[2].default_value = 1.0
+    ln.new(sh, dim.inputs[0])
+    src = b.inputs["Base Color"].links[0].from_socket
+    mul = nd.new("ShaderNodeMix")
+    mul.data_type = "RGBA"
+    mul.blend_type = "MULTIPLY"
+    mul.inputs[0].default_value = 1.0
+    ln.new(src, mul.inputs[6])
+    cmb = nd.new("ShaderNodeCombineXYZ")
+    for i in range(3):
+        ln.new(dim.outputs[0], cmb.inputs[i])
+    ln.new(cmb.outputs[0], mul.inputs[7])
+    ln.new(mul.outputs[2], b.inputs["Base Color"])
     g.data.materials.append(m)
     return g
 
@@ -328,8 +387,57 @@ def sky_and_light(sc):
     for p, c in cols[1:-1]:
         e = els.new(p)
         e.color = (*c, 1)
-    ln.new(ramp.outputs[0], bg.inputs[0])
+    # drifting clouds: noise projected onto a flat cloud deck (direction.xy / direction.z), thinning toward the zenith
+    div = nd.new("ShaderNodeVectorMath")
+    div.operation = "DIVIDE"
+    zz = nd.new("ShaderNodeMath")
+    zz.operation = "ADD"
+    zz.inputs[1].default_value = 0.06
+    ln.new(sep.outputs["Z"], zz.inputs[0])
+    zv = nd.new("ShaderNodeCombineXYZ")
+    for i in range(3):
+        ln.new(zz.outputs[0], zv.inputs[i])
+    ln.new(tc.outputs["Generated"], div.inputs[0])
+    ln.new(zv.outputs[0], div.inputs[1])
+    no = drift(nd, ln, div.outputs[0], "clouds", (0.012, 0.006), 0.9, 6.0)
+    cm = mask(nd, ln, no.outputs["Fac"], 0.5, 0.68)
+    hz = nd.new("ShaderNodeMapRange")
+    hz.interpolation_type = "SMOOTHSTEP"
+    hz.inputs["From Min"].default_value, hz.inputs["From Max"].default_value = 0.0, 0.1
+    ln.new(sep.outputs["Z"], hz.inputs[0])
+    top = nd.new("ShaderNodeMapRange")
+    top.inputs["From Min"].default_value, top.inputs["From Max"].default_value = 0.75, 0.2
+    ln.new(sep.outputs["Z"], top.inputs[0])
+    k1 = nd.new("ShaderNodeMath"); k1.operation = "MULTIPLY"
+    ln.new(cm, k1.inputs[0]); ln.new(hz.outputs[0], k1.inputs[1])
+    k2 = nd.new("ShaderNodeMath"); k2.operation = "MULTIPLY"
+    ln.new(k1.outputs[0], k2.inputs[0]); ln.new(top.outputs[0], k2.inputs[1])
+    k2.inputs[1].default_value = 1.0
+    amt = nd.new("ShaderNodeMath"); amt.operation = "MULTIPLY"
+    amt.inputs[1].default_value = 0.85
+    ln.new(k2.outputs[0], amt.inputs[0])
+    # cloud colour: sunset-lit undersides low down, darker higher up (dusk); faint moonlit grey at night
+    cc = nd.new("ShaderNodeValToRGB")
+    ln.new(mm.outputs[0], cc.inputs[0])
+    ce = cc.color_ramp.elements
+    if LIGHT == "dusk":
+        ce[0].position, ce[0].color = 0.5, (1.0, 0.5, 0.25, 1)
+        ce[1].position, ce[1].color = 0.75, (0.3, 0.14, 0.24, 1)
+    else:
+        ce[0].position, ce[0].color = 0.5, (0.05, 0.06, 0.1, 1)
+        ce[1].position, ce[1].color = 0.8, (0.02, 0.025, 0.05, 1)
+    mixc = nd.new("ShaderNodeMix")
+    mixc.data_type = "RGBA"
+    ln.new(amt.outputs[0], mixc.inputs[0])
+    ln.new(ramp.outputs[0], mixc.inputs[6])
+    ln.new(cc.outputs[0], mixc.inputs[7])
+    ln.new(mixc.outputs[2], bg.inputs[0])
+    # the light fades a little as the sun sinks over the shot
+    n = max(SHOTS[SHOT]["n"], 2)
     bg.inputs[1].default_value = strength
+    bg.inputs[1].keyframe_insert("default_value", frame=1)
+    bg.inputs[1].default_value = strength * (0.9 if LIGHT == "dusk" else 1.0)
+    bg.inputs[1].keyframe_insert("default_value", frame=n)
     sun = ts.link(bpy.data.objects.new("sun", bpy.data.lights.new("sun", "SUN")))
     fill = ts.link(bpy.data.objects.new("fill", bpy.data.lights.new("fill", "SUN")))
     fill.data.use_shadow = False
@@ -338,6 +446,15 @@ def sky_and_light(sc):
         sun.rotation_euler = (math.radians(78), 0, math.radians(195))
         fill.data.energy, fill.data.color = 0.5, (0.6, 0.55, 0.85)
         fill.rotation_euler = (math.radians(40), 0, math.radians(30))
+        # the sun sinks: slightly dimmer and redder by the end, with a soft dip as a cloud edge crosses it
+        n = max(SHOTS[SHOT]["n"], 2)
+        for f in range(1, n + 1, 5):
+            u = (f - 1) / (n - 1)
+            dip = 0.12 * math.exp(-((u - 0.55) / 0.15) ** 2)
+            sun.data.energy = 4.5 * (1 - 0.1 * u - dip)
+            sun.data.keyframe_insert("energy", frame=f)
+            sun.data.color = (1.0, 0.55 - 0.06 * u, 0.28 - 0.05 * u)
+            sun.data.keyframe_insert("color", frame=f)
     else:
         sun.data.energy, sun.data.color = 0.35, (0.55, 0.65, 1.0)
         sun.rotation_euler = (math.radians(55), 0, math.radians(150))
@@ -355,6 +472,9 @@ def sky_and_light(sc):
             bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=rnd.uniform(0.35, 0.9),
                                                   location=(math.sin(a) * r * math.cos(el), math.cos(a) * r * math.cos(el) + 20, math.sin(el) * r))
             bpy.context.object.data.materials.append(star)
+
+
+FLUTTER = [None, None]
 
 
 def grass(n, area, wind_e, wind_t, mat_, hs=(0.25, 0.6), skip=lambda x, y: False):
@@ -380,7 +500,14 @@ def grass(n, area, wind_e, wind_t, mat_, hs=(0.25, 0.6), skip=lambda x, y: False
     bm.free()
     o = ts.link(bpy.data.objects.new("grass", me))
     o.data.materials.append(mat_)
-    ts.add_wind(o, wind_e, 0.1, wind_t)
+    vg = o.vertex_groups.new(name="tips")
+    for v in me.vertices:
+        vg.add([v.index], min(1.0, (v.co.z / 0.6) ** 1.3), "REPLACE")
+    for nm, tex, emp, st, dr in (("gust", wind_t, wind_e, 0.22, "X"), ("gust2", wind_t, wind_e, 0.1, "Y"),
+                                  ("flutter", FLUTTER[0], FLUTTER[1], 0.05, "Y")):
+        d = o.modifiers.new(nm, "DISPLACE")
+        d.texture, d.texture_coords, d.texture_coords_object = tex, "OBJECT", emp
+        d.strength, d.mid_level, d.direction, d.vertex_group = st, 0.5, dr, "tips"
     return o
 
 
@@ -392,7 +519,8 @@ def build():
     ground()
     railway()
     wind_t = ts.wind_texture("wind", 3.0)
-    wind_e = ts.wind_driver_empty("windE", (0.6, 0.25))
+    wind_e = ts.wind_driver_empty("windE", (1.6, 0.5))
+    FLUTTER[:] = [ts.wind_texture("flutter", 0.35), ts.wind_driver_empty("flutterE", (0.7, -0.9))]
     canvas = ts.tex_mat("canvas", os.path.join(A, "ambientcg", "Fabric079"), "Fabric079_1K-JPG", scale=2, tint=(1.0, 0.9, 0.72))
     glow = ts.tex_mat("canvasglow", os.path.join(A, "ambientcg", "Fabric079"), "Fabric079_1K-JPG", scale=2, tint=(1.0, 0.9, 0.72))
     if LIGHT == "night":
@@ -422,6 +550,9 @@ def build():
     grass(7000, ((-30, 30), (-22, 60)), wind_e, wind_t, grass_, skip=lambda x, y: track(x, y) or incamp(x, y))
     # taller grass right in front of the low "grass" camera
     grass(500, ((-7, 2), (-15.5, -11)), wind_e, wind_t, grass_, hs=(0.4, 0.95))
+    if SHOT == "envtest":  # tall tufts just in front of the lens for the near layer
+        grass(45, ((-3.0, 2.2), (-4.0, -3.3)), wind_e, wind_t, grass_, hs=(0.35, 0.75))
+    linear_all()
     sc.render.engine = "BLENDER_EEVEE"
     ee = sc.eevee
     ee.taa_render_samples = int(arg("--samples", "12"))
