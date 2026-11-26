@@ -36,6 +36,9 @@ const project = (cam: CamJ, f: number, p: [number, number, number]) => {
   const fpx = (c.lens / c.sensor) * 1920, z = Math.max(0.05, -Z);
   return { x: 540 + (fpx * X) / z, y: 960 - (fpx * Y) / z, ppm: fpx / z };
 };
+/** walkers face the way they move on screen (the cast faces +x unflipped) */
+const faceLeft = (cam: CamJ, f: number, from: [number, number], to: [number, number]) =>
+  project(cam, f, [to[0], to[1], 0]).x < project(cam, f, [from[0], from[1], 0]).x;
 const Plate: React.FC<{ shot: string; f: number; blur?: number; bright?: number }> = ({ shot, f, blur = 0, bright = 1 }) => (
   <Img src={staticFile(`tsavo3d/${shot}/f_${String(f).padStart(4, "0")}.png`)}
     style={{ position: "absolute", width: 1080, height: 1920, filter: `${blur ? `blur(${blur}px) ` : ""}brightness(${bright})` }} />
@@ -67,8 +70,8 @@ const S_Patterson: React.FC<ShotP> = ({ T, a }) => {
     <AbsoluteFill>
       <Plate shot="patterson" f={f} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
-        <Stick id="w1" x={Wk.x} y={Wk.y} ppm={Wk.ppm} look={WORKER} pose={{ phase: wk.phase, walk: wk.walk, hold: "plank", armR: [-60, -50], lookX: -0.2 }} shade={0.92} />
-        <Stick id="pat" x={P.x} y={P.y} ppm={P.ppm} look={PATTERSON} flip={!named && !pointing}
+        <Stick id="w1" x={Wk.x} y={Wk.y} ppm={Wk.ppm} look={WORKER} flip={faceLeft(camPatterson as CamJ, f, [6.0, 6.0], [5.7, 0.6])} pose={{ phase: wk.phase, walk: wk.walk, hold: "plank", armR: [-60, -50], lookX: -0.2 }} shade={0.92} />
+        <Stick id="pat" x={P.x} y={P.y} ppm={P.ppm} look={PATTERSON} flip={wp.walk > 0.05 ? faceLeft(camPatterson as CamJ, f, [1.8, 2.6], [2.7, -0.7]) : false}
           pose={{ phase: wp.phase, walk: wp.walk, expr: named ? "stern" : "neutral", talk: undefined, blink: (T % 3.1) < 0.12,
             armR: pointing ? [-150 + 6 * Math.sin(T * 3), 8] : named ? [-30, -110] : undefined, armL: named ? [-25, -110] : undefined, lookX: pointing ? 1 : 0.2 }} />
         <Card k={Math.min((T - a - 0.3) / 0.35, (W("john") - 0.15 - T) / 0.25)} text="KENYA, 1898" y={210} w={520} />
