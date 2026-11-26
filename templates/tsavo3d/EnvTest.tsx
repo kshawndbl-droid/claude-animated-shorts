@@ -9,6 +9,7 @@ import camEnv from "../../stories/tsavo/sets/envtest.json";
 
 const FPS = 30, N = 150;
 export const ENVTEST_FRAMES = N;
+export const EnvTest2: React.FC = () => <EnvTest set="envtest2" leaves />;
 type CamJ = { frames: Record<string, { m: number[][]; lens: number; sensor: number }> };
 const cam = camEnv as CamJ;
 const project = (f: number, p: [number, number, number]) => {
@@ -74,6 +75,39 @@ const Birds: React.FC<{ f: number; T: number }> = ({ f, T }) => {
   })}</g>;
 };
 
+/** a few small acacia leaflets carried on the wind past the lens, tumbling as they fall */
+const Leaves: React.FC<{ f: number; T: number }> = ({ f, T }) => {
+  return <g>{Array.from({ length: 9 }, (_, i) => {
+    const t0 = rr(i, 9) * 5 - 1, age = T - t0;
+    if (age < 0 || age > 4.5) return null;
+    const x = -3.5 + 6 * rr(i, 10) + 0.9 * age, y = -3.2 + 5 * rr(i, 11) + 0.15 * age;
+    const z = 1.6 + 0.6 * rr(i, 12) - 0.35 * age + 0.08 * Math.sin(age * 2.2 + i);
+    if (z < 0.02) return null;
+    const p = project(f, [x, y, z]);
+    if (p.z < 0.5) return null;
+    const sz = Math.max(2, 0.03 * p.ppm), rot = (age * (140 + 90 * rr(i, 13)) + i * 40) % 360;
+    const flip = Math.cos(age * (5 + 3 * rr(i, 14)) + i);
+    const col = ["#7a7a30", "#a08a3a", "#6a6a2c", "#b09440"][i % 4];
+    return <ellipse key={i} cx={p.x} cy={p.y} rx={sz} ry={Math.max(0.6, sz * 0.42 * Math.abs(flip))} fill={col} opacity={0.85 * sm(age / 0.4) * (1 - sm((age - 3.8) / 0.7))}
+      transform={`rotate(${rot} ${p.x} ${p.y})`} />;
+  })}</g>;
+};
+
+/** warm haze lying on the horizon, breathing very slowly */
+const Haze: React.FC<{ f: number; T: number }> = ({ f, T }) => {
+  const c = cam.frames[String(f)] ?? cam.frames["1"];
+  const hz = project(f, [c.m[0][3], c.m[1][3] + 600, 0]).y;
+  const a = 0.2 + 0.03 * Math.sin(T * 0.6);
+  return <g>
+    <defs><linearGradient id="hz" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stopColor="rgb(255,170,120)" stopOpacity={0} />
+      <stop offset="0.55" stopColor="rgb(255,175,125)" stopOpacity={a} />
+      <stop offset="1" stopColor="rgb(220,120,90)" stopOpacity={0} />
+    </linearGradient></defs>
+    <rect x={0} y={hz - 170} width={1080} height={260} fill="url(#hz)" />
+  </g>;
+};
+
 const walk = (T: number, t0: number, t1: number, V: number) => {
   const v = (t: number) => V * sm((t - t0) / 0.5) * sm((t1 - t) / 0.5);
   let s = 0; const dt = 1 / 240;
@@ -81,7 +115,7 @@ const walk = (T: number, t0: number, t1: number, V: number) => {
   return { s, w: v(T) / V };
 };
 
-export const EnvTest: React.FC = () => {
+export const EnvTest: React.FC<{ set?: string; leaves?: boolean }> = ({ set = "envtest", leaves = false }) => {
   const fr = useCurrentFrame(), T = fr / FPS, f = Math.min(N, fr + 1);
   const pad = (n: number) => String(n).padStart(4, "0");
   const w = walk(T, 0.6, 4.4, 0.6);
@@ -90,20 +124,22 @@ export const EnvTest: React.FC = () => {
   const P = project(f, [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k, 0]);
   return (
     <AbsoluteFill style={{ background: "#000" }}>
-      <Img src={staticFile(`tsavo3d/envtest/f_${pad(f)}.png`)} style={{ position: "absolute", width: 1080, height: 1920 }} />
+      <Img src={staticFile(`tsavo3d/${set}/f_${pad(f)}.png`)} style={{ position: "absolute", width: 1080, height: 1920 }} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <defs>
           <filter id="smoke" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9" /></filter>
           <filter id="soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3" /></filter>
         </defs>
+        {leaves && <Haze f={f} T={T} />}
         <Birds f={f} T={T} />
         <Smoke f={f} T={T} />
         <Toon x={P.x} y={P.y} ppm={P.ppm} look={PATTERSON_T} shade={0.9} pose={{ dist: w.s, walk: w.w, t: T, lookX: 0.5, blink: (T % 3.2) < 0.1 }} />
       </svg>
-      <Img src={staticFile(`tsavo3d/envtest/fg_${pad(f)}.png`)} style={{ position: "absolute", width: 1080, height: 1920 }} />
+      <Img src={staticFile(`tsavo3d/${set}/fg_${pad(f)}.png`)} style={{ position: "absolute", width: 1080, height: 1920 }} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         <defs><filter id="soft2" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3" /></filter></defs>
         <Dust f={f} T={T} />
+        {leaves && <Leaves f={f} T={T} />}
       </svg>
     </AbsoluteFill>
   );

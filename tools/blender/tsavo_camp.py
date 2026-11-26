@@ -16,6 +16,7 @@ from mathutils import Vector
 
 sys.path.insert(0, os.path.dirname(__file__))
 import test_scene as ts  # noqa: E402
+import veg  # noqa: E402
 
 arg = ts.arg
 A = ts.A
@@ -204,72 +205,23 @@ def tent(loc, rot, lit, canvas, pole, glow):
 
 
 def thorn_fence(center, radius, gap, mat_):
-    """a boma: a ring of piled thorn-bush branches (many thin twisted twigs), with a gap for the gate"""
-    import bmesh
-    me = bpy.data.meshes.new("boma")
-    bm = bmesh.new()
-    n = int(radius * 2 * math.pi * 7)
+    """a boma: a ring of cut thorn-bush branches piled about waist to chest high, with a gap for the gate.
+    Built from a CC0 scan of dry branches (Poly Haven), stacked in two loose layers at random angles."""
+    n = int(radius * math.tau / 0.55)
     for i in range(n):
         a = i / n * math.tau
         if abs(((a - gap[0] + math.pi) % math.tau) - math.pi) < gap[1]:
             continue
-        cx = center[0] + math.cos(a) * radius + rnd.uniform(-0.4, 0.4)
-        cy = center[1] + math.sin(a) * radius + rnd.uniform(-0.4, 0.4)
-        for k in range(5):
-            L = rnd.uniform(0.8, 1.8)
-            th, ph = rnd.uniform(0, math.tau), rnd.uniform(0.2, 1.3)
-            p0 = Vector((cx + rnd.uniform(-0.3, 0.3), cy + rnd.uniform(-0.3, 0.3), rnd.uniform(0, 0.5)))
-            dvec = Vector((math.cos(th) * math.cos(ph), math.sin(th) * math.cos(ph), math.sin(ph))) * L
-            side = dvec.cross(Vector((0, 0, 1))).normalized() * 0.03
-            a1, a2, a3 = bm.verts.new(p0 - side), bm.verts.new(p0 + side), bm.verts.new(p0 + dvec)
-            bm.faces.new((a1, a2, a3))
-            # thorny side twigs
-            for j in range(3):
-                q = p0 + dvec * rnd.uniform(0.2, 0.9)
-                e = Vector((rnd.uniform(-1, 1), rnd.uniform(-1, 1), rnd.uniform(-0.2, 0.8))).normalized() * rnd.uniform(0.2, 0.45)
-                b1, b2, b3 = bm.verts.new(q - side * 0.6), bm.verts.new(q + side * 0.6), bm.verts.new(q + e)
-                bm.faces.new((b1, b2, b3))
-    bm.to_mesh(me)
-    bm.free()
-    o = ts.link(bpy.data.objects.new("boma", me))
-    o.data.materials.append(mat_)
-    return o
-
-
-def acacia(loc, s, bark, leaf, wind_e, wind_t):
-    """flat-topped acacia: a forked trunk and wide flat layered canopies"""
-    x, y = loc
-    for k, (dx, dy) in enumerate([(0.0, 0.0), (rnd.uniform(-1.2, 1.2) * s, rnd.uniform(-0.6, 0.6) * s)]):
-        bpy.ops.curve.primitive_bezier_curve_add(location=(x, y, 0))
-        cu = bpy.context.object
-        sp = cu.data.splines[0]
-        top = Vector((dx + rnd.uniform(-0.8, 0.8) * s, dy, (3.2 + 0.6 * k) * s))
-        sp.bezier_points[0].co = (0, 0, 0)
-        sp.bezier_points[0].handle_left = (0, 0, -0.5)
-        sp.bezier_points[0].handle_right = (0, 0, 1.2 * s)
-        sp.bezier_points[1].co = top
-        sp.bezier_points[1].handle_left = top - Vector((top.x * 0.6, 0, 1.0 * s))
-        sp.bezier_points[1].handle_right = top + Vector((top.x * 0.3, 0, 0.5 * s))
-        cu.data.bevel_depth = 0.14 * s
-        sp.bezier_points[0].radius = 1.4
-        sp.bezier_points[1].radius = 0.35
-        cu.data.materials.append(bark)
-    for i in range(4):
-        r = rnd.uniform(1.6, 2.6) * s
-        bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=r, depth=0.5 * s,
-                                            location=(x + rnd.uniform(-1.4, 1.4) * s, y + rnd.uniform(-1, 1) * s, (3.6 + rnd.uniform(-0.2, 0.6)) * s))
-        c = bpy.context.object
-        c.scale = (1.25, 1.0, 1.0)
-        c.modifiers.new("sub", "SUBSURF").levels = 2
-        dd = c.modifiers.new("leaves", "DISPLACE")
-        tt = bpy.data.textures.new("lf", "VORONOI")
-        tt.noise_scale = 0.35 * s
-        dd.texture = tt
-        dd.strength = 0.5 * s
-        ts.smooth(c)
-        ts.add_wind(c, wind_e, 0.08 * s, wind_t)
-        c.data.materials.append(leaf)
-
+        for layer in range(3):
+            r = radius + rnd.uniform(-0.3, 0.3)
+            x, y = center[0] + math.cos(a) * r, center[1] + math.sin(a) * r
+            o = veg.place_shrub(A, "dry_branches_medium_01", (x, y), rnd.uniform(0, math.tau),
+                                rnd.uniform(1.2, 1.6), rnd, amp=0.0, flutter=0.0)
+            o.modifiers.clear()
+            # one piece lies as the base, two stand up steeply so the twigs bristle to chest height
+            tilt = rnd.uniform(-0.3, 0.3) if layer == 0 else rnd.choice((-1, 1)) * rnd.uniform(1.0, 1.4)
+            o.rotation_euler = (tilt, rnd.uniform(-0.3, 0.3), o.rotation_euler.z)
+            o.location.z = 0.0 if layer == 0 else rnd.uniform(0.1, 0.3)
 
 def fire(loc, flame):
     """stone fire pit (Poly Haven, CC0) with crossed logs, flickering emissive flames and a flickering light"""
@@ -474,43 +426,6 @@ def sky_and_light(sc):
             bpy.context.object.data.materials.append(star)
 
 
-FLUTTER = [None, None]
-
-
-def grass(n, area, wind_e, wind_t, mat_, hs=(0.25, 0.6), skip=lambda x, y: False):
-    """dry grass blades (thin triangles) merged into one mesh, swaying in the wind; skip() keeps paths and the camp clear"""
-    import bmesh
-    me = bpy.data.meshes.new("grass")
-    bm = bmesh.new()
-    for i in range(n):
-        x, y = rnd.uniform(*area[0]), rnd.uniform(*area[1])
-        if skip(x, y):
-            continue
-        for b in range(5):
-            h = rnd.uniform(*hs)
-            a = rnd.uniform(0, math.tau)
-            lean = rnd.uniform(-0.3, 0.3)
-            bx, by = x + math.cos(a) * 0.05, y + math.sin(a) * 0.05
-            w = 0.02
-            v1 = bm.verts.new((bx - w * math.sin(a), by + w * math.cos(a), 0))
-            v2 = bm.verts.new((bx + w * math.sin(a), by - w * math.cos(a), 0))
-            v3 = bm.verts.new((bx + lean * h * math.cos(a), by + lean * h * math.sin(a), h))
-            bm.faces.new((v1, v2, v3))
-    bm.to_mesh(me)
-    bm.free()
-    o = ts.link(bpy.data.objects.new("grass", me))
-    o.data.materials.append(mat_)
-    vg = o.vertex_groups.new(name="tips")
-    for v in me.vertices:
-        vg.add([v.index], min(1.0, (v.co.z / 0.6) ** 1.3), "REPLACE")
-    for nm, tex, emp, st, dr in (("gust", wind_t, wind_e, 0.22, "X"), ("gust2", wind_t, wind_e, 0.1, "Y"),
-                                  ("flutter", FLUTTER[0], FLUTTER[1], 0.05, "Y")):
-        d = o.modifiers.new(nm, "DISPLACE")
-        d.texture, d.texture_coords, d.texture_coords_object = tex, "OBJECT", emp
-        d.strength, d.mid_level, d.direction, d.vertex_group = st, 0.5, dr, "tips"
-    return o
-
-
 def build():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
@@ -518,9 +433,6 @@ def build():
     sky_and_light(sc)
     ground()
     railway()
-    wind_t = ts.wind_texture("wind", 3.0)
-    wind_e = ts.wind_driver_empty("windE", (1.6, 0.5))
-    FLUTTER[:] = [ts.wind_texture("flutter", 0.35), ts.wind_driver_empty("flutterE", (0.7, -0.9))]
     canvas = ts.tex_mat("canvas", os.path.join(A, "ambientcg", "Fabric079"), "Fabric079_1K-JPG", scale=2, tint=(1.0, 0.9, 0.72))
     glow = ts.tex_mat("canvasglow", os.path.join(A, "ambientcg", "Fabric079"), "Fabric079_1K-JPG", scale=2, tint=(1.0, 0.9, 0.72))
     if LIGHT == "night":
@@ -534,9 +446,28 @@ def build():
     thorn = mat("thorn", (0.16, 0.12, 0.08))
     thorn_fence((-2.5, 10.5), 12.5, (math.radians(-60), 0.28), thorn)
     bark = mat("bark", (0.2, 0.15, 0.1))
-    leaf = mat("acacialeaf", (0.2, 0.28, 0.12))
-    for (x, y, s) in [(-16, 2, 1.0), (10, 20, 1.2), (-20, 26, 1.3), (22, 40, 1.5), (-6, 48, 1.4), (14, 70, 1.6), (-30, 60, 1.8), (30, 8, 1.1), (-11, -10, 1.0)]:
-        acacia((x, y), s, bark, leaf, wind_e, wind_t)
+    leaf = veg.leaf_mat("acacialeaf", None)
+    for i, (x, y, s) in enumerate([(-16, 2, 1.0), (10, 20, 1.2), (-20, 26, 1.3), (22, 40, 1.5), (-6, 48, 1.4), (14, 70, 1.6), (-30, 60, 1.8),
+                                   (30, 8, 1.1), (-11, -10, 1.0), (9, 3, 0.8), (-24, 12, 1.1), (40, 28, 1.4), (-40, 40, 1.6), (26, 95, 1.9), (-14, 110, 2.0)]):
+        veg.acacia(f"acacia{i}", (x, y), s, rnd, bark, leaf)
+    # shrubs and bushes (Poly Haven CC0): Searsia (an African shrub), wild rooibos, scrub, dry fallen branches
+    for (x, y, nm, sc_) in [(7.5, -1.5, "searsia_lucida", 0.8), (-8.5, -6.5, "searsia_lucida", 0.7), (12, 12, "searsia_lucida", 1.0),
+                            (-17, 18, "searsia_lucida", 0.9), (6.5, 24, "shrub_02", 0.5), (-12, -3, "shrub_02", 0.45), (16, -6, "shrub_02", 0.55),
+                            (-5.5, -4.5, "wild_rooibos_bush", 1.0), (2.8, -2.8, "wild_rooibos_bush", 0.9), (-9, 1.5, "wild_rooibos_bush", 1.1),
+                            (6.2, 4.5, "shrub_04", 2.2), (-1.8, -3.0, "shrub_04", 1.8), (1.5, -6.8, "shrub_04", 2.0)]:
+        veg.place_shrub(A, nm, (x, y), rnd.uniform(0, math.tau), sc_, rnd, amp=0.04 if nm != "shrub_04" else 0.03)
+    for (x, y) in [(-6.6, -2.2), (8.5, 1.0), (-3.6, -6.0)]:
+        veg.place_shrub(A, "dry_branches_medium_01", (x, y), rnd.uniform(0, math.tau), 1.0, rnd, amp=0.0, flutter=0.0)
+    # red termite mounds, typical of the Tsavo plains
+    earth = mat("mound", (0.42, 0.16, 0.08), rough=0.95)
+    for (x, y, h) in [(11, 9, 1.6), (-14, 30, 2.2), (18, 32, 1.3), (-22, -4, 1.8)]:
+        bpy.ops.mesh.primitive_cone_add(vertices=14, radius1=0.7 * h / 1.6, radius2=0.12, depth=h, location=(x, y, h / 2 - 0.05))
+        mo = bpy.context.object
+        mo.modifiers.new("sub", "SUBSURF").levels = 2
+        dm = mo.modifiers.new("lumps", "DISPLACE")
+        tx = bpy.data.textures.new("lumps", "CLOUDS"); tx.noise_scale = 0.35
+        dm.texture, dm.strength = tx, 0.22
+        mo.data.materials.append(earth)
     flame = mat("flame", (1.0, 0.55, 0.15), emit=14.0)
     for p in [(0.6, 9.5), (-6.0, 3.0), (-5.6, 20.0)]:
         fire(p, flame)
@@ -546,12 +477,22 @@ def build():
     bridge(steel, stone)
     track = lambda x, y: abs(x - 4.0) < 1.6
     incamp = lambda x, y: math.hypot(x + 2.5, y - 10.5) < 11.0 and rnd.random() < 0.85
-    grass_ = mat("drygrass", (0.62, 0.5, 0.26))
-    grass(7000, ((-30, 30), (-22, 60)), wind_e, wind_t, grass_, skip=lambda x, y: track(x, y) or incamp(x, y))
-    # taller grass right in front of the low "grass" camera
-    grass(500, ((-7, 2), (-15.5, -11)), wind_e, wind_t, grass_, hs=(0.4, 0.95))
-    if SHOT == "envtest":  # tall tufts just in front of the lens for the near layer
-        grass(45, ((-3.0, 2.2), (-4.0, -3.3)), wind_e, wind_t, grass_, hs=(0.35, 0.75))
+    gm = veg.grass_mat()
+    # fine savanna grass: dense close to the camp, thinner far away (beyond ~35 m it reads as texture anyway)
+    near = veg.fine_grass("grass_near", 5200, ((-24, 24), (-20, 34)), rnd, skip=lambda x, y: track(x, y) or incamp(x, y))
+    far = veg.fine_grass("grass_far", 4200, ((-45, 45), (-30, 75)), rnd, hs=(0.35, 0.8), blades=(6, 10),
+                         skip=lambda x, y: track(x, y) or incamp(x, y) or (abs(x) < 24 and -20 < y < 34))
+    lowc = veg.fine_grass("grass_low", 700, ((-7, 2), (-15.5, -11)), rnd, hs=(0.45, 0.9))
+    parts = [near, far, lowc]
+    # each shot gets a dense patch of grass where its camera looks closest
+    dense = {"envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9))}.get(SHOT)
+    if dense:
+        parts.append(veg.fine_grass("grass_dense", int(16 * (dense[0][1] - dense[0][0]) * (dense[1][1] - dense[1][0])), dense, rnd,
+                                    skip=lambda x, y: track(x, y) or math.hypot(x + 2.5, y - 10.5) < 12.8))
+    far.visible_shadow = False
+    for g_ in parts:
+        g_.data.materials.append(gm)
+        veg.add_wind(g_, amp=0.16, height=0.8, speed=1.1, scale=0.18, flutter=0.03, phase=0.0)
     linear_all()
     sc.render.engine = "BLENDER_EEVEE"
     ee = sc.eevee
