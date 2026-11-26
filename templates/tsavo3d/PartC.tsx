@@ -207,7 +207,7 @@ const Shots: React.FC<{ f: number; T: number }> = ({ T }) => {
   const cam = camShots as CamJ;
   const sh = shake(T, SHOT_T, 12);
   const P = proj(cam, 1, [0.35, -9.88, 0]);
-  const Lp = proj(cam, 1, [6.4, -7.55, 0]);
+  const Lp = proj(cam, 1, [8.27, -6.6, 0]);
   const fall = sm((T - 1.35) / 0.25);
   const last = SHOT_T.filter((s) => s <= T).pop();
   const fl = last !== undefined ? Math.max(0, 1 - (T - last) / 0.07) : 0;
@@ -216,8 +216,8 @@ const Shots: React.FC<{ f: number; T: number }> = ({ T }) => {
   return <AbsoluteFill style={{ transform: `translate(${sh.x}px,${sh.y}px) scale(1.05)` }}>
     <Plate shot="shots" f={1} />
     <Svg>
-      <g opacity={1 - fall * 0.6} transform={`translate(0,${fall * 0.9 * Lp.ppm})`}>
-        <FlatLion id="second" x={Lp.x} y={Lp.y} ppm={Lp.ppm} flip pose={{ crouch: 0.5 + 0.4 * fall, roar: T < 1.3 ? 0.6 + 0.3 * Math.sin(T * 9) : 0, eyes: "normal", look: -0.4 }} />
+      <g opacity={1 - fall * 0.6} transform={`translate(0,${(0.22 + fall * 0.9) * Lp.ppm})`}>
+        <FlatLion id="second" x={Lp.x} y={Lp.y} ppm={Lp.ppm} flip pose={{ crouch: 0.6 + 0.3 * fall, roar: T < 1.3 ? 0.6 + 0.3 * Math.sin(T * 9) : 0, eyes: "normal", look: -0.4 }} />
       </g>
     </Svg>
     <Plate shot="shots" f={1} fg />
@@ -265,7 +265,7 @@ const CUTS = [0, 4.32, 7.88, 10.78, 14.48, 18.28, 19.9, 25.6];
 export const PartC: React.FC = () => {
   const fr = useCurrentFrame(), T = fr / FPS;
   const k = CUTS.findIndex((c, i) => T >= c && T < CUTS[i + 1]);
-  const t = T - CUTS[k], f = Math.round(t * FPS) + 1;
+  const t = T - CUTS[k], f = Math.min(Math.round(t * FPS) + 1, [130, 107, 87, 111, 114, 49, 169][k]);
   const [h] = React.useState(() => delayRender("font"));
   React.useEffect(() => { document.fonts.load("300px 'Permanent Marker'").then(() => continueRender(h), () => continueRender(h)); }, [h]);
   return <AbsoluteFill style={{ background: "#000", overflow: "hidden" }}>
