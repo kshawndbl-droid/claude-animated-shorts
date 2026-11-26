@@ -99,15 +99,25 @@ while hb < 49.7:
 
 # --- night ambience: crickets (pulsed high tones) and a little wind
 def crickets(a, b, gain):
+    """real-sounding crickets: short trains of 3-4 scratchy pulses (band-passed noise, no pure tones), several
+    insects at different rates and distances, so it is a soft texture and never a whistle"""
     g = env(a, b, 1.5)
     c = np.zeros(N)
-    for f, rate, ph in [(4300, 14, 0), (4700, 17, 1.3), (3900, 11, 2.1)]:
-        chirp = (np.sin(2 * np.pi * rate * t + ph) > 0.6) * (0.5 + 0.5 * np.sin(2 * np.pi * 0.31 * t + ph) > 0.35)
-        c += np.sin(2 * np.pi * f * t) * lp(chirp.astype(float), 200)
+    for k in range(7):
+        rate = rng.uniform(0.9, 1.8)              # chirps per second
+        f0 = rng.uniform(3600, 5200)
+        lvl = rng.uniform(0.3, 1.0)
+        at = a + rng.uniform(0, 1)
+        while at < b:
+            for p in range(rng.integers(3, 5)):
+                tt, e = decay(0.018, 260)
+                place(c, rng.standard_normal(len(tt)) * e * lvl, at + p * 0.028, 1.0)
+            at += 1 / rate * rng.uniform(0.85, 1.15)
+    c = bp(c, 3400, 6200)
     return g * gain * c
 
 
-sfx += crickets(0, 21.9, 0.035) + crickets(21.6, 39.9, 0.03) + crickets(44.0, 50.0, 0.035)
+sfx += crickets(0, 21.9, 0.09) + crickets(21.6, 39.9, 0.07) + crickets(44.0, 50.0, 0.08)
 wind = bp(rng.standard_normal(N), 200, 900) * (0.6 + 0.4 * np.sin(2 * np.pi * 0.07 * t))
 sfx += wind * 0.05 * (env(0, 39.9, 2) + env(44, 50.2, 1))
 # fire crackle under the thorn fences and in the study
