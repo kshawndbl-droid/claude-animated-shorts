@@ -45,19 +45,19 @@ SHOTS = {
                      focus=(1.8, 1.7, 0.8), fstop=5.6),
     # ---- Part B (story 21.86-39.82 s) ----
     # inside the boma at night: the thorn fence and a fire kept burning, a slow sideways drift
-    "fence": dict(n=96, light="night", keys=[(1, (-1.0, 6.2, 1.6), (-12, 2.5, 0.9), 28), (96, (-1.7, 5.0, 1.45), (-12, 2.5, 0.9), 28)],
+    "fence": dict(n=96, light="night", keys=[(1, (-5.2, 5.4, 1.7), (-6.8, -1.2, 0.6), 28), (96, (-5.6, 5.0, 1.5), (-6.8, -1.2, 0.6), 28)],
                   focus=(-6.0, 3.0, 0.6), fstop=4.0),
     # very low inside the camp looking up at the fence: a lion leaps over it against the night sky
-    "leap": dict(n=70, light="night", keys=[(1, (-7.4, 7.2, 0.5), (-12.5, 2.0, 1.6), 24), (70, (-7.8, 6.6, 0.45), (-12.5, 2.0, 1.5), 24)],
-                 focus=(-11.8, 2.8, 1.0), fstop=4.0),
+    "leap": dict(n=70, light="night", keys=[(1, (-3.0, 1.0, 0.5), (-8.75, -0.33, 1.6), 24), (70, (-3.2, 1.3, 0.45), (-8.75, -0.33, 1.5), 24)],
+                 focus=(-8.75, -0.33, 1.0), fstop=4.0),
     # ground level at the foot of the fence: a lion crawls in under the branches (fg pass = the fence over the lion)
-    "crawl": dict(n=60, light="night", keys=[(1, (-10.3, 13.3, 0.4), (-14.3, 14.9, 0.4), 32), (60, (-10.8, 13.5, 0.38), (-14.3, 14.9, 0.4), 34)],
-                  focus=(-14.2, 14.8, 0.3), fstop=2.8),
+    "crawl": dict(n=60, light="night", keys=[(1, (-9.9, 2.5, 0.4), (-12.8, 3.4, 0.35), 32), (60, (-10.2, 2.6, 0.38), (-12.8, 3.4, 0.35), 34)],
+                  focus=(-12.7, 3.35, 0.3), fstop=2.8),
     # dusk outside the camp: an iron box trap with its door raised, low prop close-up pushing in
-    "trap": dict(n=66, light="dusk", keys=[(1, (8.0, -10.0, 0.85), (11.0, -6.6, 0.75), 30), (66, (8.5, -9.4, 0.8), (11.0, -6.6, 0.75), 32)],
+    "trap": dict(n=66, light="dusk", keys=[(1, (8.8, -10.9, 1.35), (11.0, -7.3, 0.8), 28), (66, (9.1, -10.4, 1.3), (11.0, -7.3, 0.8), 30)],
                  focus=(10.6, -7.6, 0.7), fstop=3.5),
     # night: a lone acacia outside the boma where Patterson waits in the fork, the camera slowly pulls back and down
-    "tree": dict(n=120, light="night", keys=[(1, (16.0, -7.6, 1.4), (13.0, -3.0, 2.6), 30), (120, (17.0, -9.2, 0.9), (13.0, -3.0, 2.8), 27)],
+    "tree": dict(n=120, light="night", keys=[(1, (17.6, -9.0, 1.4), (13.0, -3.0, 2.5), 30), (120, (18.6, -10.4, 1.0), (13.0, -3.0, 2.6), 27)],
                  focus=(13.0, -3.0, 2.2), fstop=4.0),
     # dusk: workers leave along the line with bundles, then the camera lifts to the bridge standing unfinished
     "flee": dict(n=128, light="dusk", keys=[(1, (14.0, -2.0, 2.0), (3.0, 8.0, 1.2), 26), (70, (14.0, -2.5, 2.4), (3.5, 16.0, 1.6), 27),
@@ -718,7 +718,7 @@ def build():
     lowc = veg.fine_grass("grass_low", 700, ((-7, 2), (-15.5, -11)), rnd, hs=(0.45, 0.9))
     parts = [near, far, lowc]
     # each shot gets a dense patch of grass where its camera looks closest
-    dense = {"trap": ((6, 14), (-12, -3)), "tree": ((12, 19), (-11, -2)), "envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9))}.get(SHOT)
+    dense = {"tree": ((12, 19), (-11, -2)), "envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9))}.get(SHOT)
     if dense:
         parts.append(veg.fine_grass("grass_dense", int(16 * (dense[0][1] - dense[0][0]) * (dense[1][1] - dense[1][0])), dense, rnd,
                                     skip=lambda x, y: track(x, y) or math.hypot(x + 2.5, y - 10.5) < 12.8))

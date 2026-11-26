@@ -95,9 +95,9 @@ type ShotP = { T: number; a: number; b: number };
 // fire, another stands guard by it, watching the dark beyond the thorns.
 const S_Fence: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 96), cam = camFence as CamJ;
-  const from: [number, number] = [-3.0, 1.2], to: [number, number] = [-5.0, 2.3];
+  const from: [number, number] = [-3.4, 1.9], to: [number, number] = [-5.1, 3.3];
   const wk = walk(T, a + 0.1, a + 2.6, 0.9), p1 = along(from, to, wk.s);
-  const P1 = project(cam, f, [p1[0], p1[1], 0]), P2 = project(cam, f, [-7.1, 4.0, 0]);
+  const P1 = project(cam, f, [p1[0], p1[1], 0]), P2 = project(cam, f, [-7.2, 1.4, 0]);
   const left1 = project(cam, f, [to[0], to[1], 0]).x < project(cam, f, [from[0], from[1], 0]).x;
   const guardLook = Math.sin(T * 0.8) > 0 ? 0.6 : -0.2;
   const people = [
@@ -123,9 +123,9 @@ const S_Leap: React.FC<ShotP> = ({ T, a }) => {
   const t0 = 0.45, t1 = 1.35; // airborne between these
   const u = clamp01((t - t0) / (t1 - t0));
   const run = clamp01(t / t0), land = clamp01((t - t1) / 0.6);
-  const from: [number, number] = [-14.6, 0.3], over: [number, number] = [-12.0, 2.4], to: [number, number] = [-9.4, 4.3];
-  const gx = t < t0 ? mixc(-15.8, from[0], run) : t < t1 ? mixc(from[0], to[0], u) : mixc(to[0], -8.6, land);
-  const gy = t < t0 ? mixc(-0.7, from[1], run) : t < t1 ? mixc(from[1], to[1], u) : mixc(to[1], 4.9, land);
+  const from: [number, number] = [-9.85, -2.24], over: [number, number] = [-8.75, -0.33], to: [number, number] = [-7.65, 1.58];
+  const gx = t < t0 ? mixc(-10.55, from[0], run) : t < t1 ? mixc(from[0], to[0], u) : mixc(to[0], -7.25, land);
+  const gy = t < t0 ? mixc(-3.45, from[1], run) : t < t1 ? mixc(from[1], to[1], u) : mixc(to[1], 2.27, land);
   const z = t > t0 && t < t1 ? 2.3 * Math.sin(Math.PI * u) : 0;
   const crossed = t > t0 + (t1 - t0) * 0.5;
   const L = project(cam, f, [gx, gy, z]), Lg = project(cam, f, [gx, gy, 0]);
@@ -157,7 +157,7 @@ const S_Leap: React.FC<ShotP> = ({ T, a }) => {
 // the branches (the fence fg pass stays over it).
 const S_Crawl: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 60), cam = camCrawl as CamJ;
-  const from: [number, number] = [-15.6, 15.8], to: [number, number] = [-13.3, 14.4];
+  const from: [number, number] = [-14.05, 2.41], to: [number, number] = [-12.25, 3.67];
   const k = sm((t - 0.15) / 1.8), g: [number, number] = [mixc(from[0], to[0], k), mixc(from[1], to[1], k)];
   const L = project(cam, f, [g[0], g[1], 0]);
   const dir = project(cam, f, [to[0], to[1], 0]).x > project(cam, f, [from[0], from[1], 0]).x;
@@ -199,7 +199,7 @@ const S_Trap: React.FC<ShotP> = ({ T, a }) => {
 // 5. "He waited in trees, night after night, rifle ready. Nothing." Night, a lone acacia: Patterson in the fork with
 // his rifle. Each "night" is a short dip to black and a new moment (head turned, rifle shifted); on "Nothing" he
 // lowers his head.
-const FORK: [number, number, number] = [12.75, -3.05, 2.25];
+const FORK: [number, number, number] = [13.2, -3.3, 1.75];
 const S_Tree: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 120), cam = camTree as CamJ;
   const tn = W("night"), tn2 = W("night", 1), tno = W("nothing");
