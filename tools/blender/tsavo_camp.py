@@ -466,6 +466,13 @@ if __name__ == "__main__":
     cam = shot_camera(sc, SHOT)
     res = int(arg("--res", "720"))
     sc.render.resolution_x, sc.render.resolution_y = res, int(res * 16 / 9)
+    # --fg CLIP: a foreground layer for compositing. Only what is nearer than CLIP metres is rendered, on a transparent
+    # background, so grass and thorn branches in front of the 2D cast can be laid over them.
+    fg = arg("--fg")
+    if fg:
+        sc.render.film_transparent = True
+        sc.render.image_settings.color_mode = "RGBA"
+        cam.data.clip_end = float(fg)
     out = os.path.abspath(arg("--out", f"out/tsavo/sets/{SHOT}/"))
     os.makedirs(out, exist_ok=True)
     n = SHOTS[SHOT]["n"]
@@ -476,12 +483,13 @@ if __name__ == "__main__":
         sc.frame_set(f)
         m = cam.matrix_world
         cams[f] = {"m": [list(r) for r in m], "lens": cam.data.lens, "sensor": 36}
-    json.dump({"shot": SHOT, "frames": cams}, open(os.path.join(out, "cam.json"), "w"))
+    if not fg:
+        json.dump({"shot": SHOT, "frames": cams}, open(os.path.join(out, "cam.json"), "w"))
     if arg("--save"):
         bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(arg("--save")))
     import time
     for f in range(a, b + 1, step):
-        p = os.path.join(out, f"f_{f:04d}.png")
+        p = os.path.join(out, f"{'fg' if fg else 'f'}_{f:04d}.png")
         if os.path.exists(p):
             continue
         t0 = time.time()
