@@ -133,15 +133,15 @@ const taper = (ax: number, ay: number, bx: number, by: number, wa: number, wb: n
   return `M${P(ax + nx * wa)},${P(ay + ny * wa)} L${P(bx + nx * wb)},${P(by + ny * wb)} A${P(wb)},${P(wb)} 0 0 1 ${P(bx - nx * wb)},${P(by - ny * wb)} L${P(ax - nx * wa)},${P(ay - ny * wa)} A${P(wa)},${P(wa)} 0 0 1 ${P(ax + nx * wa)},${P(ay + ny * wa)} Z`;
 };
 
-/** flat lion to match the cast: a side-profile maneless male with a real lion silhouette (deep chest, tucked belly,
- *  strong haunches, long muzzle), tapered legs planted by IK so the paws stay on the ground, a tufted tail, warm tawny
- *  fills with a lighter belly and a darker back. Units: metres, nose to rump ~2.3 m, ~1.1 m at the shoulder. */
+/** flat lion to match the cast: a side-profile maneless MALE (the Tsavo man-eaters): heavy build, deep chest, thick
+ *  neck, big blocky head with a broad muzzle, and a short sparse ruff of mane tufts on the cheeks, neck and throat.
+ *  Each leg is one smooth tapered shape (no round joints), planted by IK so the paws stay on the ground.
+ *  Units: metres, nose to rump ~2.4 m, ~1.1 m at the shoulder. */
 export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP; flip?: boolean; id: string; shade?: number }> = ({ x, y, ppm, pose, flip = false, id, shade = 1 }) => {
   const w = pose.walk ?? 0, ph = (pose.phase ?? 0) * Math.PI * 2, cr = pose.crouch ?? 0;
-  const FUR = "#d29a52", DARK = "#a86e34", PALE = "#f1dcb2", FAR = "#9a6634";
-  const drop = 0.17 * cr, bob = w * 0.02 * Math.sin(ph * 2);
-  const sh = { x: 0.52, y: -0.98 + drop * 0.9 + bob }, hp = { x: -0.6, y: -0.96 + drop + bob };
-  // legs: paws on the ground, swinging forward in the swing phase (lifted) and sliding back in stance
+  const FUR = "#c58e4e", DARK = "#94602e", PALE = "#e9cfa0", FAR = "#8a5a2c", RUFF = "#a36a34", RUFF_D = "#6a4020";
+  const drop = 0.18 * cr, bob = w * 0.02 * Math.sin(ph * 2);
+  const sh = { x: 0.55, y: -1.0 + drop * 0.9 + bob }, hp = { x: -0.62, y: -0.95 + drop + bob };
   const legs = [
     { r: hp, o: 0.0, front: false, near: false }, { r: sh, o: 0.25, front: true, near: false },
     { r: hp, o: 0.5, front: false, near: true }, { r: sh, o: 0.75, front: true, near: true },
@@ -150,87 +150,103 @@ export const FlatLion: React.FC<{ x: number; y: number; ppm: number; pose: LionP
     const swing = u > 0.62, k = swing ? (u - 0.62) / 0.38 : u / 0.62;
     const off = w * (swing ? -0.28 + 0.56 * (0.5 - 0.5 * Math.cos(Math.PI * k)) : 0.28 - 0.56 * k);
     const lift = swing ? w * 0.14 * Math.sin(Math.PI * k) : 0;
-    const fx = L.r.x + (L.front ? 0.06 : 0.02) + off + (L.near ? 0.04 : -0.04), fy = -lift;
-    const l1 = L.front ? 0.45 : 0.47, l2 = L.front ? 0.45 : 0.45;
-    const j = ik(L.r.x, L.r.y + 0.08, fx, fy - 0.06, l1, l2, L.front ? -1 : 1);
+    const fx = L.r.x + (L.front ? 0.08 : 0.0) + off + (L.near ? 0.05 : -0.05), fy = -lift;
+    const l1 = L.front ? 0.47 : 0.48, l2 = 0.46;
+    const j = ik(L.r.x, L.r.y + 0.1, fx, fy - 0.07, l1, l2, L.front ? -1 : 1);
     return { ...L, fx, fy, j };
   });
-  // limb shapes: big upper parts (shoulder / thigh) that merge into the body, slim lower legs, round paws
-  const shapes = (L: typeof legs[number]) => {
-    const rx = L.r.x + (L.front ? -0.02 : 0.06), ry = L.r.y + (L.front ? 0.06 : 0.1);
-    return {
-      up: taper(rx, ry, L.j.jx, L.j.jy, L.front ? 0.18 : 0.23, 0.085),
-      lo: taper(L.j.jx, L.j.jy, L.fx, L.fy - 0.06, 0.075, 0.06),
-      paw: { cx: L.fx + 0.05, cy: L.fy - 0.045 },
-    };
+  /** one smooth limb outline: wide at the body, narrowing through the joint to the paw (quadratic through the joint) */
+  const limb = (L: typeof legs[number]) => {
+    const rx = L.r.x + (L.front ? 0.0 : 0.06), ry = L.r.y + 0.1, fx = L.fx + 0.02, fy = L.fy - 0.07;
+    const nrm = (ax: number, ay: number, bx: number, by: number) => { const dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l]; };
+    const [n1x, n1y] = nrm(rx, ry, L.j.jx, L.j.jy), [n2x, n2y] = nrm(L.j.jx, L.j.jy, fx, fy);
+    const nj = [(n1x + n2x) / 2, (n1y + n2y) / 2];
+    const wR = L.front ? 0.21 : 0.26, wJ = L.front ? 0.1 : 0.095, wF = L.front ? 0.08 : 0.07;
+    return `M${P(rx + n1x * wR)},${P(ry + n1y * wR)} Q${P(L.j.jx + nj[0] * wJ * 1.6)},${P(L.j.jy + nj[1] * wJ * 1.6)} ${P(fx + n2x * wF)},${P(fy + n2y * wF)}
+      L${P(fx - n2x * wF)},${P(fy - n2y * wF)} Q${P(L.j.jx - nj[0] * wJ * 1.6)},${P(L.j.jy - nj[1] * wJ * 1.6)} ${P(rx - n1x * wR)},${P(ry - n1y * wR)} Z`;
   };
-  /** silhouette group: every shape gets an ink outline first, then all fills on top, so overlaps merge into one shape */
-  const sil = (ls: typeof legs, col: string, extra: React.ReactNode[] = [], extraFill: React.ReactNode[] = []) => {
-    const sh_ = ls.map(shapes);
-    return (
-      <g>
-        {sh_.map((q, i) => <g key={`o${i}`} stroke={INK} strokeWidth={0.06} strokeLinejoin="round" fill={INK}>
-          <path d={q.up} /><path d={q.lo} /><ellipse cx={q.paw.cx} cy={q.paw.cy} rx={0.11} ry={0.055} /></g>)}
-        {extra}
-        {sh_.map((q, i) => <g key={`f${i}`} fill={col}>
-          <path d={q.up} /><path d={q.lo} /><ellipse cx={q.paw.cx} cy={q.paw.cy} rx={0.11} ry={0.055} /></g>)}
-        {extraFill}
-        {sh_.map((q, i) => [0.03, 0.08].map((t) => <path key={`t${i}${t}`} d={`M${P(q.paw.cx - 0.02 + t)},${P(q.paw.cy + 0.04)} v-0.035`} stroke={INK} strokeWidth={0.012} strokeLinecap="round" />))}
-      </g>
-    );
-  };
+  const paw = (L: typeof legs[number]) => ({ cx: L.fx + 0.06, cy: L.fy - 0.05 });
+  const sil = (ls: typeof legs, col: string, extra: React.ReactNode[] = [], extraFill: React.ReactNode[] = []) => (
+    <g>
+      {ls.map((L, i) => <g key={`o${i}`} stroke={INK} strokeWidth={0.06} strokeLinejoin="round" fill={INK}>
+        <path d={limb(L)} /><ellipse cx={paw(L).cx} cy={paw(L).cy} rx={0.125} ry={0.06} /></g>)}
+      {extra}
+      {ls.map((L, i) => <g key={`f${i}`} fill={col}><path d={limb(L)} /><ellipse cx={paw(L).cx} cy={paw(L).cy} rx={0.125} ry={0.06} /></g>)}
+      {extraFill}
+      {ls.map((L, i) => [0.0, 0.06, 0.11].map((t) => <path key={`t${i}${t}`} d={`M${P(paw(L).cx - 0.04 + t)},${P(paw(L).cy + 0.055)} v-0.035`} stroke={INK} strokeWidth={0.013} strokeLinecap="round" />))}
+    </g>
+  );
   const swish = Math.sin((pose.tail ?? 0) * 2.0) * 0.14;
   const eyes = pose.eyes ?? "normal", roar = pose.roar ?? 0;
-  // head sits forward of the shoulder; lower and further forward when stalking
-  const hx = sh.x + 0.42 + 0.06 * cr, hy = sh.y - 0.2 + 0.24 * cr;
+  const hx = sh.x + 0.5 + 0.06 * cr, hy = sh.y - 0.16 + 0.26 * cr;
   const by = (v: number) => P(v);
-  const body = `M${by(hp.x - 0.28)},${by(hp.y + 0.12)}
-    C${by(hp.x - 0.32)},${by(hp.y - 0.12)} ${by(hp.x - 0.12)},${by(hp.y - 0.2)} ${by(hp.x + 0.15)},${by(hp.y - 0.14)}
-    C${by(hp.x + 0.45)},${by(hp.y - 0.04)} ${by(sh.x - 0.45)},${by(sh.y - 0.06)} ${by(sh.x - 0.1)},${by(sh.y - 0.19)}
-    C${by(sh.x + 0.1)},${by(sh.y - 0.22)} ${by(sh.x + 0.3)},${by(hy + 0.0)} ${by(hx - 0.05)},${by(hy + 0.02)}
-    L${by(hx + 0.02)},${by(hy + 0.22)}
-    C${by(sh.x + 0.32)},${by(sh.y + 0.25)} ${by(sh.x + 0.25)},${by(sh.y + 0.42)} ${by(sh.x + 0.05)},${by(sh.y + 0.44)}
-    C${by(sh.x - 0.3)},${by(sh.y + 0.46)} ${by(hp.x + 0.55)},${by(hp.y + 0.24)} ${by(hp.x + 0.28)},${by(hp.y + 0.3)}
-    C${by(hp.x + 0.05)},${by(hp.y + 0.42)} ${by(hp.x - 0.22)},${by(hp.y + 0.36)} ${by(hp.x - 0.28)},${by(hp.y + 0.12)} Z`;
-  const tb = { x: hp.x - 0.26, y: hp.y - 0.04 };
-  const tail = `M${P(tb.x)},${P(tb.y)} C${P(tb.x - 0.35)},${P(tb.y + 0.05)} ${P(tb.x - 0.45)},${P(tb.y + 0.45 + swish)} ${P(tb.x - 0.62)},${P(tb.y + 0.5 + swish * 1.4)}`;
+  // heavy body: high shoulders, deep chest, thick neck up to the head, tucked belly, round haunch
+  const body = `M${by(hp.x - 0.3)},${by(hp.y + 0.14)}
+    C${by(hp.x - 0.34)},${by(hp.y - 0.14)} ${by(hp.x - 0.12)},${by(hp.y - 0.22)} ${by(hp.x + 0.15)},${by(hp.y - 0.16)}
+    C${by(hp.x + 0.45)},${by(hp.y - 0.1)} ${by(sh.x - 0.45)},${by(sh.y - 0.1)} ${by(sh.x - 0.12)},${by(sh.y - 0.24)}
+    C${by(sh.x + 0.08)},${by(sh.y - 0.3)} ${by(hx - 0.25)},${by(hy - 0.22)} ${by(hx - 0.02)},${by(hy - 0.14)}
+    L${by(hx + 0.08)},${by(hy + 0.26)}
+    C${by(sh.x + 0.4)},${by(sh.y + 0.3)} ${by(sh.x + 0.32)},${by(sh.y + 0.5)} ${by(sh.x + 0.05)},${by(sh.y + 0.52)}
+    C${by(sh.x - 0.3)},${by(sh.y + 0.52)} ${by(hp.x + 0.55)},${by(hp.y + 0.3)} ${by(hp.x + 0.28)},${by(hp.y + 0.34)}
+    C${by(hp.x + 0.05)},${by(hp.y + 0.44)} ${by(hp.x - 0.24)},${by(hp.y + 0.38)} ${by(hp.x - 0.3)},${by(hp.y + 0.14)} Z`;
+  const tb = { x: hp.x - 0.28, y: hp.y - 0.04 };
+  const tail = `M${P(tb.x)},${P(tb.y)} C${P(tb.x - 0.35)},${P(tb.y + 0.05)} ${P(tb.x - 0.45)},${P(tb.y + 0.45 + swish)} ${P(tb.x - 0.62)},${P(tb.y + 0.52 + swish * 1.4)}`;
+  // sparse mane ruff: a ragged collar of short tufts behind the cheek, down the neck and under the throat
+  const ruff = (() => {
+    const pts: string[] = [];
+    const n = 23;
+    for (let i = 0; i <= n; i++) {
+      const a = (-120 + (i / n) * 215) * Math.PI / 180;
+      const r = i % 2 === 0 ? 1.0 : 0.87 + 0.04 * Math.sin(i * 2.3);
+      pts.push(`${P(-0.08 + Math.cos(Math.PI - a) * 0.3 * r)},${P(0.06 + Math.sin(a) * 0.33 * r * (a > 0 ? 1.1 : 1))}`);
+    }
+    return `M${pts.join(" L")} L0.05,0.12 L-0.05,-0.12 Z`;
+  })();
   return (
     <g transform={`translate(${P(x)},${P(y)}) scale(${P((flip ? -1 : 1) * ppm)},${P(ppm)})`} style={shade !== 1 ? { filter: `brightness(${shade})` } : undefined}>
       <defs>
-        <linearGradient id={`lb${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#c58c46" /><stop offset="0.3" stopColor={FUR} /><stop offset="0.8" stopColor={FUR} /><stop offset="1" stopColor={PALE} /></linearGradient>
+        <linearGradient id={`lb${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ae7a3e" /><stop offset="0.3" stopColor={FUR} /><stop offset="0.78" stopColor={FUR} /><stop offset="1" stopColor={PALE} /></linearGradient>
         <radialGradient id={`lg${id}`}><stop offset="0" stopColor="#fff6b0" stopOpacity={0.95} /><stop offset="0.4" stopColor="#ffcf3a" stopOpacity={0.5} /><stop offset="1" stopColor="#ffb000" stopOpacity={0} /></radialGradient>
       </defs>
-      <ellipse cx={0} cy={0} rx={1.05} ry={0.07} fill="rgba(10,5,10,0.35)" />
+      <ellipse cx={0} cy={0} rx={1.1} ry={0.075} fill="rgba(10,5,10,0.35)" />
       {sil(legs.filter((l) => !l.near), FAR)}
-      <path d={tail} stroke={INK} strokeWidth={0.075} fill="none" strokeLinecap="round" />
-      <path d={tail} stroke={FUR} strokeWidth={0.042} fill="none" strokeLinecap="round" />
-      <ellipse cx={tb.x - 0.64} cy={tb.y + 0.55 + swish * 1.4} rx={0.07} ry={0.1} transform={`rotate(${P(20 + swish * 60)},${P(tb.x - 0.64)},${P(tb.y + 0.55 + swish * 1.4)})`} fill="#4a2a18" stroke={INK} strokeWidth={0.022} />
+      <path d={tail} stroke={INK} strokeWidth={0.08} fill="none" strokeLinecap="round" />
+      <path d={tail} stroke={FUR} strokeWidth={0.045} fill="none" strokeLinecap="round" />
+      <ellipse cx={tb.x - 0.64} cy={tb.y + 0.58 + swish * 1.4} rx={0.075} ry={0.11} transform={`rotate(${P(20 + swish * 60)},${P(tb.x - 0.64)},${P(tb.y + 0.58 + swish * 1.4)})`} fill="#3e2214" stroke={INK} strokeWidth={0.022} />
       {sil(legs.filter((l) => l.near), FUR,
         [<path key="bo" d={body} fill={INK} stroke={INK} strokeWidth={0.064} strokeLinejoin="round" />],
         [<path key="bf" d={body} fill={`url(#lb${id})`} />])}
-      {/* shoulder and haunch shading lines */}
-      <path d={`M${P(sh.x - 0.12)},${P(sh.y - 0.05)} q0.08,0.2 0.0,0.38`} stroke={DARK} strokeWidth={0.025} fill="none" strokeLinecap="round" opacity={0.6} />
-      <path d={`M${P(hp.x + 0.18)},${P(hp.y - 0.08)} q-0.14,0.18 -0.02,0.4`} stroke={DARK} strokeWidth={0.025} fill="none" strokeLinecap="round" opacity={0.6} />
-      {/* head in profile: skull, long muzzle, chin, small round ear, a short neck ruff (maneless) */}
-      <g transform={`translate(${P(hx)},${P(hy)}) rotate(${P(8 * cr - 10 * roar)})`}>
-        <path d="M-0.18,0.02 Q-0.22,0.2 -0.08,0.3 L0.0,0.22 Q-0.1,0.12 -0.08,0.0 Z" fill={DARK} stroke={INK} strokeWidth={0.022} strokeLinejoin="round" />
-        <ellipse cx={-0.05} cy={-0.17} rx={0.065} ry={0.075} fill={FUR} stroke={INK} strokeWidth={0.024} />
-        <ellipse cx={-0.045} cy={-0.16} rx={0.03} ry={0.04} fill="#6a3e22" />
-        <path d={`M-0.14,0.02 C-0.16,-0.14 0.02,-0.2 0.14,-0.15 C0.22,-0.12 0.27,-0.06 0.36,-0.05 C0.42,-0.04 0.44,0.02 0.43,0.07
-          C0.42,${P(0.12 + 0.02 * roar)} 0.36,${P(0.13 + 0.02 * roar)} 0.3,${P(0.13 + 0.02 * roar)} L0.3,${P(0.15 + 0.12 * roar)} C0.22,${P(0.2 + 0.12 * roar)} 0.08,${P(0.2 + 0.1 * roar)} 0.02,${P(0.16 + 0.06 * roar)}
-          C-0.08,0.16 -0.14,0.1 -0.14,0.02 Z`} fill={FUR} stroke={INK} strokeWidth={0.028} strokeLinejoin="round" />
-        <path d="M0.2,0.02 C0.28,0.0 0.38,0.0 0.42,0.06 C0.38,0.12 0.26,0.13 0.18,0.1 Z" fill={PALE} />
-        <path d="M0.04,0.14 C0.1,0.19 0.22,0.19 0.28,0.15" stroke={PALE} strokeWidth={0.04} fill="none" strokeLinecap="round" />
-        {roar > 0.1 && <path d={`M0.3,0.13 L0.12,${P(0.14 + 0.06 * roar)} L0.3,${P(0.15 + 0.12 * roar)} Z`} fill="#5a1a22" stroke={INK} strokeWidth={0.016} />}
-        <path d="M0.4,-0.04 Q0.45,-0.02 0.44,0.03 Q0.4,0.04 0.38,0.0 Z" fill="#3a2024" stroke={INK} strokeWidth={0.014} strokeLinejoin="round" />
-        <path d="M0.42,0.05 Q0.4,0.1 0.34,0.11" stroke={INK} strokeWidth={0.014} fill="none" strokeLinecap="round" />
-        {[0, 1, 2].map((i) => <circle key={i} cx={0.28 + i * 0.03} cy={0.055 + (i % 2) * 0.02} r={0.007} fill="#6a4a3a" />)}
-        {/* eye: amber almond with a dark tear line down the muzzle, a heavy brow */}
+      {/* muscle lines: shoulder blade, haunch, a darker line along the back */}
+      <path d={`M${P(sh.x - 0.14)},${P(sh.y - 0.12)} q0.1,0.22 0.0,0.44`} stroke={DARK} strokeWidth={0.026} fill="none" strokeLinecap="round" opacity={0.6} />
+      <path d={`M${P(hp.x + 0.2)},${P(hp.y - 0.1)} q-0.16,0.2 -0.02,0.44`} stroke={DARK} strokeWidth={0.026} fill="none" strokeLinecap="round" opacity={0.6} />
+      <g transform={`translate(${P(hx)},${P(hy)}) rotate(${P(6 * cr - 10 * roar)}) scale(1.3,1.32)`}>
+        {/* the ruff, behind the head */}
+        <path d={ruff} fill={RUFF} stroke={INK} strokeWidth={0.022} strokeLinejoin="round" />
+        {[[-0.26, -0.02, -0.33, 0.06], [-0.22, 0.12, -0.3, 0.2], [-0.12, 0.24, -0.16, 0.32], [-0.2, -0.14, -0.28, -0.1]].map(([a, b, c, d], i) =>
+          <path key={i} d={`M${a},${b} L${c},${d}`} stroke={RUFF_D} strokeWidth={0.02} strokeLinecap="round" />)}
+        {/* ear: small, round, dark backed */}
+        <ellipse cx={-0.06} cy={-0.18} rx={0.06} ry={0.068} fill={RUFF_D} stroke={INK} strokeWidth={0.022} />
+        <ellipse cx={-0.05} cy={-0.17} rx={0.028} ry={0.036} fill="#a87a4a" />
+        {/* skull + broad, deep muzzle + heavy chin */}
+        <path d={`M-0.15,0.03 C-0.17,-0.14 0.0,-0.2 0.14,-0.16 C0.23,-0.13 0.28,-0.08 0.37,-0.07 C0.44,-0.06 0.46,0.01 0.45,0.08
+          C0.44,${P(0.14 + 0.02 * roar)} 0.38,${P(0.16 + 0.02 * roar)} 0.31,${P(0.16 + 0.02 * roar)} L0.31,${P(0.18 + 0.12 * roar)} C0.22,${P(0.24 + 0.12 * roar)} 0.06,${P(0.24 + 0.1 * roar)} 0.0,${P(0.19 + 0.06 * roar)}
+          C-0.1,0.18 -0.15,0.12 -0.15,0.03 Z`} fill={FUR} stroke={INK} strokeWidth={0.026} strokeLinejoin="round" />
+        {/* cheek tufts (part of the sparse mane) */}
+        <path d="M-0.1,0.0 L-0.17,0.05 L-0.1,0.08 L-0.16,0.13 L-0.07,0.13 L-0.1,0.19 L0.0,0.16" fill={RUFF} stroke={INK} strokeWidth={0.016} strokeLinejoin="round" />
+        <path d="M0.2,0.02 C0.29,-0.01 0.4,0.0 0.44,0.07 C0.4,0.14 0.27,0.15 0.18,0.11 Z" fill={PALE} />
+        <path d="M0.04,0.17 C0.1,0.22 0.22,0.22 0.29,0.18" stroke={PALE} strokeWidth={0.045} fill="none" strokeLinecap="round" />
+        {roar > 0.1 && <path d={`M0.31,0.16 L0.12,${P(0.17 + 0.06 * roar)} L0.31,${P(0.18 + 0.12 * roar)} Z`} fill="#5a1a22" stroke={INK} strokeWidth={0.016} />}
+        {/* nose bridge, broad dark nose, mouth line, whisker dots */}
+        <path d="M0.16,-0.1 Q0.3,-0.08 0.4,-0.05" stroke={DARK} strokeWidth={0.02} fill="none" strokeLinecap="round" opacity={0.7} />
+        <path d="M0.4,-0.06 Q0.47,-0.04 0.46,0.03 Q0.41,0.05 0.38,0.0 Z" fill="#2e1a1c" stroke={INK} strokeWidth={0.014} strokeLinejoin="round" />
+        <path d="M0.44,0.06 Q0.41,0.12 0.34,0.13" stroke={INK} strokeWidth={0.014} fill="none" strokeLinecap="round" />
+        {[0, 1, 2, 3].map((i) => <circle key={i} cx={0.27 + i * 0.03} cy={0.06 + (i % 2) * 0.02} r={0.006} fill="#5a3a2a" />)}
+        {/* eye: small, set deep under a heavy brow, with the dark tear line */}
         {eyes === "glow" && <circle cx={0.15} cy={-0.07} r={0.14} fill={`url(#lg${id})`} />}
-        <path d={`M0.1,-0.07 Q0.15,${eyes === "narrow" ? -0.095 : -0.115} 0.2,-0.075 Q0.15,${eyes === "narrow" ? -0.05 : -0.035} 0.1,-0.07 Z`} fill={eyes === "glow" ? "#fff3a0" : "#e8b030"} stroke={INK} strokeWidth={0.014} />
-        <ellipse cx={0.16 + (pose.look ?? 0.4) * 0.008} cy={-0.072} rx={0.01} ry={eyes === "narrow" ? 0.012 : 0.025} fill={INK} />
-        <path d="M0.08,-0.135 Q0.16,-0.16 0.23,-0.11" stroke={INK} strokeWidth={0.03} fill="none" strokeLinecap="round" />
-        <path d="M0.2,-0.05 Q0.25,0.0 0.29,0.02" stroke={DARK} strokeWidth={0.016} fill="none" strokeLinecap="round" />
+        <path d={`M0.11,-0.07 Q0.15,${eyes === "narrow" ? -0.09 : -0.1} 0.19,-0.074 Q0.15,${eyes === "narrow" ? -0.058 : -0.05} 0.11,-0.07 Z`} fill={eyes === "glow" ? "#fff3a0" : "#d9a030"} stroke={INK} strokeWidth={0.013} />
+        <ellipse cx={0.155 + (pose.look ?? 0.4) * 0.006} cy={-0.073} rx={0.008} ry={eyes === "narrow" ? 0.01 : 0.017} fill={INK} />
+        <path d="M0.07,-0.12 Q0.15,-0.15 0.23,-0.1" stroke={INK} strokeWidth={0.036} fill="none" strokeLinecap="round" />
+        <path d="M0.19,-0.05 Q0.24,0.0 0.28,0.03" stroke={DARK} strokeWidth={0.016} fill="none" strokeLinecap="round" />
       </g>
     </g>
   );
