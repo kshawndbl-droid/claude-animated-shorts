@@ -95,7 +95,7 @@ type ShotP = { T: number; a: number; b: number };
 // fire, another stands guard by it, watching the dark beyond the thorns.
 const S_Fence: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 96), cam = camFence as CamJ;
-  const from: [number, number] = [-3.4, 1.9], to: [number, number] = [-5.1, 3.3];
+  const from: [number, number] = [-4.2, -0.7], to: [number, number] = [-5.5, 0.5];
   const wk = walk(T, a + 0.1, a + 2.6, 0.9), p1 = along(from, to, wk.s);
   const P1 = project(cam, f, [p1[0], p1[1], 0]), P2 = project(cam, f, [-7.2, 1.4, 0]);
   const left1 = project(cam, f, [to[0], to[1], 0]).x < project(cam, f, [from[0], from[1], 0]).x;
@@ -177,19 +177,19 @@ const S_Crawl: React.FC<ShotP> = ({ T, a }) => {
 const TRAP: [number, number] = [11.0, -7.0];
 const S_Trap: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 66), cam = camTrap as CamJ;
-  const P = project(cam, f, [10.1, -9.0, 0]);
+  const P = project(cam, f, [10.0, -7.7, 0]);
   const reach = sm((t - 0.2) / 0.5) * (1 - sm((t - 1.6) / 0.4));
   const pull = Math.sin(t * 7) * 3 * reach;
   const top = project(cam, f, [TRAP[0] - 0.4, TRAP[1] - 1.5, 2.7]);
   // the near hand sits at the end of the raised arm: shoulder (~0.94 m) plus the arm toward the door rope
-  const hand = project(cam, f, [10.35, -8.85, 1.55 + 0.03 * pull]);
+  const hand = project(cam, f, [10.25, -7.95, 1.25 + 0.03 * pull]);
   return (
     <AbsoluteFill>
       <Plate shot="trap" f={f} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         {reach > 0.2 && <path d={`M${top.x},${top.y} L${hand.x},${hand.y}`} stroke="#6a5236" strokeWidth={Math.max(2, 0.02 * P.ppm)} opacity={reach} />}
         <Toon x={P.x} y={P.y} ppm={P.ppm} look={PATTERSON_T} pose={{ t: T, lookX: 0.6, tilt: -4 * reach, blink: (T % 3.3) < 0.1, expr: "stern",
-          armNear: reach > 0 ? [mixc(4, 150, reach) + pull, mixc(10, 18, reach)] : undefined, armFar: reach > 0 ? [mixc(2, 70, reach), mixc(8, 40, reach)] : undefined }} shade={0.92} />
+          armNear: reach > 0 ? [mixc(4, 105, reach) + pull, mixc(10, 15, reach)] : undefined, armFar: reach > 0 ? [mixc(2, 70, reach), mixc(8, 40, reach)] : undefined }} shade={0.92} />
         <Dust cam={cam} f={f} T={T} c={[9.5, -8.0]} n={45} />
       </svg>
     </AbsoluteFill>
@@ -234,7 +234,7 @@ const Bundle: React.FC<{ x: number; y: number; ppm: number; col: string; flip: b
 );
 const S_Flee: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 128), cam = camFlee as CamJ;
-  const from: [number, number] = [2.6, 10.5], to: [number, number] = [2.6, -6.0];
+  const from: [number, number] = [8.2, 4.0], to: [number, number] = [8.6, -4.5];
   const men = [
     { look: WORKER_T, t0: -0.4, v: 1.1, off: 0.0, bundle: "#c8a878", plank: false },
     { look: WORKER2_T, t0: 0.4, v: 1.05, off: 0.6, bundle: "#8a6a4a", plank: false },
@@ -249,8 +249,9 @@ const S_Flee: React.FC<ShotP> = ({ T, a }) => {
       {!m.plank && <Bundle x={P.x} y={P.y} ppm={P.ppm} col={m.bundle} flip={left} />}
     </g> };
   }).sort((x, y) => y.z - x.z);
+  const zk = sm((t - 2.6) / 1.6), bz = project(cam, f, [4.0, 56.5, 2.0]);
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{ transform: `scale(${1 + 0.6 * zk})`, transformOrigin: `${bz.x}px ${bz.y}px` }}>
       <Plate shot="flee" f={f} />
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
         {men.map((m) => m.el)}
