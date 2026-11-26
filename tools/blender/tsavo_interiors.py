@@ -13,8 +13,8 @@ import os
 import random
 import sys
 
-import bmesh
 import bpy
+import bmesh  # noqa: E402  (must come after bpy)
 
 sys.path.insert(0, os.path.dirname(__file__))
 import test_scene as ts  # noqa: E402
@@ -80,7 +80,7 @@ def wood_mat(name, a, b, scale=3.0, rough=0.45, planks=True):
     col = ramp.outputs[0]
     if planks:
         br = nd.new("ShaderNodeTexBrick")
-        br.inputs["Scale"].default_value = 1.2
+        br.inputs["Scale"].default_value = 0.7
         br.inputs["Mortar Size"].default_value = 0.006
         br.inputs["Brick Width"].default_value = 2.6
         br.inputs["Row Height"].default_value = 0.22
@@ -168,14 +168,14 @@ def dish(loc, glass, label_m, label):
 # ------------------------------------------------------------------ rooms
 def lab():
     world((0.6, 0.66, 0.7), 0.25)
-    floor = mat("labfloor", (0.55, 0.56, 0.55), rough=0.35)
-    wall = mat("labwall", (0.78, 0.8, 0.78), rough=0.9)
+    floor = mat("labfloor", (0.3, 0.34, 0.36), rough=0.35)
+    wall = mat("labwall", (0.5, 0.6, 0.6), rough=0.9)
     room_shell(9, 6, 3.0, floor, wall, mat("ceil", (0.85, 0.85, 0.84)))
     # window with blinds in the back wall, daylight outside
-    sky = mat("sky", (0.75, 0.85, 1.0), emit=3.0)
+    sky = mat("sky", (0.75, 0.85, 1.0), emit=1.6)
     box("outside", (0.0, 6.4, 1.8), (3.6, 0.05, 1.6), sky)
     bpy.data.objects["back"].hide_render = True
-    wl = mat("labwall2", (0.78, 0.8, 0.78), rough=0.9)
+    wl = mat("labwall2", (0.5, 0.6, 0.6), rough=0.9)
     box("back_l", (-3.15, 6.05, 1.5), (2.7, 0.1, 3.0), wl)
     box("back_r", (3.15, 6.05, 1.5), (2.7, 0.1, 3.0), wl)
     box("back_b", (0, 6.05, 0.5), (3.6, 0.1, 1.0), wl)
@@ -183,9 +183,9 @@ def lab():
     slat = mat("slat", (0.9, 0.9, 0.86), rough=0.5)
     for k in range(13):
         box("slat", (0, 5.98, 1.08 + k * 0.11), (3.5, 0.06, 0.012), slat).rotation_euler = (math.radians(-35), 0, 0)
-    area((0, 5.6, 1.8), (math.radians(90), 0, 0), 3.4, 900, (0.95, 0.97, 1.0), sy=1.5)
+    area((0, 5.6, 1.8), (math.radians(90), 0, 0), 3.4, 350, (0.95, 0.97, 1.0), sy=1.5)
     for x in (-2.0, 2.0):
-        area((x, 2.5, 2.95), (0, 0, 0), 1.2, 380, (1.0, 0.97, 0.92), sy=0.3)
+        area((x, 2.5, 2.95), (0, 0, 0), 1.2, 160, (1.0, 0.97, 0.92), sy=0.3)
         box("tube", (x, 2.5, 2.97), (1.2, 0.3, 0.02), mat("tubeglow", (1.0, 0.98, 0.94), emit=4.0))
     # island bench: cabinets + dark epoxy top
     top = mat("epoxy", (0.06, 0.07, 0.08), rough=0.25)
@@ -296,7 +296,11 @@ def study():
     world((0.1, 0.12, 0.2), 0.15)
     floor = wood_mat("floorwood", (0.28, 0.15, 0.07), (0.45, 0.26, 0.13), scale=1.2)
     wall = mat("paper", (0.36, 0.3, 0.22), rough=0.9)
-    room_shell(8, 5.5, 3.0, floor, wall, mat("ceil2", (0.6, 0.55, 0.48)))
+    room_shell(8, 5.5, 4.2, floor, wall, mat("ceil2", (0.6, 0.55, 0.48)))
+    bpy.data.objects["ceil"].visible_camera = False
+    fl = bpy.data.objects["floor"]
+    fl.data.transform(fl.matrix_basis.to_3x3().to_4x4())
+    fl.scale = (1, 1, 1)
     # wainscot
     pan = wood_mat("panel", (0.22, 0.12, 0.06), (0.32, 0.18, 0.09), scale=2.0, planks=False)
     box("wain_b", (0, 5.45, 0.5), (8, 0.06, 1.0), pan)
@@ -307,7 +311,7 @@ def study():
     box("fp_r", (2.85, 5.3, 0.6), (0.3, 0.3, 1.2), stone)
     box("fp_top", (2.1, 5.27, 1.28), (1.9, 0.38, 0.16), stone)
     box("fp_back", (2.1, 5.44, 0.55), (1.2, 0.05, 1.1), mat("soot", (0.03, 0.02, 0.02)))
-    flame = mat("flame", (1.0, 0.45, 0.12), emit=12)
+    flame = mat("flame", (1.0, 0.38, 0.08), emit=5)
     logs = mat("logs", (0.15, 0.08, 0.04))
     for a in (-0.3, 0.3):
         cyl((2.1, 5.3, 0.12), 0.06, 0.8, logs, verts=8, rot=(0, math.radians(90), a))
@@ -359,11 +363,11 @@ def study():
     box("frame", (0.0, 5.44, 1.9), (1.1, 0.04, 0.75), mat("gilt", (0.6, 0.45, 0.15), metal=0.8, rough=0.35))
     box("map", (0.0, 5.41, 1.9), (0.95, 0.02, 0.6), mat("mapcol", (0.75, 0.66, 0.45)))
     # the two lion-skin rugs on the floor
-    fur = mat("pelt", (0.68, 0.45, 0.2), rough=0.9)
+    fur = wood_mat("pelt", (0.22, 0.11, 0.04), (0.42, 0.24, 0.09), scale=4.0, rough=0.95, planks=False)
     edge = mat("felt", (0.18, 0.05, 0.04), rough=0.95)
-    head = mat("pelthead", (0.62, 0.4, 0.18), rough=0.8)
-    rug("rugA", (-0.9, 1.6), math.radians(-18), 0.72, fur, edge, head)
-    rug("rugB", (1.0, 2.6), math.radians(30), 0.72, fur, edge, head)
+    head = mat("pelthead", (0.34, 0.19, 0.07), rough=0.8)
+    rug("rugA", (-0.9, 1.6), math.radians(-18), 0.85, fur, edge, head)
+    rug("rugB", (1.0, 2.6), math.radians(30), 0.85, fur, edge, head)
     area((0, 1.8, 2.9), (0, 0, 0), 2.5, 120, (1.0, 0.85, 0.65))
 
 
@@ -375,7 +379,7 @@ def museum():
     # the case: dark plinth, painted savanna back wall (emissive gradient), lit top box, slim bronze corner posts
     plinth = mat("plinth", (0.08, 0.07, 0.06), rough=0.5)
     box("plinth", (0.1, 4.4, 0.25), (4.4, 2.2, 0.5), plinth)
-    box("deck", (0.1, 4.4, 0.51), (4.3, 2.1, 0.02), mat("deckgrass", (0.55, 0.42, 0.24), rough=0.95))
+    box("deck", (0.1, 4.4, 0.51), (4.3, 2.1, 0.02), mat("deckgrass", (0.38, 0.28, 0.14), rough=0.95))
     m, nd, ln, bs = ts.new_mat("diorama")
     tc = nd.new("ShaderNodeTexCoord")
     sep = nd.new("ShaderNodeSeparateXYZ")
@@ -406,15 +410,15 @@ def museum():
         for y in (3.32, 5.48):
             box("post", (x, y, 1.75), (0.04, 0.04, 2.5), bronze)
     box("topbox", (0.1, 4.4, 3.1), (4.4, 2.2, 0.2), plinth)
-    box("topglow", (0.1, 4.4, 2.99), (4.0, 1.9, 0.01), mat("topglow", (1.0, 0.92, 0.78), emit=2.5))
+    box("topglow", (0.1, 4.4, 2.99), (4.0, 1.9, 0.01), mat("topglow", (1.0, 0.92, 0.78), emit=1.0))
     for x in (-1.2, 0.1, 1.4):
         spot((x, 4.0, 2.9), (0, 0, 0), 420, (1.0, 0.9, 0.75), angle=55, blend=0.6)
     # plaque on a slanted stand in front
-    box("stand", (-1.2, 2.7, 0.45), (0.06, 0.06, 0.9), bronze)
-    pl = box("plaque", (-1.2, 2.68, 0.93), (0.7, 0.03, 0.42), mat("plaque", (0.1, 0.09, 0.08)))
+    box("stand", (-2.75, 2.9, 0.45), (0.06, 0.06, 0.9), bronze)
+    pl = box("plaque", (-2.75, 2.88, 0.93), (0.7, 0.03, 0.42), mat("plaque", (0.1, 0.09, 0.08)))
     pl.rotation_euler = (math.radians(-40), 0, 0)
     gold = mat("gold", (0.9, 0.75, 0.4), emit=0.4)
-    text("THE MAN-EATERS\nOF TSAVO", (-1.2, 2.655, 0.98), 0.07, gold, rot=(math.radians(50), 0, 0))
+    text("THE MAN-EATERS\nOF TSAVO", (-2.75, 2.855, 0.98), 0.07, gold, rot=(math.radians(50), 0, 0))
     # dim hall lights, a doorway glow far left, a bench
     area((-6.5, 2.0, 2.0), (0, math.radians(-90), 0), 2.0, 80, (0.9, 0.85, 0.8))
     box("door", (-6.95, 2.0, 1.4), (0.02, 1.6, 2.8), mat("doorglow", (0.9, 0.8, 0.6), emit=1.5))
@@ -442,7 +446,7 @@ def build():
         ee.use_raytracing = False
     sc.view_settings.view_transform = "AgX"
     sc.view_settings.look = "AgX - Medium High Contrast"
-    sc.view_settings.exposure = float(arg("--exposure", {"lab": "-0.3", "study": "0.2", "museum": "0.4"}[ROOM]))
+    sc.view_settings.exposure = float(arg("--exposure", {"lab": "-0.3", "study": "-0.3", "museum": "0.4"}[ROOM]))
     sc.render.image_settings.file_format = "PNG"
     return sc
 
