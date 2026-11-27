@@ -9,6 +9,9 @@ import { ShortA, A_FRAMES } from "../../templates/mailed/ShortA";
 import { LionTest } from "../../templates/tsavo/LionTest";
 import { TsavoTest, TSAVO_TEST_FRAMES } from "../../templates/tsavo/TsavoTest";
 import { Tsavo3DTest, TSAVO3D_FRAMES } from "../../templates/tsavo3d/Tsavo3DTest";
+import { TsavoPartD, PARTD_FRAMES } from "../../templates/tsavo3d/TsavoPartD";
+import { MaleLionTest } from "../../templates/tsavo3d/LionTest";
+import { TsavoFinal, TSAVO_FINAL_FRAMES } from "../../templates/tsavo3d/TsavoFinal";
 import { EnvTest, EnvTest2, EnvTest3, ENVTEST_FRAMES } from "../../templates/tsavo3d/EnvTest";
 import { ToonWalkTest, ToonStandTest, TOON_WALK_FRAMES, TOON_STAND_FRAMES } from "../../templates/tsavo3d/ToonTest";
 import { JWalkTest, JStandTest, J_WALK_FRAMES, J_STAND_FRAMES } from "../../templates/jorogumo/CharTest";
@@ -71,6 +74,9 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="JFull" component={JFull} durationInFrames={J_FULL_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="JStandTest" component={JStandTest} durationInFrames={J_STAND_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="ToonStandTest" component={ToonStandTest} durationInFrames={TOON_STAND_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="MaleLionTest" component={MaleLionTest} durationInFrames={1} fps={30} width={1080} height={1920} />
+    <Composition id="TsavoFinal" component={TsavoFinal} durationInFrames={TSAVO_FINAL_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="TsavoPartD" component={TsavoPartD} durationInFrames={PARTD_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="Tsavo3DTest" component={Tsavo3DTest} durationInFrames={TSAVO3D_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="MailedBv3" component={ShortB} durationInFrames={B_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true, v3: true }} />
   </>
