@@ -49,7 +49,7 @@ const sub = defaultStyle("serious", { key: "#3DF0FF", keyWords: KEY, y: 0.74, ma
 /** the creature as a near-black silhouette (same design as creature.tsx), never seen clearly before the attack */
 const Shape: React.FC<{ x: number; y: number; ppm: number; h?: number; lean?: number; op?: number; blur?: number; flip?: boolean }> =
   ({ x, y, ppm, h = 2.7, lean = 0, op = 1, blur = 0, flip }) => (
-    <g transform={`rotate(${lean},${x},${y})`} opacity={op} style={{ filter: `brightness(0.12)${blur ? ` blur(${blur}px)` : ""}` }}>
+    <g transform={`rotate(${lean},${x},${y})`} opacity={op} style={{ filter: `brightness(0.02)${blur ? ` blur(${blur}px)` : ""}` }}>
       <Creature x={x} y={y} ppm={(ppm * h) / 2.7} flip={flip} p={{ pose: "lurk", glow: 0, rim: 0.4 }} />
     </g>
   );
@@ -100,7 +100,7 @@ export const HPreview: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }
     const G = project(cam, f, [-2.7, 13.5, 0]);
     layer = <>
       <svg width={1080} height={1920} style={{ position: "absolute" }}>
-        <Shape x={G.x} y={G.y} ppm={G.ppm} op={0.55 * sm((T - 16.2) / 0.8) * (1 - sm((T - 17.2) / 0.5))} blur={2} />
+        <Shape x={G.x} y={G.y} ppm={G.ppm} op={0.35 * sm((T - 16.2) / 0.8) * (1 - sm((T - 17.2) / 0.5))} blur={2} />
       </svg>
       <Man shot={shot} f={f} T={T} pf={pf} expr="neutral" lookX={0.35} />
     </>;
@@ -108,7 +108,7 @@ export const HPreview: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }
     layer = <Man shot={shot} f={f} T={T} pf={pf} expr={T > 18.15 ? "scared" : "neutral"} lookX={T > 18.5 ? -0.9 : 0.35} />;
   } else if (shot === "pC") {
     // jumpscare 1: during the whip a tall shape is caught beside the hide tree and slips behind it (≈7 frames)
-    const k = sm((T - 20.52) / 0.22), H = project(cam, f, [2.1 - 0.85 * (1 - k), 5.75, 0]);
+    const k = sm((T - 20.52) / 0.22), H = project(cam, f, [2.1 - 1.0 * (1 - k), 5.85, 0]);
     const vis = T >= 20.5 && T < 20.8;
     layer = <>
       {vis && <svg width={1080} height={1920} style={{ position: "absolute" }}>
@@ -143,7 +143,7 @@ export const HPreview: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }
         <rect width={1080} height={1920} filter="url(#gr)" />
       </svg>
       <Subtitles words={WORDS.filter((w) => w.s >= T0 - 0.05 && w.s < T1 - 0.2)} style={sub} offset={-T0} />
-      {withAudio && <Audio src={staticFile("hidebehind/mix_v1.wav")} startFrom={Math.round(T0 * FPS)} />}
+      {withAudio && <Audio src={staticFile("hidebehind/mix_v3.wav")} startFrom={Math.round(T0 * FPS)} />}
       {fadeIn > 0 && <AbsoluteFill style={{ background: "#000", opacity: fadeIn }} />}
       {fadeOut > 0 && <AbsoluteFill style={{ background: "#000", opacity: fadeOut }} />}
     </AbsoluteFill>
