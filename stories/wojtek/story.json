@@ -1,0 +1,85 @@
+{
+ "engine": "kokoro",
+ "voice": "bm_fable",
+ "speed": 1.1,
+ "lines": [
+  {
+   "text": "In World War Two, one Polish army unit had a soldier who wrestled his friends, saluted his officers, and was covered in fur. He was a bear.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "1942, near Hamadan in Iran. Polish soldiers on the march meet a local boy with an orphaned cub. A Syrian brown bear.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "Accounts differ, but the best-known version says the soldiers traded chocolate, canned beef and a pocketknife for him. Deal.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "They name him Wojtek, and feed him condensed milk from an old vodka bottle.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "He grows. And grows. He learns to wrestle the soldiers, and to salute.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "And the soldiers told some wild stories about him. They said he loved a bottle of beer...",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "...and that he loved the camp showers so much, he used up all the water and got banned from showering alone.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "1944. The unit has to ship out to Italy. But animals aren't allowed to travel with the troops.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "The solution? They officially register him as a soldier, so he can travel with the unit. Private Wojtek.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "At the Battle of Monte Cassino, according to his fellow soldiers, Wojtek helped carry heavy crates of artillery shells, and never dropped one.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "The unit was so proud, they made their badge a bear carrying a shell. And Wojtek was promoted to corporal.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "After the war, he retired to Edinburgh Zoo in Scotland, where he lived until 1963.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "Today there are statues of him across Europe. Corporal Wojtek. The bear who went to war.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  }
+ ]
+}
