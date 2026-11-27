@@ -1,0 +1,72 @@
+{
+ "engine": "kokoro",
+ "voice": "af_heart",
+ "lines": [
+  {
+   "text": "My neighbor Dave kept stealing my packages. So I mailed him a box of crickets. Kind of.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "Every week, something went missing. Shoes. A blender. A forty-dollar candle that smelled like cozy cabin.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "Dave always had an excuse. Oh, I thought it was mine! Dave. It had my name on it. In giant letters.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "So I got a huge box, and wrote on it in red marker: live crickets. Do not open indoors.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "Inside? No crickets. Just a tiny speaker, playing cricket sounds on a loop. The battery lasts for weeks.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "I left it on my porch. Ten minutes later... gone.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "That night, I heard Dave yelling. The next night, I saw him crawling around his living room with a flashlight.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "Three days later, he knocked on my door, holding a stack of my packages. Shoes. Blender. Candle.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "He looked exhausted. He said, I think your crickets got loose.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "I said, weird. Must be a sign.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "My packages have arrived safely ever since. And Dave still has not found the speaker.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  }
+ ]
+}

@@ -1,0 +1,96 @@
+{
+ "title": "The Mary Celeste, 1872",
+ "engine": "chatterbox",
+ "mood": "mystery",
+ "voice": "bm_george",
+ "lines": [
+  {
+   "text": "December fourth, eighteen seventy-two. In the middle of the Atlantic, a ship is sailing... with nobody on board.",
+   "mood": "mystery",
+   "emotion": 0.55,
+   "gap": 0.6
+  },
+  {
+   "text": "The crew of the Dei Gratia spotted her drifting near the Azores.",
+   "mood": "mystery",
+   "emotion": 0.45,
+   "gap": 0.3
+  },
+  {
+   "text": "She was the Mary Celeste, carrying seventeen hundred barrels of alcohol to Genoa.",
+   "mood": "serious",
+   "emotion": 0.45,
+   "gap": 0.3
+  },
+  {
+   "text": "Ten people should have been aboard. Captain Benjamin Briggs, his wife Sarah, their two-year-old Sophia, and seven crew.",
+   "mood": "serious",
+   "emotion": 0.45,
+   "gap": 0.5
+  },
+  {
+   "text": "They found no one.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.7
+  },
+  {
+   "text": "The cargo was there. Plenty of food. Nothing stolen. Lowkey creepy.",
+   "mood": "mystery",
+   "emotion": 0.45,
+   "gap": 0.3
+  },
+  {
+   "text": "But the lifeboat was gone, and so were the captain's papers and instruments.",
+   "mood": "mystery",
+   "emotion": 0.55,
+   "gap": 0.4
+  },
+  {
+   "text": "The last log entry was nine days old. The ship had sailed on alone for about four hundred miles.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.5
+  },
+  {
+   "text": "Three and a half feet of water in the hold. Bad, but she wasn't sinking.",
+   "mood": "serious",
+   "emotion": 0.45,
+   "gap": 0.4
+  },
+  {
+   "text": "So why would a veteran captain put his family in a tiny boat, on the open ocean?",
+   "mood": "mystery",
+   "emotion": 0.6,
+   "gap": 0.5
+  },
+  {
+   "text": "Maybe a pump failed, and he thought she was going down. Maybe the alcohol fumes scared them off. Or a waterspout hit.",
+   "mood": "serious",
+   "emotion": 0.45,
+   "gap": 0.4
+  },
+  {
+   "text": "And the warm meals left on the table? Pure eighteen-eighties fake news. A young Arthur Conan Doyle even turned it into fiction.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.5
+  },
+  {
+   "text": "The ten people of the Mary Celeste were never seen again.",
+   "mood": "sad",
+   "emotion": 0.4,
+   "gap": 0.6
+  },
+  {
+   "text": "Only the ship came back... and she kept her secret.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.0
+  }
+ ],
+ "dropped_lines": [
+  8
+ ],
+ "tempo": 1.1
+}
