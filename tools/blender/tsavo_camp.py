@@ -43,7 +43,29 @@ SHOTS = {
     # character test plate: a still camera inside the camp at dusk looking east across the line, for walks across frame
     "chartest": dict(n=1, light="dusk", keys=[(1, (-1.5, 0.5, 1.0), (10.0, 4.5, 1.3), 28)],
                      focus=(1.8, 1.7, 0.8), fstop=5.6),
+    # ---- Part B (story 21.86-39.82 s) ----
+    # inside the boma at night: the thorn fence and a fire kept burning, a slow sideways drift
+    "fence": dict(n=96, light="night", keys=[(1, (-5.2, 5.4, 1.7), (-6.8, -1.2, 0.6), 28), (96, (-5.6, 5.0, 1.5), (-6.8, -1.2, 0.6), 28)],
+                  focus=(-6.0, 3.0, 0.6), fstop=4.0),
+    # very low inside the camp looking up at the fence: a lion leaps over it against the night sky
+    "leap": dict(n=70, light="night", keys=[(1, (-3.0, 1.0, 0.5), (-8.75, -0.33, 1.6), 24), (70, (-3.2, 1.3, 0.45), (-8.75, -0.33, 1.5), 24)],
+                 focus=(-8.75, -0.33, 1.0), fstop=4.0),
+    # ground level at the foot of the fence: a lion crawls in under the branches (fg pass = the fence over the lion)
+    "crawl": dict(n=60, light="night", keys=[(1, (-9.9, 2.5, 0.4), (-12.8, 3.4, 0.35), 32), (60, (-10.2, 2.6, 0.38), (-12.8, 3.4, 0.35), 34)],
+                  focus=(-12.7, 3.35, 0.3), fstop=2.8),
+    # dusk outside the camp: an iron box trap with its door raised, low prop close-up pushing in
+    "trap": dict(n=66, light="dusk", keys=[(1, (8.8, -10.9, 1.35), (11.0, -7.3, 0.8), 28), (66, (9.1, -10.4, 1.3), (11.0, -7.3, 0.8), 30)],
+                 focus=(10.6, -7.6, 0.7), fstop=3.5),
+    # night: a lone acacia outside the boma where Patterson waits in the fork, the camera slowly pulls back and down
+    "tree": dict(n=120, light="night", keys=[(1, (17.6, -9.0, 1.4), (13.0, -3.0, 2.5), 30), (120, (18.6, -10.4, 1.0), (13.0, -3.0, 2.6), 27)],
+                 focus=(13.0, -3.0, 2.2), fstop=4.0),
+    # dusk: workers leave along the line with bundles, then the camera lifts to the bridge standing unfinished
+    "flee": dict(n=128, light="dusk", keys=[(1, (14.0, -2.0, 2.0), (3.0, 8.0, 1.2), 26), (70, (14.0, -2.5, 2.4), (3.5, 16.0, 1.6), 27),
+                                           (128, (13.5, -3.0, 3.2), (4.0, 56.0, 3.0), 34)],
+                 focus=(4.0, 6.0, 1.0), fstop=8.0),
 }
+TREE = (13.0, -3.0, 1.25)  # the ambush acacia of the "tree" shot
+TRAP = (11.0, -7.0)  # the box trap of the "trap" shot
 SHOT = arg("--shot", "patterson")
 LIGHT = SHOTS[SHOT]["light"]
 ts.N = max(s["n"] for s in SHOTS.values())
@@ -678,6 +700,7 @@ def build():
     for p in [(0.6, 9.5), (-6.0, 3.0), (-5.6, 20.0)]:
         fire(p, flame)
     props(None, None)
+    part_b_extras(bark, leaf)
     steel = ts.flat_mat("girder", (0.25, 0.2, 0.18), rough=0.5, metal=0.6)
     stone = mat("pier", (0.55, 0.45, 0.38))
     bridge(steel, stone)
@@ -695,7 +718,7 @@ def build():
     lowc = veg.fine_grass("grass_low", 700, ((-7, 2), (-15.5, -11)), rnd, hs=(0.45, 0.9))
     parts = [near, far, lowc]
     # each shot gets a dense patch of grass where its camera looks closest
-    dense = {"envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9))}.get(SHOT)
+    dense = {"tree": ((12, 19), (-11, -2)), "envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9))}.get(SHOT)
     if dense:
         parts.append(veg.fine_grass("grass_dense", int(16 * (dense[0][1] - dense[0][0]) * (dense[1][1] - dense[1][0])), dense, rnd,
                                     skip=lambda x, y: track(x, y) or math.hypot(x + 2.5, y - 10.5) < 12.8))
@@ -716,6 +739,38 @@ def build():
     sc.view_settings.exposure = float(arg("--exposure", "-0.4" if LIGHT == "dusk" else "0.3"))
     sc.render.image_settings.file_format = "PNG"
     return sc
+
+
+def part_b_extras(bark, leaf):
+    """Part B props, added with their own random stream so the shared camp layout stays the same"""
+    if SHOT == "tree":
+        veg.acacia("ambush", TREE[:2], TREE[2], random.Random(77), bark, leaf)
+    if SHOT == "trap":
+        iron = ts.flat_mat("trapiron", (0.2, 0.19, 0.19), rough=0.45, metal=0.8)
+        x, y = TRAP
+        w, l, h = 1.4, 3.0, 1.6
+        def bar(loc, sc_):
+            bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
+            o = bpy.context.object
+            o.scale = sc_
+            o.data.materials.append(iron)
+        for i in range(9):  # side bars
+            yy = y - l / 2 + i * l / 8
+            for sx in (-1, 1):
+                bar((x + sx * w / 2, yy, h / 2), (0.04, 0.04, h))
+        for i in range(5):  # roof bars and back bars
+            xx = x - w / 2 + i * w / 4
+            bar((xx, y, h), (0.04, l, 0.04))
+            bar((xx, y + l / 2, h / 2), (0.04, 0.04, h))
+        for zz in (0.05, h / 2, h):
+            for sx in (-1, 1):
+                bar((x + sx * w / 2, y, zz), (0.06, l, 0.06))
+        for i in range(5):  # the door, raised above the open end
+            bar((x - w / 2 + i * w / 4, y - l / 2, h + 0.55), (0.04, 0.04, 1.1))
+        bar((x, y - l / 2, h + 0.02), (w + 0.1, 0.06, 0.06))
+        bar((x, y - l / 2, h + 1.1), (w + 0.1, 0.05, 0.05))
+        for sx in (-1, 1):  # door guide posts
+            bar((x + sx * (w / 2 + 0.06), y - l / 2, (h + 1.2) / 2), (0.07, 0.07, h + 1.2))
 
 
 def shot_camera(sc, name):
