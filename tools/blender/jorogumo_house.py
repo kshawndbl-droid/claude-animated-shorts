@@ -19,7 +19,9 @@ rnd = random.Random(1603)
 
 SHOTS = {
     # character test plate: still camera, low at the room's front edge, looking at the shoji wall; walks cross the frame
-    "chartest": dict(n=1, keys=[(1, (0.2, -3.4, 1.55), (0.0, 6.0, 0.55), 24)], focus=(0.0, 0.6, 0.8), fstop=5.6),
+    # v2: lower, closer and wider so the room fills the 9:16 frame (ceiling beams above, tatami below), shallow focus
+    # on the walk line 2.1 m in front of the lens, a dark post and a hanging web close to the lens for depth
+    "chartest": dict(n=1, keys=[(1, (0.0, -3.4, 1.12), (0.0, 6.0, 0.95), 22)], focus=(0.0, -1.3, 0.9), fstop=2.4),
 }
 SHOT = arg("--shot", "chartest")
 W, D0, D1, H = 4.2, -5.0, 6.0, 2.7  # room half-width, front/back wall y, ceiling height
@@ -226,7 +228,7 @@ def build():
     wo.node_tree.nodes["Background"].inputs[0].default_value = (0.004, 0.006, 0.014, 1)
     wo.node_tree.nodes["Background"].inputs[1].default_value = 1.0
     vol = wo.node_tree.nodes.new("ShaderNodeVolumePrincipled")
-    vol.inputs["Density"].default_value = 0.008
+    vol.inputs["Density"].default_value = 0.022
     vol.inputs["Anisotropy"].default_value = 0.35
     vol.inputs["Color"].default_value = (0.7, 0.75, 0.9, 1)
     wo.node_tree.links.new(vol.outputs[0], wo.node_tree.nodes["World Output"].inputs["Volume"])
@@ -262,13 +264,23 @@ def build():
     for i in range(22):
         box("ceil", (-W + (i + 0.5) * 2 * W / 22, (D0 + D1) / 2, H + 0.02), (2 * W / 22 - 0.01, D1 - D0, 0.03), wood)
     # the lantern she plays by, her cushion, and a fallen roof tile (the house is abandoned)
-    andon((1.5, 2.6), beam, ts.flat_mat("andon", (1.0, 0.5, 0.2), emit=1.6))
-    box("zabuton", (0.75, 2.9, 0.05), (0.55, 0.6, 0.08), stain_mat("cushion", (0.32, 0.06, 0.07), (0.15, 0.03, 0.04)), rot=0.15, bevel=0.03)
+    andon((1.05, 1.5), beam, ts.flat_mat("andon", (1.0, 0.5, 0.2), emit=1.6))
+    box("zabuton", (0.4, 1.85, 0.05), (0.55, 0.6, 0.08), stain_mat("cushion", (0.32, 0.06, 0.07), (0.15, 0.03, 0.04)), rot=0.15, bevel=0.03)
     box("tile", (-2.2, 1.2, 0.03), (0.28, 0.22, 0.03), ts.flat_mat("tile", (0.12, 0.12, 0.13)), rot=0.6)
     web = ts.flat_mat("web", (0.75, 0.76, 0.8), rough=0.5, emit=0.25)
     cobweb((-W + 0.12, D1 - 0.12, H - 0.18), (-W + 0.12, D1 - 0.12, H - 1.0), (-W + 0.9, D1 - 0.12, H - 0.18), web)
     cobweb((W - 0.12, D1 - 0.12, H - 0.18), (W - 0.12, D1 - 0.12, H - 0.8), (W - 0.12, D1 - 0.9, H - 0.18), web)
     cobweb((-W + 0.1, 2.0 - 0.1, H - 0.17), (-W + 0.1, 1.2, H - 0.17), (-W + 0.1, 1.9, H - 0.9), web)
+    # foreground (close to the lens, out of focus): a dark post on the left, a sagging web strand and a rope top right
+    box("fgpost", (-0.5, -2.25, H / 2), (0.16, 0.16, H), beam, bevel=0.01)
+    box("fgsill", (-0.5, -2.25, 0.06), (0.5, 0.2, 0.12), beam)
+    cobweb((-0.42, -2.25, 2.25), (-0.42, -2.25, 1.85), (-0.1, -2.25, 2.25), ts.flat_mat("fgweb", (0.5, 0.5, 0.55), rough=0.5, emit=0.06), n_rad=5, n_ring=4)
+    curve("rope", [(0.55, -2.0, H), (0.57, -2.0, 2.2), (0.56, -2.0, 1.9)], ts.flat_mat("rope", (0.18, 0.14, 0.1)), r=0.012)
+    # warm bounce from the lantern up onto the ceiling, so the top of the frame is a lit ceiling, not black
+    bo = bpy.data.lights.new("bounce", "AREA")
+    bo.size, bo.energy, bo.color = 2.0, 22, (1.0, 0.6, 0.3)
+    o = ts.link(bpy.data.objects.new("bounce", bo))
+    o.location, o.rotation_euler = (0.9, 1.5, 0.9), (math.radians(180), 0, 0)
     # light: moon behind the screens, the lantern, and a faint cold fill
     mo = bpy.data.lights.new("moon", "AREA")
     mo.shape, mo.size, mo.size_y = "RECTANGLE", 8.0, 2.5
@@ -286,6 +298,10 @@ def build():
         ee.use_raytracing = False
     if hasattr(ee, "volumetric_tile_size"):
         ee.volumetric_tile_size = "4"
+    if hasattr(ee, "volumetric_samples"):
+        ee.volumetric_samples = 96
+    if hasattr(ee, "use_volumetric_shadows"):
+        ee.use_volumetric_shadows = True
     sc.view_settings.view_transform = "AgX"
     sc.view_settings.look = "AgX - High Contrast"
     sc.view_settings.exposure = float(arg("--exposure", "1.1"))
@@ -322,6 +338,12 @@ if __name__ == "__main__":
     cam = shot_camera(sc, SHOT)
     res = int(arg("--res", "720"))
     sc.render.resolution_x, sc.render.resolution_y = res, int(res * 16 / 9)
+    fg = arg("--fg")
+    if fg:  # foreground layer: only what is nearer than FG metres, on transparency, laid over the cast
+        sc.render.film_transparent = True
+        sc.render.image_settings.color_mode = "RGBA"
+        cam.data.clip_end = float(fg)
+        sc.world.node_tree.links.remove(sc.world.node_tree.nodes["World Output"].inputs["Volume"].links[0])
     out = os.path.abspath(arg("--out", f"out/jorogumo/sets/{SHOT}/"))
     os.makedirs(out, exist_ok=True)
     n = SHOTS[SHOT]["n"]
@@ -329,11 +351,12 @@ if __name__ == "__main__":
     for f in range(1, n + 1):
         sc.frame_set(f)
         cams[f] = {"m": [list(r) for r in cam.matrix_world], "lens": cam.data.lens, "sensor": 36}
-    json.dump({"shot": SHOT, "frames": cams}, open(os.path.join(out, "cam.json"), "w"))
+    if not fg:
+        json.dump({"shot": SHOT, "frames": cams}, open(os.path.join(out, "cam.json"), "w"))
     import time
     a, b = (int(x) for x in arg("--range", f"1-{n}").split("-"))
     for f in range(a, b + 1, int(arg("--step", "1"))):
-        p = os.path.join(out, f"f_{f:04d}.png")
+        p = os.path.join(out, f"{'fg' if fg else 'f'}_{f:04d}.png")
         t0 = time.time()
         sc.frame_set(f)
         sc.render.filepath = p

@@ -31,6 +31,8 @@ export type KPose = {
   armNear?: [number, number]; armFar?: [number, number];
   expr?: "neutral" | "stern" | "worried" | "scared" | "eerie";
   lookX?: number; blink?: boolean; tilt?: number; voidEyes?: boolean;
+  /** lady: hover-glide (no bob, a slow float, the head stays level) */
+  glide?: boolean;
 };
 
 const HIP = 0.625, THIGH = 0.29, SHIN = 0.28, ANKLE = 0.07;
@@ -158,11 +160,14 @@ const Head: React.FC<{ hx: number; hy: number; L: KLook; pose: KPose }> = ({ hx,
 };
 
 /** her long hair, drawn behind the body: hangs from the crown to the waist and lags behind the movement */
-const BackHair: React.FC<{ hx: number; hy: number; L: KLook; sway: number }> = ({ hx, hy, L, sway }) => {
+const BackHair: React.FC<{ hx: number; hy: number; L: KLook; sway: number; t: number }> = ({ hx, hy, L, sway, t }) => {
   const S = (x: number, y: number) => `${P(hx + x)},${P(hy + y)}`;
+  const wv = (k: number) => sway * k + 0.012 * Math.sin(t * 1.7 - k * 2.2);   // more swing further down
+  const tips = [[-0.3, 0.8], [-0.24, 0.84], [-0.17, 0.83], [-0.12, 0.8]];
   return <g>
-    <Two fill={L.hair} ow={0.02} d={`M${S(0.0, -HEAD_R)} Q${S(-HEAD_R - 0.08, -0.2)} ${S(-HEAD_R - 0.06, 0.2)} Q${S(-0.34 + sway, 0.55)} ${S(-0.3 + sway * 1.6, 0.8)} L${S(-0.12 + sway * 1.6, 0.82)} Q${S(-0.1 + sway, 0.5)} ${S(-0.05, 0.2)} Z`} />
-    <path d={`M${S(-0.2, 0.1)} Q${S(-0.26 + sway, 0.5)} ${S(-0.22 + sway * 1.5, 0.78)}`} stroke="rgba(255,255,255,0.1)" strokeWidth={0.014} fill="none" />
+    <Two fill={L.hair} ow={0.02} d={`M${S(0.0, -HEAD_R)} Q${S(-HEAD_R - 0.08, -0.2)} ${S(-HEAD_R - 0.06, 0.2)} Q${S(-0.34 + wv(0.8), 0.55)} ${S(tips[0][0] + wv(1.6), tips[0][1])}
+      L${S(tips[1][0] + wv(1.5), tips[1][1])} L${S(tips[2][0] + wv(1.45), tips[2][1] - 0.02)} L${S(tips[3][0] + wv(1.4), tips[3][1])} Q${S(-0.1 + wv(0.9), 0.5)} ${S(-0.05, 0.2)} Z`} />
+    {[-0.2, -0.15, -0.25].map((x0, i) => <path key={i} d={`M${S(x0, 0.08)} Q${S(x0 - 0.04 + wv(0.8), 0.48)} ${S(x0 - 0.02 + wv(1.5), 0.78)}`} stroke="rgba(255,255,255,0.09)" strokeWidth={0.012} fill="none" />)}
   </g>;
 };
 
@@ -215,27 +220,37 @@ export const Kimono: React.FC<{ x: number; y: number; ppm: number; look: KLook; 
     const near = footAt(C, L.lift, dist, 0, w, lady ? 0.03 : 0.07), far = footAt(C, L.lift, dist, 0.5, w, lady ? -0.02 : -0.06);
     const cyc = dist / C, mid = Math.cos(4 * Math.PI * (cyc - 0.5 * STANCE * 0.5));
     const sway = (1 - w) * 0.012 * Math.sin(t * 0.7);
-    const bob = lady ? 0.4 : 1;
-    const hipY = -(HIP - 0.045 * w * bob + 0.014 * w * mid * bob) + (1 - w) * 0.004 * Math.sin(t * 1.7);
+    const bob = pose.glide ? 0 : lady ? 0.4 : 1;
+    const hover = pose.glide ? 0.008 * Math.sin(t * 1.15) : 0;
+    const hipY = -(HIP - 0.045 * w * bob + 0.014 * w * mid * bob) + (1 - w) * 0.004 * Math.sin(t * 1.7) - hover;
     const hipX = sway;
     const lean = (lady ? 2 : 5) * w + (1 - w) * 0.6 * Math.sin(t * 0.7);
     const breath = (1 - w) * Math.sin(t * 1.7);
-    const armPh = Math.cos(2 * Math.PI * near.loc);
+    // arms follow the legs a touch late (follow-through), so the swing reads as carried by the body, not driven
+    const armPh = Math.cos(2 * Math.PI * (near.loc - 0.06));
     const turn = 0.018 * w * -armPh;
     const swing = (lady ? 6 : 20) * w;
-    const nearA: [number, number] = pose.armNear ?? [mix(2, 4, w) - swing * armPh + breath * 0.6, mix(8, 12, w) + 14 * w * Math.max(0, -armPh)];
-    const farA: [number, number] = pose.armFar ?? [mix(1, 4, w) + swing * armPh + breath * 0.6, mix(8, 12, w) + 14 * w * Math.max(0, armPh)];
+    // elbow bends more on the forward swing and opens on the back swing
+    const nearA: [number, number] = pose.armNear ?? [mix(2, 5, w) - swing * armPh + breath * 0.6, mix(8, 10, w) + 22 * w * Math.max(0, -armPh)];
+    const farA: [number, number] = pose.armFar ?? [mix(1, 5, w) + swing * armPh + breath * 0.6, mix(8, 10, w) + 22 * w * Math.max(0, armPh)];
     const lr = rad(lean), cl = Math.cos(lr), sl = Math.sin(lr);
     const up = (h: number, dx = 0): V => [hipX + dx * cl + Math.sin(lr) * h, hipY - Math.cos(lr) * h + dx * sl];
     const sh = up(SHOULDER - HIP + 0.004 * breath);
     const shN: V = [sh[0] + 0.015 + turn, sh[1] + 0.025], shF: V = [sh[0] - 0.035 - turn, sh[1] + 0.03];
     const nk = up(NECK - HIP + 0.004 * breath);
-    const hx = nk[0] + 0.02 + 0.01 * w, hy = nk[1] - HEAD_R + 0.05;
+    // the head rides a little steadier than the hips (the neck absorbs part of the bob); a gliding head is dead level
+    const hx = nk[0] + 0.02 + 0.01 * w, hy = nk[1] - HEAD_R + 0.05 + (pose.glide ? 0 : 0.006 * w * mid * bob);
     const nA = armPts(shN[0], shN[1], nearA[0], nearA[1]);
     const fA = armPts(shF[0], shF[1], farA[0], farA[1]);
     const hipN: V = [hipX + 0.025, hipY], hipF: V = [hipX - 0.03, hipY - 0.01];
     // sleeves and hair lag behind the movement and breathe a little
-    const lag = -0.05 * w + 0.012 * Math.sin(t * 1.3) + 0.03 * w * Math.sin(2 * Math.PI * cyc);
+    // each sleeve is a pendulum: it trails its arm's swing by about a quarter cycle, plus the drag of walking forward
+    const drag = (lady ? -0.07 : -0.045) * w, idle = (lady ? 0.022 : 0.01) * Math.sin(t * 1.25);
+    const lagN = drag + idle + 0.045 * w * Math.sin(2 * Math.PI * (near.loc - 0.18)) * (lady ? 0.6 : 1);
+    const lagF = drag + idle * 0.8 - 0.045 * w * Math.sin(2 * Math.PI * (near.loc - 0.18)) * (lady ? 0.6 : 1);
+    const lag = drag + idle;
+    // her hair: trails behind the glide and moves in a slow wave
+    const hairSway = (lady ? -0.09 : 0) * w + 0.03 * Math.sin(t * 0.9) + 0.015 * Math.sin(t * 2.1 + 0.7);
     const top = SHOULDER - HIP;
     const torso = `M-0.13,${P(-top + 0.05)} Q-0.14,${P(-top - 0.02)} -0.02,${P(-top - 0.035)} L0.05,${P(-top - 0.035)} Q0.16,${P(-top - 0.02)} 0.15,${P(-top + 0.06)}
       Q0.17,-0.1 0.16,0.1 Q0.02,0.13 -0.15,0.1 Q-0.16,-0.12 -0.13,${P(-top + 0.05)} Z`;
@@ -257,8 +272,8 @@ export const Kimono: React.FC<{ x: number; y: number; ppm: number; look: KLook; 
     return (
       <g transform={`translate(${P(x)},${P(y)}) scale(${P((flip ? -1 : 1) * ppm)},${P(ppm)})`} style={shade !== 1 ? { filter: `brightness(${shade})` } : undefined}>
         <ellipse cx={hipX} cy={0} rx={0.34} ry={0.05} fill="rgba(5,3,8,0.4)" />
-        {lady && <BackHair hx={hx} hy={hy} L={L} sway={lag} />}
-        <Arm a={fA} L={L} far lag={lag} />
+        {lady && <BackHair hx={hx} hy={hy} L={L} sway={hairSway} t={t} />}
+        <Arm a={fA} L={L} far lag={lagF} />
         {lady ? <>
           <Foot f={fF} L={L} far />
           <Foot f={fN} L={L} />
@@ -300,7 +315,7 @@ export const Kimono: React.FC<{ x: number; y: number; ppm: number; look: KLook; 
           </>}
         </g>
         <Head hx={hx} hy={hy} L={L} pose={{ ...pose, tilt: (pose.tilt ?? 0) + lean * 0.4 }} />
-        <Arm a={nA} L={L} lag={lag} />
+        <Arm a={nA} L={L} lag={lagN} />
         <circle cx={nA.s[0]} cy={nA.s[1] + 0.012} r={0.05} fill={L.top} />
       </g>
     );
