@@ -18,6 +18,7 @@ import { CreatureSheet } from "../../templates/hidebehind/CreatureSheet";
 import { HScareTest, SCARE_FRAMES } from "../../templates/hidebehind/ScareTest";
 import { FaceTest } from "../../templates/hidebehind/FaceTest";
 import { HPartD, PARTD_FRAMES } from "../../templates/hidebehind/PartD";
+import { HFull, FULL_FRAMES } from "../../templates/hidebehind/Full";
 import { ShortB, B_FRAMES } from "../../templates/mailed/ShortB";
 
 export const EiffelRoot: React.FC = () => (
@@ -40,6 +41,7 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="HCreature" component={CreatureSheet} durationInFrames={1} fps={30} width={1080} height={1920} />
     <Composition id="HScareTest" component={HScareTest} durationInFrames={SCARE_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="HFace" component={FaceTest} durationInFrames={1} fps={30} width={1080} height={1920} />
+    <Composition id="HFull" component={HFull} durationInFrames={FULL_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="HPartD" component={HPartD} durationInFrames={PARTD_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="HPartB" component={HPreview} durationInFrames={PREVIEW_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: false, clean: true }} />
     <Composition id="HWalkTest" component={HWalkTest} durationInFrames={H_WALK_FRAMES} fps={30} width={1080} height={1920} />

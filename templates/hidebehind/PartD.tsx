@@ -43,16 +43,18 @@ export const MAC: ToonLook = {
 };
 
 // dawn set-up (world metres, ground z = 0): the lantern where his tracks end; his tracks come from deeper in the trail
-const LANT: [number, number] = [-2.82, 15.58];
+const ANCH: [number, number] = [-2.82, 15.58];               // the camera's focus point on the trail (partD_paths.json)
+const LANT: [number, number] = [-4.17, 15.89];                // his lantern, in the snow patch in front of the camera
 const TRK: [number, number] = [0.759, -0.651];                // back along his tracks: he came from screen right
 const TRK_R: [number, number] = [TRK[1], -TRK[0]];
 const FWD: [number, number] = [0.946, 0.324], LEFT: [number, number] = [-0.324, 0.946];  // camera forward, screen left
-const at = (a: number, b: number): [number, number] => [LANT[0] + a * FWD[0] + b * LEFT[0], LANT[1] + a * FWD[1] + b * LEFT[1]];
+const at = (a: number, b: number): [number, number] => [ANCH[0] + a * FWD[0] + b * LEFT[0], ANCH[1] + a * FWD[1] + b * LEFT[1]];
 
 /** a kerosene lantern lying on its side in the snow: cracked globe, cold, out */
 const DeadLantern: React.FC<{ x: number; y: number; ppm: number }> = ({ x, y, ppm }) => (
-  <g transform={`translate(${x},${y}) scale(${ppm}) rotate(-78)`}>
-    <ellipse cx={-0.02} cy={-0.02} rx={0.2} ry={0.05} transform="rotate(78)" fill="#000" opacity={0.45} />
+  <g transform={`translate(${x},${y}) scale(${ppm})`}>
+    <ellipse cx={0.11} cy={0.045} rx={0.16} ry={0.035} fill="#0a0e18" opacity={0.5} style={{ filter: "blur(0.01px)" }} />
+  <g transform="rotate(-78)">
     <path d="M-0.045,0.075 Q-0.09,0.0 -0.03,-0.03" stroke={INK} strokeWidth={0.008} fill="none" />
     <path d="M-0.03,0.07 L0.03,0.07 L0.04,0.095 L-0.04,0.095 Z" fill="#3e3e3a" stroke={INK} strokeWidth={0.01} />
     <ellipse cx={0} cy={0.15} rx={0.045} ry={0.06} fill="rgba(150,170,190,0.35)" stroke={INK} strokeWidth={0.01} />
@@ -60,6 +62,7 @@ const DeadLantern: React.FC<{ x: number; y: number; ppm: number }> = ({ x, y, pp
     <path d="M0.012,0.1 L0.04,0.13 L0.03,0.11 Z" fill="#0a0a10" opacity={0.7} />
     <path d="M-0.045,0.13 L0.045,0.13 M-0.045,0.17 L0.045,0.17 M0,0.09 L0,0.21" stroke={INK} strokeWidth={0.006} opacity={0.8} />
     <path d="M-0.05,0.205 L0.05,0.205 L0.055,0.25 Q0,0.262 -0.055,0.25 Z" fill="#4a4842" stroke={INK} strokeWidth={0.012} />
+  </g>
   </g>
 );
 
@@ -72,7 +75,7 @@ const Tracks: React.FC<{ f: number }> = ({ f }) => (
       const Q = project(camDawn, f, [LANT[0] + (s + 0.14) * TRK[0] + side * TRK_R[0], LANT[1] + (s + 0.14) * TRK[1] + side * TRK_R[1], 0.005]);
       const rx = 0.055 * P.ppm, ang = Math.atan2(Q.y - P.y, Q.x - P.x) * 180 / Math.PI, len = Math.hypot(Q.x - P.x, Q.y - P.y);
       return <ellipse key={i} cx={(P.x + Q.x) / 2} cy={(P.y + Q.y) / 2} rx={Math.max(len * 0.62, rx * 0.5)} ry={rx * 0.42}
-        transform={`rotate(${ang},${(P.x + Q.x) / 2},${(P.y + Q.y) / 2})`} fill="#1c2434" opacity={0.55 * (1 - i / 22)} />;
+        transform={`rotate(${ang},${(P.x + Q.x) / 2},${(P.y + Q.y) / 2})`} fill="#283146" opacity={0.75 * (1 - i / 24)} />;
     })}
   </g>
 );
@@ -121,7 +124,7 @@ export const HPartD: React.FC = () => {
     const Lp = project(camDawn, f, [LANT[0], LANT[1], 0.06]);
     const fadeIn = 1 - sm((T - DAWN0) / 0.9), fadeOut = sm((T - (END0 - 0.25)) / 0.25);
     // they come in from screen left, behind the lantern, and stop a few steps short of it
-    const m1s = at(1.9, 3.9), m1e = at(1.9, 0.55), m2s = at(3.1, 3.4), m2e = at(3.1, -0.1);
+    const m1s = at(1.7, 4.4), m1e = at(1.7, 1.05), m2s = at(3.6, 3.0), m2e = at(3.6, -0.75);
     return (
       <AbsoluteFill style={{ background: "#000" }}>
         <Img src={staticFile(`hidebehind/dDawn/f_${pad(f)}.png`)} style={{ position: "absolute", width: 1080, height: 1920 }} />
