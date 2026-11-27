@@ -33,15 +33,15 @@ export type DevilPose = { wings?: number; crouch?: number; reach?: number; open?
 const Wing: React.FC<{ r: V; s: number; far: boolean; t: number; col: string; bone: string }> = ({ r, s, far, t, col, bone }) => {
   const k = far ? 0.82 : 1;
   const flut = Math.sin(t * 2.3) * 0.02 * s;
-  const elbow: V = [r[0] - lerp(0.22, 0.5, s) * k, r[1] - lerp(0.18, 0.55, s) * k];
-  const wrist: V = [elbow[0] + lerp(0.08, -0.25, s) * k, elbow[1] - lerp(0.42, 0.55, s) * k + flut];
+  const elbow: V = [r[0] - lerp(0.12, 0.45, s) * k, r[1] - lerp(0.22, 0.45, s) * k];
+  const wrist: V = [elbow[0] + lerp(0.1, -0.2, s) * k, elbow[1] - lerp(0.3, 0.5, s) * k + flut];
   // finger tips fan out from the wrist (folded: they hang down behind the back like a cloak)
   const tips: V[] = [0, 1, 2, 3].map((i) => {
-    const aF = (100 + i * 18) * Math.PI / 180, aS = (-150 + i * 38) * Math.PI / 180;   // folded vs spread angles
-    const a = lerp(aF, aS, s), len = lerp(1.15 + i * 0.12, 1.25 - i * 0.12, s) * k;
+    const aF = (98 + i * 9) * Math.PI / 180, aS = (205 + i * 27) * Math.PI / 180;   // folded (hanging down behind) vs spread (fanned up and back)
+    const a = lerp(aF, aS, s), len = lerp(1.0 - i * 0.08, 1.35 - i * 0.1, s) * k;
     return [wrist[0] + Math.cos(a) * len, wrist[1] + Math.sin(a) * len + flut * (i + 1)];
   });
-  const root2: V = [r[0] - 0.02, r[1] + lerp(0.7, 0.5, s)];   // membrane meets the body at the waist
+  const root2: V = [r[0] - 0.06, r[1] + lerp(0.75, 0.55, s)];   // membrane meets the body at the waist
   // membrane edge scallops between finger tips (sag inward), torn notch on one panel
   const pts: V[] = [r, elbow, wrist, tips[0]];
   let d = `M${f2(r)} L${f2(elbow)} L${f2(wrist)} L${f2(tips[0])}`;
@@ -202,7 +202,7 @@ export const DevilFace: React.FC<{ x: number; y: number; size: number; open?: nu
           {[0.2, 0.35, 0.5, 0.65, 0.8].map((k, i) => <path key={i} d={`M${(0.3 + 0.8 * k) * s},${(-0.6 - 0.32 * Math.sin(k * 2.8)).toFixed(3)} l${(0.03 * s).toFixed(3)},0.07`} stroke="#15100c" strokeWidth={0.014} />)}
         </g>)}
         {/* leathery hide on the neck/cheeks behind the skull */}
-        <path d="M-0.5,-0.3 C-0.55,0.1 -0.45,0.5 -0.3,0.75 L0.3,0.75 C0.45,0.5 0.55,0.1 0.5,-0.3 Z" fill={HIDE} stroke={INK} strokeWidth={0.016} />
+        <path d="M-0.42,-0.4 C-0.5,-0.1 -0.44,0.4 -0.32,0.8 C-0.1,0.9 0.1,0.9 0.32,0.8 C0.44,0.4 0.5,-0.1 0.42,-0.4 C0.2,-0.2 -0.2,-0.2 -0.42,-0.4 Z" fill={HIDE} stroke={INK} strokeWidth={0.016} />
         <path d={jaw} fill="#1a0505" stroke={INK} strokeWidth={0.014} />
         {teethL}
         <path d={skull} fill="#b9ab90" stroke={INK} strokeWidth={0.02} />
