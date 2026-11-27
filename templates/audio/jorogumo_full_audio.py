@@ -90,7 +90,6 @@ mono += hp(rng.standard_normal(N), 1500) * env(FLASH, 0.002, 0.08) * db(-8) + ru
 mono += np.sin(2 * np.pi * (48 * np.exp(-np.maximum(0, t - FLASH) * 2.2)) * np.maximum(0, t - FLASH)) * env(FLASH, 0.003, 0.5) * db(-1)
 rise = sum(np.sin(2 * np.pi * f * (1 + 0.25 * ramp(FLASH - 1.6, FLASH)) * t) for f in (220, 233, 311)) / 3
 mono += rise * ramp(FLASH - 1.6, FLASH) * (t < FLASH) * db(-30)
-mono += sum(np.sin(2 * np.pi * f * t + 3 * np.sin(2 * np.pi * 7.5 * t)) for f in (1250, 1330, 1790, 2410)) / 4 * env(FLASH, 0.004, 0.45) * db(-11)
 
 # ---------- Part B: the biwa ----------
 PLUCKS = [15.30, 15.92, 16.28, 16.90, 17.52, 17.86, 18.50, 19.12]
@@ -115,27 +114,27 @@ mono += biwa * duck2
 # scare 2 on "Silk" (22.36): a thin string pulled tight snapping, a whip, a hit, a short shriek
 S2 = 22.36
 mono += np.sin(2 * np.pi * (900 + 1400 * ramp(S2 - 0.8, S2)) * t) * ramp(S2 - 0.8, S2) * (t < S2) * db(-34)
-mono += hp(rng.standard_normal(N), 2500) * env(S2, 0.001, 0.05) * db(-6)
+mono += hp(rng.standard_normal(N), 2500) * env(S2, 0.001, 0.05) * db(-12)
 mono += bp(rng.standard_normal(N), 400, 3000) * env(S2 - 0.08, 0.06, 0.08) * db(-14)
-mono += np.sin(2 * np.pi * (55 * np.exp(-np.maximum(0, t - S2) * 2.5)) * np.maximum(0, t - S2)) * env(S2, 0.003, 0.45) * db(-3)
-mono += sum(np.sin(2 * np.pi * f * t + 2.5 * np.sin(2 * np.pi * 9 * t)) for f in (1480, 1568, 2217)) / 3 * env(S2, 0.004, 0.35) * db(-14)
+mono += np.sin(2 * np.pi * (55 * np.exp(-np.maximum(0, t - S2) * 2.5)) * np.maximum(0, t - S2)) * env(S2, 0.003, 0.45) * db(-12)
+mono += sum(np.sin(2 * np.pi * f * t + 2.5 * np.sin(2 * np.pi * 9 * t)) for f in (1480, 1568, 2217)) / 3 * env(S2, 0.004, 0.35) * db(-60)
 mono += sum(np.sin(2 * np.pi * f * t) for f in (207.7, 220, 233.1)) / 3 * env(S2 + 0.2, 0.3, 1.6) * db(-30)
 
 # ---------- Part C ----------
 # lantern sputter (25.2-29.0): small crackles and a breathy flame
 for k in range(40):
-    tt = rng.uniform(25.2, 28.9); L = int(0.03 * SR)
+    tt = rng.uniform(25.2, 28.6); L = int(0.03 * SR)
     place(hp(rng.standard_normal(L), 2000) * np.exp(-np.arange(L) / (0.004 * SR)), tt, mono, db(-28))
-mono += bp(rng.standard_normal(N), 200, 900) * ramp(25.2, 25.6) * (t < 28.95) * (0.6 + 0.4 * np.sin(t * 17)) * db(-36)
+mono += bp(rng.standard_normal(N), 200, 900) * ramp(25.2, 25.6) * (1 - ramp(28.45, 28.7)) * (0.6 + 0.4 * np.sin(t * 17)) * db(-36)
 # chitin clicks as the eight legs unfold on the wall (27.0-28.7), getting faster
 tt = 27.0
-while tt < 28.7:
+while tt < 28.6:
     L = int(0.02 * SR)
     place(bp(rng.standard_normal(L), 2500, 7000) * np.exp(-np.arange(L) / (0.003 * SR)), tt, mono, db(-20))
     tt += 0.16 - 0.1 * (tt - 27.0) / 1.7
-mono += sum(np.sin(2 * np.pi * f * t) for f in (110, 116.5, 155.6)) / 3 * ramp(26.8, 28.95) * (t < 28.95) * db(-24)
+mono += sum(np.sin(2 * np.pi * f * t) for f in (110, 116.5, 155.6)) / 3 * ramp(26.8, 28.5) * (1 - ramp(28.5, 28.7)) * db(-24)
 # FINAL scare (as the approved Hidebehind v3 hit): 29.0-29.6, then hard silence
-A, C = 29.0, 29.6
+A, C = 29.2, 30.0   # the reveal: cut to her face on the end of "legs." (29.17), black at 30.0
 n = int((C - A) * SR); u = np.arange(n) / SR
 f0 = (480 + 520 * (1 - np.exp(-u / 0.12))) * (1 + 0.035 * np.sin(2 * np.pi * 6.5 * u))
 src = sawtooth(2 * np.pi * np.cumsum(f0) / SR) + 0.6 * rng.standard_normal(n)
@@ -172,9 +171,10 @@ mono += bp(rng.standard_normal(N), 2000, 8000) * env(EY - 0.15, 0.15, 0.08) * db
 mono += np.sin(2 * np.pi * (44 * np.exp(-np.maximum(0, t - 40.62) * 1.5)) * np.maximum(0, t - 40.62)) * env(40.62, 0.004, 0.35) * db(-8)
 
 # ---------- mix ----------
-silence = 1 - ramp(29.6, 29.61) * (1 - ramp(30.2, 30.21))    # dead black after the face (the slash is the only sound)
+silence = 1 - ramp(C, C + 0.01) * (1 - ramp(30.2, 30.21))    # dead black after the face (the slash is the only sound)
 music_off = 1 - ramp(31.72, 31.76) * (1 - ramp(33.9, 33.95))
-bed = rain * duck1 * silence * music_off + (mono * np.where((t >= FLASH - 0.02) & (t < FLASH + 2), 1, duck1) * silence * music_off)[None]
+hush = 1 - 0.9 * ramp(28.4, 28.75) * (t < A)          # the room holds its breath under "eight legs."
+bed = rain * duck1 * hush * silence * music_off + (mono * np.where((t >= FLASH - 0.02) & (t < FLASH + 2), 1, duck1) * hush * silence * music_off)[None]
 # the slash and room tone survive the "music off" mutes; the final hit sits on top of everything
 bed[:, int(30.0 * SR):int(31.0 * SR)] += slash[int(30.0 * SR):int(31.0 * SR)][None] * (1 - silence[int(30.0 * SR):int(31.0 * SR)])
 bed += room[None] * (1 - music_off)

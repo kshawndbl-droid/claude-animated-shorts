@@ -114,7 +114,7 @@ const Shot2: React.FC<{ T: number }> = ({ T }) => {
   // (the held breath pushes in steadily, and the hold after the scare keeps creeping in, so no two frames match)
   const base = lerp(1.85, 1.95, Math.min(1, (T - CUT) / (HOLD0 - CUT))) + 0.12 * Math.max(0, Math.min(1, (T - HOLD0) / (SILK - HOLD0)));
   const z = base + (snapped ? 0.3 * ease(d / 0.1) + 0.06 * Math.max(0, d - 0.3) : 0);
-  const jolt = snapped ? 22 * Math.exp(-d / 0.11) * Math.sin(d * 70) : 0;
+  const jolt = snapped ? 9 * Math.exp(-d / 0.11) * Math.sin(d * 70) : 0;
   // keep the plate covering the frame (the focus can't go closer to its edge than half a screen, plus room for the jolt)
   const cl = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
   const fx = cl(A.x + (0.7 * jx) * ppm, (540 + 30) / z, 1080 - (540 + 30) / z), fy = cl(A.y - 0.08 * ppm, (1100 + 20) / z, 1920 - (820 + 20) / z);
@@ -189,7 +189,7 @@ const Shot2: React.FC<{ T: number }> = ({ T }) => {
       </svg>
     </div>
     <AbsoluteFill style={{ backgroundColor: "#000", opacity: 0.4 * pre + (snapped ? 0.15 : 0) }} />
-    <AbsoluteFill style={{ backgroundColor: "#dfe8ff", opacity: 0.7 * flash, mixBlendMode: "screen" }} />
+    <AbsoluteFill style={{ backgroundColor: "#dfe8ff", opacity: 0.22 * flash, mixBlendMode: "screen" }} />
   </>;
 };
 

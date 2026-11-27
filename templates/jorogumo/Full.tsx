@@ -7,12 +7,12 @@ import { Subtitles, defaultStyle, Word } from "../../src/subtitles/Subtitles";
 import wordsJson from "../../stories/jorogumo/final/words.json";
 
 export const J_FULL_FRAMES = 1230;
-const SUB = defaultStyle("serious", { y: 0.8, keyWords: ["four", "hundred", "spider", "woman's", "samurai", "empty", "silk", "eight", "legs", "slashes", "black", "blood", "rafters"] });
+const SUB = defaultStyle("serious", { y: 0.8, maxChars: 14, keyWords: ["four", "hundred", "spider", "woman's", "samurai", "empty", "silk", "eight", "legs", "slashes", "black", "blood", "rafters"] });
 
 export const JFull: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: "#000" }}>
-    <OffthreadVideo src={staticFile("jorogumo/full_bg.mp4")} muted />
-    <Audio src={staticFile("jorogumo/full_mix.wav")} />
+    <OffthreadVideo src={staticFile("jorogumo/full_bg_v2.mp4")} muted />
+    <Audio src={staticFile("jorogumo/full_mix_v2.wav")} />
     <Subtitles words={wordsJson as Word[]} style={SUB} offset={0} />
   </AbsoluteFill>
 );

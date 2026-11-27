@@ -98,7 +98,7 @@ export const JStylePreview: React.FC<{ clean?: boolean }> = ({ clean }) => {
           <Rain t={T} />
           <rect x={SHX} y={SHY} width={SHW} height={SHH} fill="#e8f0ff" opacity={0.85 * light} style={{ mixBlendMode: "screen" }} />
           {after && <Lit id="lady" flick={flick} x={Q.x} y={Q.y} ppm={Q.ppm} look={LADY} flip
-            pose={{ t: T, lookX: 0.3, expr: "eerie", glide: true, voidEyes: t - FLASH < 0.33, tilt: -6 * sm((t - FLASH - 0.4) / 1.0), armNear: [8, 72], armFar: [6, 78], blink: false }} />}
+            pose={{ t: T, lookX: 0.3, expr: "eerie", glide: true, voidEyes: false, tilt: -6 * sm((t - FLASH - 0.4) / 1.0), armNear: [8, 72], armFar: [6, 78], blink: false }} />}
           <Lit id="sam" flick={flick} x={P.x} y={P.y} ppm={P.ppm} look={SAMURAI}
             pose={{ dist: shotB ? pEnd : p.s, walk: shotB ? 0 : p.w, t: T, lookX: look, blink: !after && (T % 3.1) < 0.1,
               expr: after ? "scared" : shotB ? "worried" : "stern", armNear: grip > 0 ? [2 + 2 * grip, 8 + 85 * grip] : undefined }} />

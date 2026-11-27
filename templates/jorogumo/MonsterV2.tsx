@@ -56,7 +56,10 @@ export const Leg: React.FC<{ p: V[]; s?: number; seed: number }> = ({ p, s = 1, 
 };
 
 /** her face: cracked porcelain, black eyes with pinpoint red, extra small eyes, a too-wide needle-tooth grin */
-export const Face: React.FC<{ cx: number; cy: number; s: number; jaw?: number }> = ({ cx, cy, s, jaw = 0 }) => {
+/** morph: 0 = her calm human face (no cracks, human eyes, small lips), 1 = the approved true face (default) */
+export const Face: React.FC<{ cx: number; cy: number; s: number; jaw?: number; morph?: number }> = ({ cx, cy, s, jaw = 0, morph = 1 }) => {
+  const m = Math.max(0, Math.min(1, morph)), mk = 0.25 + 0.75 * m, my = 0.3 + 0.7 * m;
+  const mouthT = `translate(${cx},${cy + 54 * s}) scale(${mk},${my}) translate(${-cx},${-(cy + 54 * s)})`;
   const P = (x: number, y: number) => `${(cx + x * s).toFixed(1)},${(cy + y * s).toFixed(1)}`;
   const teeth: string[] = [];
   for (let k = 0; k <= 18; k++) {
@@ -77,27 +80,31 @@ export const Face: React.FC<{ cx: number; cy: number; s: number; jaw?: number }>
       <radialGradient id="porcelain" cx="45%" cy="35%" r="75%"><stop offset="0" stopColor="#fbf6f0" /><stop offset="0.7" stopColor="#ddd2c8" /><stop offset="1" stopColor="#a89a92" /></radialGradient>
     </defs>
     <path d={`M${P(0, -120)} Q${P(96, -118)} ${P(100, -10)} Q${P(98, 92)} ${P(0, 126)} Q${P(-98, 92)} ${P(-100, -10)} Q${P(-96, -118)} ${P(0, -120)} Z`} fill="url(#porcelain)" stroke={INK} strokeWidth={6 * s} />
-    {cracks.map((d, i) => <g key={i}><path d={d} stroke="#3a2a2a" strokeWidth={3.2 * s} fill="none" strokeLinejoin="bevel" /><path d={d} stroke="#ffffff" strokeOpacity={0.5} strokeWidth={1.2 * s} fill="none" transform={`translate(${1.5 * s},${1.5 * s})`} /></g>)}
+    {cracks.map((d, i) => <g key={i} opacity={Math.min(1, m * 3)}><path d={d} pathLength={1} strokeDasharray="1" strokeDashoffset={1 - m} stroke="#3a2a2a" strokeWidth={3.2 * s} fill="none" strokeLinejoin="bevel" /><path d={d} pathLength={1} strokeDasharray="1" strokeDashoffset={1 - m} stroke="#ffffff" strokeOpacity={0.5} strokeWidth={1.2 * s} fill="none" transform={`translate(${1.5 * s},${1.5 * s})`} /></g>)}
     {/* a chip missing from the porcelain, dark underneath */}
-    <path d={`M${P(62, -96)} L${P(84, -70)} L${P(70, -64)} L${P(58, -80)} Z`} fill="#1a0e14" stroke={INK} strokeWidth={2 * s} />
+    <path d={`M${P(62, -96)} L${P(84, -70)} L${P(70, -64)} L${P(58, -80)} Z`} fill="#1a0e14" stroke={INK} strokeWidth={2 * s} opacity={m} />
     {/* extra eyes in an arc on the brow */}
-    {[[-46, -78, 7], [-18, -90, 8], [18, -90, 8], [46, -78, 7]].map(([x, y, r], i) => <g key={i}>
+    {m > 0.05 && [[-46, -78, 7], [-18, -90, 8], [18, -90, 8], [46, -78, 7]].map(([x, y, r0], i) => { const r = r0 * m; return <g key={i}>
       <circle cx={cx + x * s} cy={cy + y * s} r={r * s} fill="#050304" stroke={INK} strokeWidth={2 * s} />
-      <circle cx={cx + (x - 2) * s} cy={cy + (y - 2) * s} r={1.8 * s} fill="#d8c8ff" opacity={0.8} /></g>)}
+      <circle cx={cx + (x - 2) * s} cy={cy + (y - 2) * s} r={1.8 * s} fill="#d8c8ff" opacity={0.8} /></g>; })}
     {/* main eyes: big, black, with a wet highlight and a pinpoint red */}
     {[-40, 40].map((x, i) => <g key={i}>
-      <path d={`M${P(x - 30, -24)} Q${P(x, -52)} ${P(x + 30, -24)} Q${P(x, 6)} ${P(x - 30, -24)} Z`} fill="#050304" stroke={INK} strokeWidth={4 * s} />
-      <circle cx={cx + x * s} cy={cy - 22 * s} r={3.2 * s} fill="#ff2a2a" />
-      <circle cx={cx + x * s} cy={cy - 22 * s} r={9 * s} fill="#ff2a2a" opacity={0.18} />
+      {m < 1 && <path d={`M${P(x - 30, -24)} Q${P(x, -52)} ${P(x + 30, -24)} Q${P(x, 6)} ${P(x - 30, -24)} Z`} fill="#f4eee6" stroke={INK} strokeWidth={4 * s} />}
+      {/* the black floods out from the iris until the whole eye is black */}
+      <path transform={`translate(${cx + x * s},${cy - 22 * s}) scale(${0.36 + 0.64 * m}) translate(${-(cx + x * s)},${-(cy - 22 * s)})`} d={`M${P(x - 30, -24)} Q${P(x, -52)} ${P(x + 30, -24)} Q${P(x, 6)} ${P(x - 30, -24)} Z`} fill="#050304" stroke={INK} strokeWidth={4 * s} />
+      <circle cx={cx + x * s} cy={cy - 22 * s} r={3.2 * s} fill="#ff2a2a" opacity={m} />
+      <circle cx={cx + x * s} cy={cy - 22 * s} r={9 * s} fill="#ff2a2a" opacity={0.18 * m} />
       <path d={`M${P(x - 14, -36)} q${8 * s},${-6 * s} ${16 * s},${-3 * s}`} stroke="#ffffff" strokeOpacity={0.75} strokeWidth={3 * s} strokeLinecap="round" fill="none" />
       {/* dark tear streaks */}
-      <path d={`M${P(x + (i ? 6 : -6), 2)} Q${P(x + (i ? 10 : -10), 30)} ${P(x + (i ? 4 : -4), 52)}`} stroke="#2a1a22" strokeOpacity={0.5} strokeWidth={4 * s} fill="none" strokeLinecap="round" />
+      <path d={`M${P(x + (i ? 6 : -6), 2)} Q${P(x + (i ? 10 : -10), 30)} ${P(x + (i ? 4 : -4), 52)}`} stroke="#2a1a22" strokeOpacity={0.5 * m} strokeWidth={4 * s} fill="none" strokeLinecap="round" />
     </g>)}
     {/* the grin, stretched almost ear to ear */}
+    <g transform={mouthT}>
     <path d={`M${P(-84, 54)} Q${P(0, 98)} ${P(84, 54)} Q${P(0, 120 + 68 * jaw)} ${P(-84, 54)} Z`} fill="#12060a" stroke={INK} strokeWidth={4 * s} />
-    <path d={teeth.join(" ")} fill="#efe6da" stroke={INK} strokeWidth={0.8 * s} />
+    <path d={teeth.join(" ")} opacity={m} fill="#efe6da" stroke={INK} strokeWidth={0.8 * s} />
     <path d={`M${P(-84, 54)} Q${P(0, 98)} ${P(84, 54)}`} stroke={LADY.lips} strokeWidth={6 * s} fill="none" strokeLinecap="round" />
-    <path d={`M${P(-84, 54)} l${-10 * s},${-8 * s} M${P(84, 54)} l${10 * s},${-8 * s}`} stroke="#3a2a2a" strokeWidth={3 * s} strokeLinecap="round" />
+    <path d={`M${P(-84, 54)} l${-10 * s},${-8 * s} M${P(84, 54)} l${10 * s},${-8 * s}`} stroke="#3a2a2a" strokeWidth={3 * s} strokeLinecap="round" opacity={m} />
+    </g>
   </g>;
 };
 

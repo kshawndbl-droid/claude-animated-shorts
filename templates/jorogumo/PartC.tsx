@@ -14,7 +14,7 @@ import { LAMP, sm } from "./CharTest";
 
 const FPS = 30, OFF = 25.2, DUR = 8.7;
 export const J_PARTC_FRAMES = Math.round(DUR * FPS); // 261
-const S2 = 26.95, S3 = 28.9, LUNGE = 29.0, BLACK = 29.6, SLASH = 30.3, ROOM = 31.95, END = 33.9;
+const S2 = 26.95, S3 = 29.2, LUNGE = 29.2, BLACK = 30.0, SLASH = 30.3, ROOM = 31.95, END = 33.9;
 
 type V = [number, number];
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
@@ -27,6 +27,7 @@ const flame = (T: number) => {
   v -= 0.62 * bump(T, 25.72, 25.82) + 0.4 * bump(T, 26.02, 26.1) + 0.75 * bump(T, 26.3, 26.52, 0.05);
   v -= 0.25 * sm((T - 27.6) / 1.0);            // it burns lower while the shadow grows
   v -= 0.6 * bump(T, 28.42, 28.5);             // one gutter as the legs unfold
+  v -= 0.55 * sm((T - 28.75) / 0.4);           // then it sinks almost out in the held silence before the reveal
   return clamp01(v);
 };
 
@@ -109,7 +110,8 @@ const Shoji: React.FC<{ T: number; I: number }> = ({ T, I }) => {
 const Shadow: React.FC<{ T: number; u: number }> = ({ T, u }) => {
   // body (in shadow space; base on the floor line at y = 0, facing right)
   const pluck = Math.max(0, Math.sin(T * 6.2)) * (1 - u);
-  const tilt = -14 * sm((u - 0.6) / 0.4);
+  // something is wrong: her head creeps over to an unnatural angle while the music still plays
+  const tilt = -10 * sm((T - 27.3) / 1.2) - 16 * sm((u - 0.6) / 0.4);
   const body = <g>
     <path d="M-150,0 Q-180,-120 -110,-170 Q-60,-200 40,-180 Q120,-170 150,-40 Q160,0 120,0 Z" />{/* folded legs and kimono */}
     <path d="M-110,-160 Q-150,-330 -90,-470 Q-40,-540 30,-520 Q70,-470 60,-330 Q50,-220 60,-170 Z" />{/* torso */}
@@ -179,12 +181,15 @@ export const JPartC: React.FC = () => {
   } else if (T < BLACK) {
     // shot 3: FINAL JUMPSCARE. The flame dies (a few frames of near-black), then her face shoots out of the dark
     const d = T - LUNGE;
-    const lunge = clamp01(d / (5 / FPS));                    // 5 frames from a speck to filling the screen
-    const s = d < 0 ? 0 : lerp(0.25, 6.2, 1 - Math.pow(1 - lunge, 2)) + 1.6 * Math.max(0, d - 5 / FPS);
-    const shake = d > 4 / FPS ? 26 * Math.exp(-(d - 4 / FPS) / 0.35) : 0;
+    // REVEAL on the end of "legs.": hard cut to her calm human face; in 4 frames it transforms into the approved true
+    // face (cracks race across, the eyes flood black, extra eyes open, the grin tears ear to ear) while it lunges
+    const morph = sm(clamp01((d - 1 / FPS) / (4 / FPS)));
+    const lunge = clamp01((d - 1 / FPS) / (5 / FPS));        // 5 frames from close to filling the screen
+    const s = d < 0 ? 0 : lerp(2.4, 6.2, 1 - Math.pow(1 - lunge, 2)) + 1.6 * Math.max(0, d - 6 / FPS);
+    const shake = d > 5 / FPS ? 26 * Math.exp(-(d - 5 / FPS) / 0.35) : 0;
     const sx = shake * Math.sin(d * 97), sy = shake * Math.cos(d * 83);
-    const jaw = d > 3 / FPS ? 0.55 + 0.45 * Math.sin(d * 34) : 0.3;
-    const flash = bump(T, 29.5, 29.56, 0.012);
+    const jaw = d > 4 / FPS ? 0.55 + 0.45 * Math.sin(d * 34) : 0.3 * morph;
+    const flash = bump(T, BLACK - 0.1, BLACK - 0.04, 0.012) + 0.35 * Math.exp(-Math.max(0, d) / 0.05) * (d >= 0 ? 1 : 0);
     const cy = 1000 - 140 * lunge;                          // face centre: eyes and grin both on screen when it fills
     const legs = [...LEGS_L.map((l, i) => ({ l, i })), ...LEGS_L.map((l, i) => ({ l: mirror(l), i: i + 4 }))];
     content = d < 0 ? <AbsoluteFill style={{ backgroundColor: "#030204" }} /> : <>
@@ -195,11 +200,11 @@ export const JPartC: React.FC = () => {
           <radialGradient id="under" cx="50%" cy="80%" r="70%"><stop offset="0" stopColor="#ff7040" stopOpacity={0.28} /><stop offset="1" stopColor="#000" stopOpacity={0} /></radialGradient>
         </defs>
         {/* her legs flare out around the face while it is still small (scaled about the face centre) */}
-        <g transform={`translate(540,${cy}) scale(${s * 0.9}) translate(-540,-1030)`} opacity={clamp01(1.4 - s / 3)}>
+        <g transform={`translate(540,${cy}) scale(${s * 0.9}) translate(-540,-1030)`} opacity={clamp01(1.6 - s / 3) * sm(clamp01(d / (2 / FPS)))}>
           {legs.map((g) => <Leg key={g.i} p={g.l} seed={g.i} />)}
         </g>
         <Hair cx={540} cy={cy} s={s} floor={1920} />
-        <Face cx={540} cy={cy} s={s} jaw={jaw} />
+        <Face cx={540} cy={cy} s={s} jaw={jaw} morph={morph} />
         <rect width={1080} height={1920} fill="url(#under)" style={{ mixBlendMode: "screen" }} />
       </svg>
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 100%)" }} />
