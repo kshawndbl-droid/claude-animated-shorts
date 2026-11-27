@@ -22,6 +22,10 @@ SHOTS = {
     # v2: lower, closer and wider so the room fills the 9:16 frame (ceiling beams above, tatami below), shallow focus
     # on the walk line 2.1 m in front of the lens, a dark post and a hanging web close to the lens for depth
     "chartest": dict(n=1, keys=[(1, (0.0, -3.4, 1.12), (0.0, 6.0, 0.95), 22)], focus=(0.0, -1.3, 0.9), fstop=2.4),
+    # Part A opening (line 1): ONE tall still (1:2.67) looking from the room into the back-left ceiling corner where the
+    # old spider lives; Remotion pans a 9:16 window over it (rafters first, then a slow tilt down onto the moonlit shoji
+    # and the tatami), so the move is smooth at 30 fps without rendering a moving Blender camera
+    "rafters": dict(n=1, keys=[(1, (-2.0, 3.2, 1.0), (-4.2, 6.0, 1.0), 15)], focus=(-4.0, 5.8, 2.4), fstop=5.6, ar=8 / 3),
 }
 SHOT = arg("--shot", "chartest")
 W, D0, D1, H = 4.2, -5.0, 6.0, 2.7  # room half-width, front/back wall y, ceiling height
@@ -276,6 +280,11 @@ def build():
     box("fgsill", (-0.5, -2.25, 0.06), (0.5, 0.2, 0.12), beam)
     cobweb((-0.42, -2.25, 2.25), (-0.42, -2.25, 1.85), (-0.1, -2.25, 2.25), ts.flat_mat("fgweb", (0.5, 0.5, 0.55), rough=0.5, emit=0.06), n_rad=5, n_ring=4)
     curve("rope", [(0.55, -2.0, H), (0.57, -2.0, 2.2), (0.56, -2.0, 1.9)], ts.flat_mat("rope", (0.18, 0.14, 0.1)), r=0.012)
+    if SHOT == "rafters":  # old exposed rafters and a brace in the back-left corner, where the spider lives
+        for x in [-3.75, -3.05, -2.35]:
+            box("rafter", (x, 4.3, H - 0.1), (0.13, 3.4, 0.14), beam, bevel=0.01)
+        box("purlin", (-2.9, 5.2, H - 0.25), (2.6, 0.14, 0.12), beam, bevel=0.01)
+        box("brace", (-3.75, 5.55, H - 0.45), (0.1, 0.9, 0.1), beam, rot=0.0).rotation_euler = (math.radians(40), 0, 0)
     # warm bounce from the lantern up onto the ceiling, so the top of the frame is a lit ceiling, not black
     bo = bpy.data.lights.new("bounce", "AREA")
     bo.size, bo.energy, bo.color = 2.0, 22, (1.0, 0.6, 0.3)
@@ -337,7 +346,7 @@ if __name__ == "__main__":
     sc = build()
     cam = shot_camera(sc, SHOT)
     res = int(arg("--res", "720"))
-    sc.render.resolution_x, sc.render.resolution_y = res, int(res * 16 / 9)
+    sc.render.resolution_x, sc.render.resolution_y = res, int(res * SHOTS[SHOT].get("ar", 16 / 9))
     fg = arg("--fg")
     if fg:  # foreground layer: only what is nearer than FG metres, on transparency, laid over the cast
         sc.render.film_transparent = True

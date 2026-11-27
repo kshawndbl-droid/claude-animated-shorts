@@ -51,7 +51,8 @@ const Rain: React.FC<{ t: number }> = ({ t }) => <g clipPath="url(#shoji)" opaci
   })}
 </g>;
 
-export const JStylePreview: React.FC = () => {
+// clean: no audio and no subtitles (Part A of the full video uses it as its second half; Part D adds both)
+export const JStylePreview: React.FC<{ clean?: boolean }> = ({ clean }) => {
   const t = useCurrentFrame() / FPS, T = t + OFF;
   const shotB = t >= CUT, after = t >= FLASH;
   // samurai: walks in from the left in shot A, stops; then stands, looks around, and reacts to the flash
@@ -82,7 +83,7 @@ export const JStylePreview: React.FC = () => {
   const zf = 1 + (z - 1) * 1.6;
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", overflow: "hidden" }}>
-      <Audio src={staticFile("jorogumo/preview_mix.wav")} />
+      {!clean && <Audio src={staticFile("jorogumo/preview_mix.wav")} />}
       <div style={layer(z)}>
         <Img src={staticFile("jorogumo/hi/f_0001.png")} style={{ position: "absolute", width: 1080, height: 1920 }} />
         <svg width={1080} height={1920} style={{ position: "absolute" }}>
@@ -112,7 +113,7 @@ export const JStylePreview: React.FC = () => {
       <AbsoluteFill style={{ backgroundColor: "#000", opacity: 0.38 * pre + (after ? 0.12 : 0) }} />
       <AbsoluteFill style={{ backgroundColor: "#dfe8ff", opacity: 0.75 * L2 + 0.12 * L1, mixBlendMode: "screen" }} />
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 52%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.62) 100%)" }} />
-      <Subtitles words={WORDS} style={SUB} offset={-OFF} />
+      {!clean && <Subtitles words={WORDS} style={SUB} offset={-OFF} />}
     </AbsoluteFill>
   );
 };
