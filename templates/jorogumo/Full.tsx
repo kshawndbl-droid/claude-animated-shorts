@@ -11,8 +11,8 @@ const SUB = defaultStyle("serious", { y: 0.8, maxChars: 14, keyWords: ["four", "
 
 export const JFull: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: "#000" }}>
-    <OffthreadVideo src={staticFile("jorogumo/full_bg_v2.mp4")} muted />
-    <Audio src={staticFile("jorogumo/full_mix_v2.wav")} />
+    <OffthreadVideo src={staticFile("jorogumo/full_bg_v3.mp4")} muted />
+    <Audio src={staticFile("jorogumo/full_mix_v3.wav")} />
     <Subtitles words={wordsJson as Word[]} style={SUB} offset={0} />
   </AbsoluteFill>
 );

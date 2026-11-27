@@ -10,11 +10,11 @@ import React from "react";
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { INK } from "./kimono";
 import { Face, Hair, Leg, LEGS_L, mirror } from "./MonsterV2";
-import { LAMP, sm } from "./CharTest";
+import { LADY, LAMP, Lit, SAMURAI, sm } from "./CharTest";
 
 const FPS = 30, OFF = 25.2, DUR = 8.7;
 export const J_PARTC_FRAMES = Math.round(DUR * FPS); // 261
-const S2 = 26.95, S3 = 29.2, LUNGE = 29.2, BLACK = 30.0, SLASH = 30.3, ROOM = 31.95, END = 33.9;
+const S2 = 26.95, S3 = 28.83, LUNGE = 29.2, SLASH = 30.28, BLACK = 30.42, ROOM = 31.95, END = 33.9;
 
 type V = [number, number];
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
@@ -148,6 +148,13 @@ const Shadow: React.FC<{ T: number; u: number }> = ({ T, u }) => {
   return <g fill="#000">{legs}{body}</g>;
 };
 
+/* ---------- close-ups in lantern light: his reaction, then her ---------- */
+const CloseBg: React.FC<{ I: number; dx: number }> = ({ I, dx }) =>
+  <div style={{ position: "absolute", inset: 0, transform: "scale(2.6)", transformOrigin: "540px 900px", filter: `blur(16px) brightness(${0.2 + 0.4 * I})` }}>
+    <Img src={staticFile("jorogumo/hi/f_0001.png")} style={{ position: "absolute", width: 1080, height: 1920, transform: `translate(${dx}px,0px)` }} />
+  </div>;
+const HEAD = 1.2;   // head-centre height of the rig, metres
+
 /* ---------- shot 5: the room, after ---------- */
 const CUSHION = { x: 630, y: 1170 };
 
@@ -178,6 +185,17 @@ export const JPartC: React.FC = () => {
         <Shadow T={T} u={u} />
       </g>
     </svg>;
+  } else if (T < LUNGE) {
+    // shot 2b: HIS REACTION. He has seen the wall: eyes wide, he turns toward her and grips the sword
+    const k = (T - S3) / (LUNGE - S3), ppm = 1700, z = 1 + 0.06 * k;
+    const lamp = { x: 1250, y: 700 };
+    content = <>
+      <CloseBg I={0.5} dx={-200} />
+      <svg width={1080} height={1920} style={{ position: "absolute", transform: `scale(${z})`, transformOrigin: "540px 760px" }}>
+        <Lit id="samc" flick={0.75} x={500} y={820 + HEAD * ppm} ppm={ppm} look={SAMURAI} lamp={lamp} noShadow
+          pose={{ t: T, expr: "scared", lookX: lerp(-0.2, 0.9, sm(k * 1.6)), blink: false, armNear: [10, 60], armFar: [6, 70] }} />
+      </svg>
+    </>;
   } else if (T < BLACK) {
     // shot 3: FINAL JUMPSCARE. The flame dies (a few frames of near-black), then her face shoots out of the dark
     const d = T - LUNGE;
@@ -185,16 +203,24 @@ export const JPartC: React.FC = () => {
     // face (cracks race across, the eyes flood black, extra eyes open, the grin tears ear to ear) while it lunges
     const morph = sm(clamp01((d - 1 / FPS) / (4 / FPS)));
     const lunge = clamp01((d - 1 / FPS) / (5 / FPS));        // 5 frames from close to filling the screen
-    const s = d < 0 ? 0 : lerp(2.4, 6.2, 1 - Math.pow(1 - lunge, 2)) + 1.6 * Math.max(0, d - 6 / FPS);
+    const s = d < 0 ? 0 : lerp(2.4, 6.2, 1 - Math.pow(1 - lunge, 2)) + 1.0 * Math.max(0, d - 6 / FPS);
     const shake = d > 5 / FPS ? 26 * Math.exp(-(d - 5 / FPS) / 0.35) : 0;
     const sx = shake * Math.sin(d * 97), sy = shake * Math.cos(d * 83);
     const jaw = d > 4 / FPS ? 0.55 + 0.45 * Math.sin(d * 34) : 0.3 * morph;
-    const flash = bump(T, BLACK - 0.1, BLACK - 0.04, 0.012) + 0.35 * Math.exp(-Math.max(0, d) / 0.05) * (d >= 0 ? 1 : 0);
-    const cy = 1000 - 140 * lunge;                          // face centre: eyes and grin both on screen when it fills
+    const flash = bump(T, SLASH + 0.08, BLACK - 0.02, 0.02) + 0.15 * Math.exp(-Math.max(0, d) / 0.05) * (d >= 0 ? 1 : 0);
+    const cy = 840 + 20 * lunge;                          // face centre: eyes and grin both on screen when it fills
     const legs = [...LEGS_L.map((l, i) => ({ l, i })), ...LEGS_L.map((l, i) => ({ l: mirror(l), i: i + 4 }))];
-    content = d < 0 ? <AbsoluteFill style={{ backgroundColor: "#030204" }} /> : <>
+    const human = 1 - sm(clamp01((d - 1.5 / FPS) / (2 / FPS)));   // her face as we know it, then gone into the lunge
+    const ppmL = 1700 * (1 + 0.4 * lunge);
+    const sl = d - (SLASH - LUNGE), cut = sl < 0 ? 0 : clamp01(sl / (3 / FPS));
+    const L2 = Math.hypot(1280, 1080);
+    content = <>
       <AbsoluteFill style={{ backgroundColor: "#050306" }} />
-      <svg width={1080} height={1920} style={{ position: "absolute", transform: `translate(${sx}px,${sy}px)` }}>
+      {human > 0.01 && <><CloseBg I={0.6} dx={200} /><svg width={1080} height={1920} style={{ position: "absolute", opacity: human }}>
+        <Lit id="ladyc" flick={0.8} x={540} y={840 + HEAD * ppmL} ppm={ppmL} look={LADY} lamp={{ x: -200, y: 700 }} noShadow flip
+          pose={{ t: T, expr: "eerie", lookX: 0.9, glide: true, blink: false, tilt: -12, armNear: [8, 72], armFar: [6, 78] }} />
+      </svg></>}
+      <svg width={1080} height={1920} style={{ position: "absolute", opacity: 1 - human, transform: `translate(${sx}px,${sy}px)` }}>
         <defs>
           <linearGradient id="chitin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#4a2442" /><stop offset="0.5" stopColor="#2a1226" /><stop offset="1" stopColor="#12060f" /></linearGradient>
           <radialGradient id="under" cx="50%" cy="80%" r="70%"><stop offset="0" stopColor="#ff7040" stopOpacity={0.28} /><stop offset="1" stopColor="#000" stopOpacity={0} /></radialGradient>
@@ -208,11 +234,17 @@ export const JPartC: React.FC = () => {
         <rect width={1080} height={1920} fill="url(#under)" style={{ mixBlendMode: "screen" }} />
       </svg>
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 100%)" }} />
+      {/* HE SLASHES: his blade tears across her face, a white flash, then black */}
+      {sl >= 0 && <svg width={1080} height={1920} style={{ position: "absolute" }}>
+        <defs><filter id="glow2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation={18} /></filter></defs>
+        <path d="M1180,380 L-100,1460" stroke="#9ab8ff" strokeWidth={70} strokeDasharray={L2} strokeDashoffset={L2 * (1 - cut)} filter="url(#glow2)" strokeLinecap="round" />
+        <path d="M1180,380 L-100,1460" stroke="#ffffff" strokeWidth={12} strokeDasharray={L2} strokeDashoffset={L2 * (1 - cut)} strokeLinecap="round" />
+      </svg>}
       <AbsoluteFill style={{ backgroundColor: "#fff2ee", opacity: flash }} />
     </>;
   } else if (T < ROOM) {
     // shot 4: black; one sword stroke tears across the dark on "slashes"
-    const d = T - SLASH, draw = clamp01(d / (3 / FPS)), fade = d < 0 ? 0 : Math.exp(-Math.max(0, d - 3 / FPS) / 0.16);
+    const d = -1, draw = clamp01(d / (3 / FPS)), fade = d < 0 ? 0 : Math.exp(-Math.max(0, d - 3 / FPS) / 0.16);
     const flash = d < 0 ? 0 : 0.55 * Math.exp(-d / 0.06);
     const x1 = 1180, y1 = 420, x2 = -100, y2 = 1500, L = Math.hypot(x2 - x1, y2 - y1);
     content = <>

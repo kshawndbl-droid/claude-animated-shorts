@@ -134,7 +134,7 @@ while tt < 28.6:
     tt += 0.16 - 0.1 * (tt - 27.0) / 1.7
 mono += sum(np.sin(2 * np.pi * f * t) for f in (110, 116.5, 155.6)) / 3 * ramp(26.8, 28.5) * (1 - ramp(28.5, 28.7)) * db(-24)
 # FINAL scare (as the approved Hidebehind v3 hit): 29.0-29.6, then hard silence
-A, C = 29.2, 30.0   # the reveal: cut to her face on the end of "legs." (29.17), black at 30.0
+A, C = 29.2, 30.28  # the reveal: cut to her face on the end of "legs." (29.17); his slash (30.28) cuts her off
 n = int((C - A) * SR); u = np.arange(n) / SR
 f0 = (480 + 520 * (1 - np.exp(-u / 0.12))) * (1 + 0.035 * np.sin(2 * np.pi * 6.5 * u))
 src = sawtooth(2 * np.pi * np.cumsum(f0) / SR) + 0.6 * rng.standard_normal(n)
@@ -143,13 +143,14 @@ scream = np.tanh(3 * scream / (np.abs(scream).max() + 1e-9))
 shr = sum(np.sin(2 * np.pi * f * (1 + 0.15 * u) * u + i) for i, f in enumerate([1870, 2470, 3310, 4120, 5230])) * (0.6 + 0.4 * np.sin(2 * np.pi * 23 * u))
 gr = bp(np.tanh(4 * sawtooth(2 * np.pi * np.cumsum(95 * np.exp(-u * 0.7) + 40) / SR) * (1 + np.sin(2 * np.pi * 29 * u))), 60, 1800)
 imp = np.sin(2 * np.pi * np.cumsum(np.linspace(58, 24, n)) / SR) * np.exp(-u / 0.4) * 2.2 + rng.standard_normal(n) * np.exp(-u / 0.012) * 1.5
-e = np.interp(u, [0, 0.006, 0.3, C - A], [0, 1, 0.9, 0.85])
+e = np.interp(u, [0, 0.006, 0.3, 0.75, C - A - 0.03, C - A], [0, 1, 0.9, 0.6, 0.22, 0])   # dips under "He slashes."
 hit = (0.9 * scream + 0.25 * shr / 5 + 0.6 * gr) * e + imp
 hit = np.tanh(1.7 * hit / np.sqrt((hit ** 2).mean())) * 0.97
+hit *= np.interp(u, [0, 0.7, 0.98, C - A], [1, 1, 0.12, 0.08])   # clear room for "He slashes." (30.22)
 hit[-int(0.004 * SR):] *= np.linspace(1, 0, int(0.004 * SR))
 m = int(0.32 * SR); swell = bp(rng.standard_normal(m), 300, 6000) * np.linspace(0, 1, m) ** 4 * 0.35
 # the slash (30.3): a fast air rip and a bright blade ring in the black
-SL = 30.3
+SL = 30.28
 slash = bp(rng.standard_normal(N), 1200, 9000) * np.exp(-((t - SL + 0.04) / 0.05) ** 2) * db(-4)
 slash += sum(np.sin(2 * np.pi * f * t) for f in (2960, 4430, 5920)) / 3 * env(SL + 0.02, 0.002, 0.5) * db(-16)
 mono += slash
@@ -171,7 +172,7 @@ mono += bp(rng.standard_normal(N), 2000, 8000) * env(EY - 0.15, 0.15, 0.08) * db
 mono += np.sin(2 * np.pi * (44 * np.exp(-np.maximum(0, t - 40.62) * 1.5)) * np.maximum(0, t - 40.62)) * env(40.62, 0.004, 0.35) * db(-8)
 
 # ---------- mix ----------
-silence = 1 - ramp(C, C + 0.01) * (1 - ramp(30.2, 30.21))    # dead black after the face (the slash is the only sound)
+silence = np.ones(N)   # no black gap any more: the slash ends the scare    # dead black after the face (the slash is the only sound)
 music_off = 1 - ramp(31.72, 31.76) * (1 - ramp(33.9, 33.95))
 hush = 1 - 0.9 * ramp(28.4, 28.75) * (t < A)          # the room holds its breath under "eight legs."
 bed = rain * duck1 * hush * silence * music_off + (mono * np.where((t >= FLASH - 0.02) & (t < FLASH + 2), 1, duck1) * hush * silence * music_off)[None]
