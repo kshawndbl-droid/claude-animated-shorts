@@ -33,6 +33,16 @@ export type KPose = {
   lookX?: number; blink?: boolean; tilt?: number; voidEyes?: boolean;
   /** lady: hover-glide (no bob, a slow float, the head stays level) */
   glide?: boolean;
+  /** kneel in seiza: legs folded under, feet hidden under the hips, the cloth pooling on the floor */
+  kneel?: boolean;
+  /** extra forward lean of the upper body in degrees (a sleepy slump) */
+  slump?: number;
+  /** upper eyelids: 0 open .. 1 shut (sleepy) */
+  lids?: number;
+  /** hand targets in figure metres (feet at 0,0, facing +x); they override the arm angles */
+  reachNear?: [number, number]; reachFar?: [number, number];
+  /** lady: plays a biwa on her lap; `since` = seconds since the last pluck (drives the stroke and the strings) */
+  biwa?: { since: number };
 };
 
 const HIP = 0.625, THIGH = 0.29, SHIN = 0.28, ANKLE = 0.07;
@@ -68,7 +78,7 @@ const tube = (a: V, b: V, c: V, wa: number, wc: number, bulge = 0) => {
   return `M${s(L[0])} ${L.slice(1).map((p) => `L${s(p)}`).join(" ")} A${P(wc)},${P(wc)} 0 0 1 ${s(R[N])} ${R.slice(0, N).reverse().map((p) => `L${s(p)}`).join(" ")} A${P(wa)},${P(wa)} 0 0 1 ${s(L[0])} Z`;
 };
 
-const Two: React.FC<{ d: string | string[]; fill: string; ow?: number }> = ({ d, fill, ow = 0.026 }) => {
+export const Two: React.FC<{ d: string | string[]; fill: string; ow?: number }> = ({ d, fill, ow = 0.026 }) => {
   const ds = Array.isArray(d) ? d : [d];
   return <g>
     {ds.map((x, i) => <path key={"o" + i} d={x} fill={INK} stroke={INK} strokeWidth={ow} strokeLinejoin="round" />)}
@@ -94,7 +104,7 @@ const footAt = (C: number, liftK: number, dist: number, o: number, w: number, id
 };
 
 /** tabi sock (ankle at 0,0) on a straw sandal; the sole is at y = ANKLE */
-const SOCK = `M-0.045,-0.05 L0.03,-0.05 L0.045,-0.005 Q0.14,-0.005 0.15,0.04 L0.148,0.056 L-0.05,0.056 Q-0.062,0.015 -0.045,-0.05 Z`;
+export const SOCK = `M-0.045,-0.05 L0.03,-0.05 L0.045,-0.005 Q0.14,-0.005 0.15,0.04 L0.148,0.056 L-0.05,0.056 Q-0.062,0.015 -0.045,-0.05 Z`;
 const HEEL: V = [-0.055, ANKLE], BALL: V = [0.1, ANKLE];
 const footPose = (rel: number, lift: number, pitch: number) => {
   const piv = pitch >= 0 ? BALL : HEEL, a = rad(pitch), c = Math.cos(a), s = Math.sin(a);
@@ -144,6 +154,15 @@ const Head: React.FC<{ hx: number; hy: number; L: KLook; pose: KPose }> = ({ hx,
           </> : <>
             <ellipse cx={hx + ox} cy={hy - 0.02} rx={eyeR} ry={eyeR * 1.2} fill="#fffaf2" stroke={INK} strokeWidth={0.012} />
             <circle cx={hx + ox + lx} cy={hy - 0.015} r={ex === "scared" ? 0.014 : 0.019} fill={INK} />
+            {(pose.lids ?? 0) > 0.01 && (() => {
+              // the upper lid slides down over the eye: the part of the eye above the lid line is covered with skin
+              const ry = eyeR * 1.2, cy = hy - 0.02, ly = cy - ry + 2 * ry * Math.min(0.97, pose.lids ?? 0);
+              const pts = Array.from({ length: 25 }, (_, k) => { const a = (k / 24) * 2 * Math.PI;
+                return `${P(hx + ox + eyeR * 1.08 * Math.cos(a))},${P(Math.min(ly, cy + ry * 1.08 * Math.sin(a)))}`; });
+              const half = Math.sqrt(Math.max(0, 1 - ((ly - cy) / (ry * 1.08)) ** 2)) * eyeR * 1.08;
+              return <g><path d={`M${pts.join(" L")} Z`} fill={L.skin} />
+                <path d={`M${P(hx + ox - half)},${P(ly)} L${P(hx + ox + half)},${P(ly)}`} stroke={INK} strokeWidth={0.016} strokeLinecap="round" /></g>;
+            })()}
           </>}
         {lady ? <path d={`M${P(hx + ox - 0.03)},${P(hy - 0.1)} q0.03,-0.012 0.06,0`} stroke={INK} strokeWidth={0.012} fill="none" strokeLinecap="round" />
           : <path d={`M${P(hx + ox - 0.05)},${P(hy - 0.09 + (i === 0 ? -browT : browT) * 0.6)} L${P(hx + ox + 0.05)},${P(hy - 0.09 + (i === 0 ? browT : -browT) * 0.6)}`} stroke={INK} strokeWidth={0.032} strokeLinecap="round" />}
@@ -213,6 +232,58 @@ const HakamaLeg: React.FC<{ hip: V; f: ReturnType<typeof footPose>; L: KLook; fa
   </g>;
 };
 
+const KNEEL_HIP = 0.25;
+const deg = (r: number) => (r * 180) / Math.PI;
+/** arm angles (from straight down, elbow bend) that put the wrist on a target point */
+const reach = (s: V, tg: V): [number, number] => {
+  const dx = tg[0] - s[0], dy = tg[1] - s[1], d = Math.max(0.05, Math.min(UPPER + FORE - 1e-3, Math.hypot(dx, dy)));
+  const cl = (v: number) => Math.max(-1, Math.min(1, v));
+  const inner = Math.acos(cl((UPPER * UPPER + FORE * FORE - d * d) / (2 * UPPER * FORE)));
+  const alpha = Math.acos(cl((UPPER * UPPER + d * d - FORE * FORE) / (2 * UPPER * d)));
+  return [deg(Math.atan2(dx, dy) - alpha), 180 - deg(inner)];
+};
+
+/** seiza: the folded legs seen from the side, under wide hakama (samurai) or the long kimono (lady); the soles show at the back */
+const KneelLegs: React.FC<{ L: KLook; hipX: number; hipY: number; t: number }> = ({ L, hipX, hipY, t }) => {
+  const lady = L.kind === "lady", x = hipX, sw = 0.006 * Math.sin(t * 1.3);
+  const knee = 0.4, back = lady ? -0.3 : -0.085;
+  const cloth = `M${P(x - 0.15)},${P(hipY - 0.04)} Q${P(x - 0.24)},${P(hipY + 0.1)} ${P(x + back + sw)},-0.03 Q${P(x + back - 0.01)},0.012 ${P(x + back + 0.04)},0.012
+    L${P(x + knee)},0.012 Q${P(x + knee + 0.07)},0.0 ${P(x + knee + 0.05)},-0.08 Q${P(x + knee + 0.02)},-0.17 ${P(x + knee - 0.08)},${P(hipY + 0.05)} L${P(x + 0.12)},${P(hipY + 0.02)} Z`;
+  return <g>
+    {/* the tabi feet, folded under him: tops of the feet on the floor, soles up, toes pointing back */}
+    {[1, 0].map((k) => <g key={k} transform={`translate(${P(x - 0.09 + k * 0.03)},${P(-0.066 - k * 0.012)}) scale(-1,-1)`}>
+      <Two fill={k ? "#b8b2a6" : L.sock} ow={0.016} d={SOCK} />
+      <path d="M0.11,-0.004 Q0.125,0.03 0.12,0.055" stroke="rgba(60,50,40,0.5)" strokeWidth={0.008} fill="none" />
+    </g>)}
+    <Two fill={L.legs} d={cloth} />
+    {/* folds: over the thigh, down the shin, and the hem on the floor */}
+    <path d={`M${P(x + 0.0)},${P(hipY + 0.06)} Q${P(x + 0.22)},${P(hipY + 0.05)} ${P(x + knee - 0.02)},-0.12`} stroke={L.legsDark} strokeWidth={0.014} fill="none" opacity={0.8} />
+    <path d={`M${P(x - 0.12)},${P(hipY + 0.08)} Q${P(x - 0.05)},-0.04 ${P(x + 0.2)},-0.02`} stroke={L.legsDark} strokeWidth={0.012} fill="none" opacity={0.6} />
+    {!lady && [0.06, 0.16, 0.26].map((u) => <path key={u} d={`M${P(x + u)},${P(hipY + 0.07)} L${P(x + u + 0.03)},0.0`} stroke={L.legsDark} strokeWidth={0.009} opacity={0.7} />)}
+  </g>;
+};
+
+/** the biwa (a pear-shaped lute) with four strings that shiver after each pluck, and the fan-shaped plectrum */
+const Biwa: React.FC<{ at: (u: number, v: number) => V; since: number }> = ({ at, since }) => {
+  const pts = (arr: [number, number][]) => arr.map(([u, v], i) => { const p = at(u, v); return `${i ? "L" : "M"}${P(p[0])},${P(p[1])}`; }).join(" ") + " Z";
+  const body: [number, number][] = [];
+  for (let k = 0; k <= 24; k++) { const a = (k / 24) * 2 * Math.PI, v = 0.2 - 0.2 * Math.cos(a), hw = 0.15 * Math.sin(a) * (1 - 0.35 * (v / 0.4));
+    body.push([hw, v + (v > 0.3 ? 0.06 * ((v - 0.3) / 0.1) : 0)]); }
+  const amp = 0.007 * Math.exp(-since / 0.45);
+  return <g>
+    <Two fill="#5a3418" ow={0.016} d={pts(body)} />
+    <path d={pts([[-0.1, 0.1], [0.1, 0.1], [0.06, 0.32], [-0.06, 0.32]])} fill="#7a4a24" opacity={0.6} />
+    <Two fill="#3a2010" ow={0.014} d={pts([[-0.022, 0.42], [0.022, 0.42], [0.02, 0.72], [-0.02, 0.72]])} />
+    <Two fill="#2a160a" ow={0.014} d={pts([[-0.02, 0.72], [0.02, 0.72], [0.07, 0.83], [0.035, 0.85]])} />
+    {[0, 1].map((k) => { const p = at(0.0 + k * 0.03, 0.75 + k * 0.03); return <circle key={k} cx={p[0]} cy={p[1]} r={0.012} fill="#c9a24a" />; })}
+    <path d={pts([[-0.05, 0.06], [0.05, 0.06], [0.05, 0.08], [-0.05, 0.08]])} fill="#1a0e06" />
+    {[-0.012, -0.004, 0.004, 0.012].map((u, i) => {
+      const a = at(u, 0.07), b = at(u, 0.72), m = at(u + amp * Math.sin(since * 95 + i * 1.7), 0.38);
+      return <path key={i} d={`M${P(a[0])},${P(a[1])} Q${P(m[0])},${P(m[1])} ${P(b[0])},${P(b[1])}`} stroke="#e8dcc0" strokeWidth={0.004} fill="none" opacity={0.85} />;
+    })}
+  </g>;
+};
+
 export const Kimono: React.FC<{ x: number; y: number; ppm: number; look: KLook; pose: KPose; flip?: boolean; shade?: number }> =
   ({ x, y, ppm, look: L, pose, flip = false, shade = 1 }) => {
     const lady = L.kind === "lady";
@@ -222,9 +293,11 @@ export const Kimono: React.FC<{ x: number; y: number; ppm: number; look: KLook; 
     const sway = (1 - w) * 0.012 * Math.sin(t * 0.7);
     const bob = pose.glide ? 0 : lady ? 0.4 : 1;
     const hover = pose.glide ? 0.008 * Math.sin(t * 1.15) : 0;
-    const hipY = -(HIP - 0.045 * w * bob + 0.014 * w * mid * bob) + (1 - w) * 0.004 * Math.sin(t * 1.7) - hover;
+    const kneel = !!pose.kneel;
+    const hipY = kneel ? -KNEEL_HIP + 0.004 * Math.sin(t * 1.7) - hover
+      : -(HIP - 0.045 * w * bob + 0.014 * w * mid * bob) + (1 - w) * 0.004 * Math.sin(t * 1.7) - hover;
     const hipX = sway;
-    const lean = (lady ? 2 : 5) * w + (1 - w) * 0.6 * Math.sin(t * 0.7);
+    const lean = (lady ? 2 : 5) * w + (1 - w) * 0.6 * Math.sin(t * 0.7) + (kneel ? 3 : 0) + (pose.slump ?? 0);
     const breath = (1 - w) * Math.sin(t * 1.7);
     // arms follow the legs a touch late (follow-through), so the swing reads as carried by the body, not driven
     const armPh = Math.cos(2 * Math.PI * (near.loc - 0.06));
@@ -240,8 +313,18 @@ export const Kimono: React.FC<{ x: number; y: number; ppm: number; look: KLook; 
     const nk = up(NECK - HIP + 0.004 * breath);
     // the head rides a little steadier than the hips (the neck absorbs part of the bob); a gliding head is dead level
     const hx = nk[0] + 0.02 + 0.01 * w, hy = nk[1] - HEAD_R + 0.05 + (pose.glide ? 0 : 0.006 * w * mid * bob);
-    const nA = armPts(shN[0], shN[1], nearA[0], nearA[1]);
-    const fA = armPts(shF[0], shF[1], farA[0], farA[1]);
+    // biwa on her lap: body on the near thigh, the neck tilted back past the far shoulder
+    const bw = pose.biwa, BWA = -24, BWS = 1.2, bwB: V = [0.22, hipY + 0.1];
+    const bwAt = (u: number, v: number): V => { const a = rad(BWA); u *= BWS; v *= BWS; return [bwB[0] + u * Math.cos(a) + v * Math.sin(a), bwB[1] + u * Math.sin(a) - v * Math.cos(a)]; };
+    let rN = pose.reachNear, rF = pose.reachFar;
+    if (bw) {
+      // the plectrum stroke: a quick sweep down across the strings, then a slow lift back
+      const k = bw.since < 0.1 ? smooth(bw.since / 0.1) : 1 - smooth((bw.since - 0.1) / 0.55);
+      rN = bwAt(mix(0.09, -0.05, k), mix(0.24, 0.17, k));
+      rF = bwAt(-0.03, 0.56);
+    }
+    const nA = rN ? armPts(shN[0], shN[1], ...reach(shN, rN)) : armPts(shN[0], shN[1], nearA[0], nearA[1]);
+    const fA = rF ? armPts(shF[0], shF[1], ...reach(shF, rF)) : armPts(shF[0], shF[1], farA[0], farA[1]);
     const hipN: V = [hipX + 0.025, hipY], hipF: V = [hipX - 0.03, hipY - 0.01];
     // sleeves and hair lag behind the movement and breathe a little
     // each sleeve is a pendulum: it trails its arm's swing by about a quarter cycle, plus the drag of walking forward
@@ -274,7 +357,7 @@ export const Kimono: React.FC<{ x: number; y: number; ppm: number; look: KLook; 
         <ellipse cx={hipX} cy={0} rx={0.34} ry={0.05} fill="rgba(5,3,8,0.4)" />
         {lady && <BackHair hx={hx} hy={hy} L={L} sway={hairSway} t={t} />}
         <Arm a={fA} L={L} far lag={lagF} />
-        {lady ? <>
+        {kneel ? <KneelLegs L={L} hipX={hipX} hipY={hipY} t={t} /> : lady ? <>
           <Foot f={fF} L={L} far />
           <Foot f={fN} L={L} />
           <Two fill={L.top} d={robe} />
@@ -315,7 +398,11 @@ export const Kimono: React.FC<{ x: number; y: number; ppm: number; look: KLook; 
           </>}
         </g>
         <Head hx={hx} hy={hy} L={L} pose={{ ...pose, tilt: (pose.tilt ?? 0) + lean * 0.4 }} />
+        {bw && <Biwa at={bwAt} since={bw.since} />}
         <Arm a={nA} L={L} lag={lagN} />
+        {bw && (() => { const d = rad(nA.dir), ux = Math.sin(d), uy = Math.cos(d), hx2 = nA.w[0] + ux * 0.06, hy2 = nA.w[1] + uy * 0.06;
+          // the bachi: a wooden fan-shaped plectrum held in the playing hand, its wide edge to the strings
+          return <Two fill="#b88c52" ow={0.01} d={`M${P(hx2)},${P(hy2)} L${P(hx2 + ux * 0.075 - uy * 0.04)},${P(hy2 + uy * 0.075 + ux * 0.04)} L${P(hx2 + ux * 0.075 + uy * 0.04)},${P(hy2 + uy * 0.075 - ux * 0.04)} Z`} />; })()}
         <circle cx={nA.s[0]} cy={nA.s[1] + 0.012} r={0.05} fill={L.top} />
       </g>
     );

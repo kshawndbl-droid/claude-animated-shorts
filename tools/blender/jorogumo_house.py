@@ -26,6 +26,9 @@ SHOTS = {
     # old spider lives; Remotion pans a 9:16 window over it (rafters first, then a slow tilt down onto the moonlit shoji
     # and the tatami), so the move is smooth at 30 fps without rendering a moving Blender camera
     "rafters": dict(n=1, keys=[(1, (-2.0, 3.2, 1.0), (-4.2, 6.0, 1.0), 15)], focus=(-4.0, 5.8, 2.4), fstop=5.6, ar=8 / 3),
+    # Part B close-up: lens a hand above the tatami, looking along the floor past his folded feet toward the lantern;
+    # the feet are drawn in Remotion at (-0.25, 0.2, 0) in sharp focus, the lantern glows out of focus behind
+    "anklecu": dict(n=1, keys=[(1, (-0.3, -0.85, 0.2), (0.6, 3.0, 0.12), 24)], focus=(-0.25, 0.2, 0.06), fstop=1.8),
 }
 SHOT = arg("--shot", "chartest")
 W, D0, D1, H = 4.2, -5.0, 6.0, 2.7  # room half-width, front/back wall y, ceiling height
