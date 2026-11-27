@@ -1,2 +1,24 @@
 references/frames/
 references/sheets/
+node_modules/
+out/
+.remotion/
+public/bridge/kenney/*.glb
+voice/_tts/
+templates/audio/_cache/
+public/bridge/mix.wav
+__pycache__/
+.venv-bpy/
+public/assets/
+public/vasa/*.wav
+public/vasa/*.mp3
+public/emu/*.wav
+public/napoleon/*.wav
+public/pigwar/*.wav
+public/celeste/*.wav
+public/cooper/*.wav
+public/medusa/*.wav
+public/medusa/art/
+public/medusa/art3/
+# spider woman plates and preview mix: shipped as tars in project files (shorts/jorogumo/assets/), not in git
+public/jorogumo/

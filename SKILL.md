@@ -22,7 +22,7 @@ User rules that apply:
 - Voice: one steady tone.
 - Jokes are researched real facts.
 - Standard mix: music +3 dB, SFX -6 dB, voice unchanged.
-- Final export 2K vertical: 1440x2560, `--scale 1.3333`.
+- Final export 2K vertical: 1440x2560 (scale exactly 4/3; `--scale 1.3333` gives 2559.94 px and Remotion refuses it).
 - Opus max verifies every check.
 - Save after every step.
 - "Just do it" once the script is approved.
@@ -74,7 +74,7 @@ User rules that apply:
    - Make side-by-sides against the user's local reference frames (git-ignored `references/frames/`) with `python scripts/sbs_sheet.py out.jpg --ours ... --ref ...`.
    - Send them to an Opus max verifier: 1-3 images, a ≤200-word verdict.
 10. **Final render.**
-    - `npx remotion render src/index.ts <Comp> out/<name>/video.mp4 --codec h264 --crf 16 --scale 1.3333`
+    - `node templates/scripts/bridge-render.mjs out/<name>/video.mp4 <Comp>` (h264, CRF 16, scale 4/3 = 1440x2560).
     - Mux with `-map 0:v:0 -map 1:a:0` (Remotion writes a silent audio track).
     - QA: `python scripts/short_qa.py final.mp4 out/<name>/qa shots.json` checks every frame for black, white, frozen and pop frames, plus loudness and sheets.
     - Fix anything it finds, then run a deep Opus audit.

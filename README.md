@@ -12,7 +12,8 @@ Proven on **The Bridge That Fell for a Song**, a 67 s short about the 1831 Broug
 | `SKILL.md` | The skill: the full pipeline, every rule, every fix, and the final look values |
 | `templates/bridge/` | The full source of the bridge short: world, characters, ink, lens blur, grade, story/camera |
 | `templates/audio/` | The synthesized sound: SFX, march music, the mix with ducking and loudness |
-| `templates/scripts/` | Stills, side-by-side sheets, shot merge and frame-by-frame QA helpers |
+| `templates/scripts/` | Stills, final render, side-by-side sheets, shot merge and frame-by-frame QA helpers |
+| `src/`, `package.json` | Remotion project that renders the bridge short straight from this repo |
 | `references/STYLE_BIBLE.md` | The script and visual formula measured from 20 reference shorts |
 | `references/reports/` | Seven measured reports: motion, depth, textures, characters, lighting, outlines, grade |
 
@@ -22,6 +23,24 @@ Proven on **The Bridge That Fell for a Song**, a 67 s short about the 1831 Broug
 3. In Claude Code, say: *"Use the cartoon short skill and make a short about …"*.
 
 Claude then follows `SKILL.md`: topic and facts, then script, then voice, then the shot plan in `story.ts`, then stills, then renders. Agents check your frames against the reports (and against your own reference frames, if you add some), and you get the final 2K render and sound mix.
+
+## Render the bridge short from a fresh clone
+This repo is also a runnable Remotion project for the bridge short (`src/Root.tsx` registers `BridgeShort` from `templates/bridge/`).
+
+```bash
+npm install
+npm run voice    # placeholder narration (Festival TTS) -> out/bridge/voice/voice.wav + words.json
+npm run audio    # SFX + march + mix -> out/bridge/audio/, copies mix.wav to public/bridge/mix.wav
+npm run render   # -> out/bridge/video.mp4, 1440x2560, 30 fps, 67.5 s
+```
+
+- **Voice:** `npm run voice` needs `festival` and `festvox-us-slt-hts` (Linux: `apt install festival festvox-us-slt-hts`). It is a robotic stand-in. For a real release, put your own `voice.wav` (48 kHz) and `words.json` (`[{"w","s","e"}]`, seconds, timed to the picture) in `out/bridge/voice/` and skip that step.
+- **Audio** needs Python 3 with `numpy` and `scipy`, plus `ffmpeg`.
+- **3D props (optional):** the town uses a few [Kenney](https://kenney.nl) CC0 models (lantern, cart, market stalls, banners, windmill, canoe). Put the `.glb` files in `public/bridge/kenney/` (names in `templates/bridge/world.ts`). Without them the short still renders; those props are simply left out.
+- **GPU:** with a GPU the default `REMOTION_GL=angle` is fast. On a Linux box without one, use `REMOTION_GL=swangle` and point `BROWSER_EXECUTABLE` at a Chrome or chrome-headless-shell; expect about 11 s per 1440x2560 frame (about 6 hours for the full short on 4 cores).
+
+## Free asset library (CC0)
+`python3 tools/fetch-assets.py` downloads 15 Poly Haven props (barrels, crates, lantern, ladder, spinning wheel, shield, fire pit...) and 9 ambientCG textures (planks, paving, bricks, roof tiles, thatch, ground, grass, rock, fabric) at 1k into `public/assets/` (about 87 MB, git-ignored), with `public/assets/manifest.json`. Load a model into the bridge kit and `kitClone()` gives it the two-tone toon shading; the InkPass outlines it like everything else. Check them all in one still: `node tools/asset-still.mjs out/assets.jpg AssetToon` (or `AssetRaw` for the untouched PBR look).
 
 ## Notes
 - Set `REMOTION_TMP` to a folder on a big drive. Every Remotion bundle copies `public/` (~1.3 GB) into the temp folder.
