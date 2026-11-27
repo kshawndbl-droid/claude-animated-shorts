@@ -1,0 +1,341 @@
+# 3D sets for "Jorogumo: The Spider Woman" (Japanese legend), same look as the Tsavo Short: real lit Blender sets (EEVEE),
+# NO characters; the flat 2D cast is drawn in Remotion on top through the same camera (cam.json per frame).
+# Set: an abandoned house at night. Worn tatami, old dark posts and beams, shoji screens glowing with moonlight
+# (some panes torn), faded fusuma doors, a paper floor lantern (andon), a cushion, and cobwebs in the corners.
+# usage: .venv-bpy/bin/python tools/blender/jorogumo_house.py -- --shot chartest --out out/jorogumo/sets/chartest/ [--res 720]
+import json
+import math
+import os
+import random
+import sys
+
+import bpy
+
+sys.path.insert(0, os.path.dirname(__file__))
+import test_scene as ts  # noqa: E402
+
+arg = ts.arg
+rnd = random.Random(1603)
+
+SHOTS = {
+    # character test plate: still camera, low at the room's front edge, looking at the shoji wall; walks cross the frame
+    "chartest": dict(n=1, keys=[(1, (0.2, -3.4, 1.55), (0.0, 6.0, 0.55), 24)], focus=(0.0, 0.6, 0.8), fstop=5.6),
+}
+SHOT = arg("--shot", "chartest")
+W, D0, D1, H = 4.2, -5.0, 6.0, 2.7  # room half-width, front/back wall y, ceiling height
+
+
+def wood_mat(name, a, b, stretch=18.0, rough=0.75):
+    m, nd, ln, bs = ts.new_mat(name)
+    tc = nd.new("ShaderNodeTexCoord")
+    mp = nd.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1.0, 1.0, stretch)
+    ln.new(tc.outputs["Object"], mp.inputs[0])
+    no = nd.new("ShaderNodeTexNoise")
+    no.inputs["Scale"].default_value = 6.0
+    no.inputs["Detail"].default_value = 8.0
+    ln.new(mp.outputs[0], no.inputs["Vector"])
+    ramp = nd.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].color = (*a, 1)
+    ramp.color_ramp.elements[1].color = (*b, 1)
+    ln.new(no.outputs["Fac"], ramp.inputs[0])
+    ln.new(ramp.outputs[0], bs.inputs["Base Color"])
+    bs.inputs["Roughness"].default_value = rough
+    return m
+
+
+def stain_mat(name, base, dark, scale=3.0, rough=0.9, emit=None, emit_k=0.0):
+    """flat colour with blotchy age stains (plaster, paper, cloth)"""
+    m, nd, ln, bs = ts.new_mat(name)
+    no = nd.new("ShaderNodeTexNoise")
+    no.inputs["Scale"].default_value = scale
+    no.inputs["Detail"].default_value = 6.0
+    ramp = nd.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].position = 0.35
+    ramp.color_ramp.elements[0].color = (*dark, 1)
+    ramp.color_ramp.elements[1].position = 0.7
+    ramp.color_ramp.elements[1].color = (*base, 1)
+    ln.new(no.outputs["Fac"], ramp.inputs[0])
+    ln.new(ramp.outputs[0], bs.inputs["Base Color"])
+    bs.inputs["Roughness"].default_value = rough
+    if emit:
+        bs.inputs["Emission Color"].default_value = (*emit, 1)
+        mm = nd.new("ShaderNodeMath")
+        mm.operation = "MULTIPLY"
+        mm.inputs[1].default_value = emit_k
+        ln.new(no.outputs["Fac"], mm.inputs[0])
+        ln.new(mm.outputs[0], bs.inputs["Emission Strength"])
+    return m
+
+
+def tatami_mat():
+    m, nd, ln, bs = ts.new_mat("tatami")
+    tc = nd.new("ShaderNodeTexCoord")
+    wv = nd.new("ShaderNodeTexWave")
+    wv.inputs["Scale"].default_value = 70.0
+    wv.inputs["Distortion"].default_value = 1.5
+    ln.new(tc.outputs["Object"], wv.inputs["Vector"])
+    no = nd.new("ShaderNodeTexNoise")
+    no.inputs["Scale"].default_value = 2.5
+    mixc = nd.new("ShaderNodeMix")
+    mixc.data_type = "RGBA"
+    mixc.inputs[6].default_value = (0.5, 0.42, 0.24, 1)
+    mixc.inputs[7].default_value = (0.66, 0.57, 0.34, 1)
+    ln.new(wv.outputs["Fac"], mixc.inputs[0])
+    dk = nd.new("ShaderNodeMix")
+    dk.data_type = "RGBA"
+    dk.blend_type = "MULTIPLY"
+    dk.inputs[0].default_value = 0.6
+    ln.new(mixc.outputs[2], dk.inputs[6])
+    rm = nd.new("ShaderNodeValToRGB")
+    rm.color_ramp.elements[0].color = (0.45, 0.4, 0.32, 1)
+    rm.color_ramp.elements[1].color = (1, 1, 1, 1)
+    ln.new(no.outputs["Fac"], rm.inputs[0])
+    ln.new(rm.outputs[0], dk.inputs[7])
+    ln.new(dk.outputs[2], bs.inputs["Base Color"])
+    bs.inputs["Roughness"].default_value = 0.85
+    return m
+
+
+def box(name, loc, size, m, rot=0.0, bevel=0.0):
+    bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
+    o = bpy.context.object
+    o.name = name
+    o.scale = size
+    o.rotation_euler[2] = rot
+    if bevel:
+        bv = o.modifiers.new("bv", "BEVEL")
+        bv.width, bv.segments = bevel, 2
+    o.data.materials.append(m)
+    return o
+
+
+def plane(name, loc, size, rot, m):
+    bpy.ops.mesh.primitive_plane_add(size=1, location=loc, rotation=rot)
+    o = bpy.context.object
+    o.name = name
+    o.scale = (size[0], size[1], 1)
+    o.data.materials.append(m)
+    return o
+
+
+def curve(name, pts, m, r=0.0025):
+    cu = bpy.data.curves.new(name, "CURVE")
+    cu.dimensions = "3D"
+    cu.bevel_depth = r
+    sp = cu.splines.new("POLY")
+    sp.points.add(len(pts) - 1)
+    for p, q in zip(sp.points, pts):
+        p.co = (*q, 1)
+    o = ts.link(bpy.data.objects.new(name, cu))
+    o.data.materials.append(m)
+    return o
+
+
+def tatami(m, edge):
+    """worn mats laid in staggered rows (each row offset half a mat); black cloth borders along the long sides"""
+    row, y = 0, D0
+    while y < D1 - 0.05:
+        d = min(0.9, D1 - y)
+        x = -W - (0.9 if row % 2 else 0.0)
+        while x < W - 0.05:
+            x0, x1 = max(x, -W), min(x + 1.8, W)
+            if x1 - x0 > 0.05:
+                cx, cy, w = (x0 + x1) / 2, y + d / 2, x1 - x0
+                o = box(f"mat{row}_{x:.1f}", (cx, cy, 0.025), (w - 0.012, d - 0.012, 0.05), m, bevel=0.01)
+                o.color = (rnd.uniform(0.8, 1.0),) * 3 + (1,)
+                for sgn in (-1, 1):
+                    box("edge", (cx, cy + sgn * (d / 2 - 0.025), 0.03), (w - 0.012, 0.045, 0.052), edge)
+            x += 1.8
+        y += 0.9
+        row += 1
+    box("subfloor", (0, (D0 + D1) / 2, -0.01), (2 * W, D1 - D0, 0.02), edge)
+
+
+def shoji(x0, x1, y, wood, paper, torn):
+    """sliding paper screens: a wooden lattice over moonlit paper, some panes torn out"""
+    hgt, cols, rows = 1.9, 4, 7
+    n = int(round((x1 - x0) / 0.95))
+    pw = (x1 - x0) / n
+    for i in range(n):
+        cx = x0 + pw * (i + 0.5)
+        yy = y - (0.03 if i % 2 else 0.0)
+        for s in (-1, 1):
+            box("stile", (cx + s * (pw / 2 - 0.025), yy, hgt / 2), (0.05, 0.035, hgt), wood)
+        for z in (0.03, hgt - 0.03):
+            box("rail", (cx, yy, z), (pw, 0.035, 0.06), wood)
+        for c in range(1, cols):
+            box("kumiko", (cx - pw / 2 + c * pw / cols, yy - 0.004, hgt / 2), (0.012, 0.02, hgt - 0.1), wood)
+        for r in range(1, rows):
+            box("kumiko", (cx, yy - 0.004, 0.06 + r * (hgt - 0.12) / rows), (pw - 0.06, 0.02, 0.012), wood)
+        for c in range(cols):
+            for r in range(rows):
+                if (i, c, r) in torn:
+                    continue
+                plane("pane", (cx - pw / 2 + 0.025 + (c + 0.5) * (pw - 0.05) / cols, yy + 0.012, 0.06 + (r + 0.5) * (hgt - 0.12) / rows),
+                      ((pw - 0.05) / cols, (hgt - 0.12) / rows), (math.radians(90), 0, 0), paper)
+    box("lintel", ((x0 + x1) / 2, y, hgt + 0.05), (x1 - x0, 0.1, 0.1), wood)
+
+
+def andon(loc, wood, glow):
+    x, y = loc
+    for dx in (-0.14, 0.14):
+        for dy in (-0.14, 0.14):
+            box("leg", (x + dx, y + dy, 0.33), (0.03, 0.03, 0.66), wood)
+    pa = box("paper", (x, y, 0.42), (0.26, 0.26, 0.4), glow)
+    pa.visible_shadow = False
+    for z in (0.2, 0.63):
+        box("ring", (x, y, z), (0.31, 0.31, 0.03), wood)
+    box("base", (x, y, 0.06), (0.32, 0.32, 0.03), wood)
+    li = bpy.data.lights.new("lamp", "POINT")
+    li.energy, li.color, li.shadow_soft_size = 45, (1.0, 0.5, 0.2), 0.1
+    o = ts.link(bpy.data.objects.new("lamp", li))
+    o.location = (x, y, 0.42)
+
+
+def cobweb(corner, out1, out2, m, n_rad=7, n_ring=6):
+    """a sagging corner web between two edges meeting at `corner`"""
+    import mathutils as mu
+    c, a, b = mu.Vector(corner), mu.Vector(out1), mu.Vector(out2)
+    spokes = []
+    for k in range(n_rad):
+        t = k / (n_rad - 1)
+        e = a.lerp(b, t)
+        e = c + (e - c) * rnd.uniform(0.75, 1.0)
+        spokes.append(e)
+        curve("spoke", [tuple(c), tuple(c.lerp(e, 0.5) + mu.Vector((0, 0, -0.03))), tuple(e)], m)
+    for r in range(1, n_ring + 1):
+        f = r / (n_ring + 0.6)
+        pts = []
+        for k in range(n_rad):
+            p = c.lerp(spokes[k], f)
+            pts.append(tuple(p))
+            if k < n_rad - 1:
+                q = c.lerp(spokes[k + 1], f)
+                mid = p.lerp(q, 0.5) - (p.lerp(q, 0.5) - c) * 0.12 + mu.Vector((0, 0, -0.02 * f))
+                pts.append(tuple(mid))
+        curve("ring", pts, m, r=0.0016)
+
+
+def build():
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    sc = bpy.context.scene
+    sc.render.fps = 30
+    wo = bpy.data.worlds.new("night")
+    wo.use_nodes = True
+    wo.node_tree.nodes["Background"].inputs[0].default_value = (0.004, 0.006, 0.014, 1)
+    wo.node_tree.nodes["Background"].inputs[1].default_value = 1.0
+    vol = wo.node_tree.nodes.new("ShaderNodeVolumePrincipled")
+    vol.inputs["Density"].default_value = 0.008
+    vol.inputs["Anisotropy"].default_value = 0.35
+    vol.inputs["Color"].default_value = (0.7, 0.75, 0.9, 1)
+    wo.node_tree.links.new(vol.outputs[0], wo.node_tree.nodes["World Output"].inputs["Volume"])
+    sc.world = wo
+
+    wood = wood_mat("oldwood", (0.06, 0.035, 0.022), (0.17, 0.1, 0.06))
+    beam = wood_mat("beam", (0.04, 0.025, 0.018), (0.12, 0.075, 0.045))
+    tatami(tatami_mat(), ts.flat_mat("cloth", (0.03, 0.03, 0.035), rough=0.9))
+    # moonlit paper with water stains; the moon is behind it
+    paper = stain_mat("paper", (0.78, 0.8, 0.86), (0.5, 0.48, 0.42), scale=4.0, rough=0.9, emit=(0.6, 0.7, 1.0), emit_k=0.55)
+    torn = {(0, 1, 2), (0, 2, 2), (0, 1, 3), (1, 3, 5), (2, 0, 1), (2, 1, 1), (3, 2, 4), (3, 2, 5), (3, 3, 5), (4, 0, 6)}
+    shoji(-W, W, D1, wood, paper, torn)
+    plaster = stain_mat("plaster", (0.22, 0.19, 0.15), (0.08, 0.07, 0.06), scale=2.0)
+    box("ranma", (0, D1 + 0.02, (1.95 + H) / 2 + 0.05), (2 * W, 0.06, H - 1.95), plaster)
+    # outside: a dark moonlit garden wall far behind the torn panes
+    box("outside", (0, D1 + 3.0, 1.5), (14, 0.1, 5), stain_mat("garden", (0.05, 0.07, 0.12), (0.02, 0.03, 0.05), emit=(0.25, 0.32, 0.5), emit_k=0.5))
+    # left wall: stained plaster over a plank wainscot; right wall: faded fusuma doors, one left ajar on darkness
+    box("lwall", (-W - 0.05, (D0 + D1) / 2, H / 2), (0.1, D1 - D0, H), plaster)
+    for i in range(18):
+        box("plank", (-W + 0.01, D0 + 0.03 + i * (D1 - D0) / 18 + 0.3, 0.45), (0.03, (D1 - D0) / 18 - 0.01, 0.9), wood)
+    fus = stain_mat("fusuma", (0.42, 0.37, 0.27), (0.2, 0.17, 0.12), scale=3.0)
+    for i, y in enumerate([0.0, 1.0, 2.6, 3.6, 4.6]):
+        box("fusuma", (W - 0.02, y + 0.5, 0.95), (0.04, 0.96, 1.9), fus)
+        box("frame", (W - 0.045, y + 0.5, 0.95), (0.02, 1.0, 1.94), beam)
+    box("dark", (W + 0.4, 2.1, 0.95), (0.05, 0.9, 1.9), ts.flat_mat("void", (0.0, 0.0, 0.0), rough=1.0))
+    box("rwall", (W + 0.05, (D0 + D1) / 2, H / 2), (0.1, D1 - D0, H), plaster).hide_render = False
+    # posts, beams and a plank ceiling
+    for (x, y) in [(-W + 0.07, D1 - 0.06), (W - 0.07, D1 - 0.06), (-W + 0.07, 0.0), (W - 0.07, -0.05), (-W + 0.07, -4.0), (W - 0.07, -4.0)]:
+        box("post", (x, y, H / 2), (0.15, 0.15, H), beam, bevel=0.01)
+    for y in [D1 - 0.06, 2.0, -2.0]:
+        box("beamx", (0, y, H - 0.08), (2 * W, 0.16, 0.18), beam)
+    box("beamy", (0, (D0 + D1) / 2, H - 0.22), (0.2, D1 - D0, 0.2), beam)
+    for i in range(22):
+        box("ceil", (-W + (i + 0.5) * 2 * W / 22, (D0 + D1) / 2, H + 0.02), (2 * W / 22 - 0.01, D1 - D0, 0.03), wood)
+    # the lantern she plays by, her cushion, and a fallen roof tile (the house is abandoned)
+    andon((1.5, 2.6), beam, ts.flat_mat("andon", (1.0, 0.5, 0.2), emit=1.6))
+    box("zabuton", (0.75, 2.9, 0.05), (0.55, 0.6, 0.08), stain_mat("cushion", (0.32, 0.06, 0.07), (0.15, 0.03, 0.04)), rot=0.15, bevel=0.03)
+    box("tile", (-2.2, 1.2, 0.03), (0.28, 0.22, 0.03), ts.flat_mat("tile", (0.12, 0.12, 0.13)), rot=0.6)
+    web = ts.flat_mat("web", (0.75, 0.76, 0.8), rough=0.5, emit=0.25)
+    cobweb((-W + 0.12, D1 - 0.12, H - 0.18), (-W + 0.12, D1 - 0.12, H - 1.0), (-W + 0.9, D1 - 0.12, H - 0.18), web)
+    cobweb((W - 0.12, D1 - 0.12, H - 0.18), (W - 0.12, D1 - 0.12, H - 0.8), (W - 0.12, D1 - 0.9, H - 0.18), web)
+    cobweb((-W + 0.1, 2.0 - 0.1, H - 0.17), (-W + 0.1, 1.2, H - 0.17), (-W + 0.1, 1.9, H - 0.9), web)
+    # light: moon behind the screens, the lantern, and a faint cold fill
+    mo = bpy.data.lights.new("moon", "AREA")
+    mo.shape, mo.size, mo.size_y = "RECTANGLE", 8.0, 2.5
+    mo.energy, mo.color = 900, (0.55, 0.65, 1.0)
+    o = ts.link(bpy.data.objects.new("moon", mo))
+    o.location, o.rotation_euler = (0.0, D1 + 1.2, 1.4), (math.radians(-90), 0, 0)
+    fl = bpy.data.lights.new("fill", "AREA")
+    fl.size, fl.energy, fl.color = 4.0, 500, (0.45, 0.55, 0.9)
+    o = ts.link(bpy.data.objects.new("fill", fl))
+    o.location, o.rotation_euler = (0.0, -3.0, H - 0.1), (math.radians(30), 0, 0)
+    sc.render.engine = "BLENDER_EEVEE"
+    ee = sc.eevee
+    ee.taa_render_samples = int(arg("--samples", "16"))
+    if hasattr(ee, "use_raytracing"):
+        ee.use_raytracing = False
+    if hasattr(ee, "volumetric_tile_size"):
+        ee.volumetric_tile_size = "4"
+    sc.view_settings.view_transform = "AgX"
+    sc.view_settings.look = "AgX - High Contrast"
+    sc.view_settings.exposure = float(arg("--exposure", "1.1"))
+    sc.render.image_settings.file_format = "PNG"
+    return sc
+
+
+def shot_camera(sc, name):
+    S = SHOTS[name]
+    c = ts.link(bpy.data.objects.new("cam", bpy.data.cameras.new("cam")))
+    c.data.sensor_width, c.data.clip_start, c.data.clip_end = 36, 0.05, 200
+    c.data.dof.use_dof = True
+    c.data.dof.aperture_fstop = S["fstop"]
+    foc = ts.link(bpy.data.objects.new("focus", None))
+    foc.location = S["focus"]
+    c.data.dof.focus_object = foc
+    aim = ts.link(bpy.data.objects.new("aim", None))
+    tc = c.constraints.new("TRACK_TO")
+    tc.target, tc.track_axis, tc.up_axis = aim, "TRACK_NEGATIVE_Z", "UP_Y"
+    for f, loc, look, lens in S["keys"]:
+        c.location = loc
+        c.keyframe_insert("location", frame=f)
+        aim.location = look
+        aim.keyframe_insert("location", frame=f)
+        c.data.lens = lens
+        c.data.keyframe_insert("lens", frame=f)
+    sc.camera = c
+    sc.frame_start, sc.frame_end = 1, S["n"]
+    return c
+
+
+if __name__ == "__main__":
+    sc = build()
+    cam = shot_camera(sc, SHOT)
+    res = int(arg("--res", "720"))
+    sc.render.resolution_x, sc.render.resolution_y = res, int(res * 16 / 9)
+    out = os.path.abspath(arg("--out", f"out/jorogumo/sets/{SHOT}/"))
+    os.makedirs(out, exist_ok=True)
+    n = SHOTS[SHOT]["n"]
+    cams = {}
+    for f in range(1, n + 1):
+        sc.frame_set(f)
+        cams[f] = {"m": [list(r) for r in cam.matrix_world], "lens": cam.data.lens, "sensor": 36}
+    json.dump({"shot": SHOT, "frames": cams}, open(os.path.join(out, "cam.json"), "w"))
+    import time
+    a, b = (int(x) for x in arg("--range", f"1-{n}").split("-"))
+    for f in range(a, b + 1, int(arg("--step", "1"))):
+        p = os.path.join(out, f"f_{f:04d}.png")
+        t0 = time.time()
+        sc.frame_set(f)
+        sc.render.filepath = p
+        bpy.ops.render.render(write_still=True)
+        print("frame", f, round(time.time() - t0, 1), "s", flush=True)
