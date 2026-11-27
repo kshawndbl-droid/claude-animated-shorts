@@ -90,7 +90,7 @@ export const HPartC: React.FC = () => {
     const s = walked(T) - TOTAL, x = LG.x + s * LG.dir[0], y = LG.y + s * LG.dir[1];
     const cam = cam1 as CamJ, A = project(cam, [x, y, 0.03]), B = project(cam, [x + 0.3 * LG.dir[0], y + 0.3 * LG.dir[1], 0.03]);
     const Lp = project(cam, [LG.x + 0.12 * LG.dir[0], LG.y + 0.12 * LG.dir[1], 0.5]);
-    const z = 1.35 + 0.05 * sm((T - PC_T0) / (CUT2 - PC_T0)); // a slow creep in
+    const z = 1.35 + 0.12 * clamp01((T - PC_T0) / (CUT2 - PC_T0)); // a slow, constant creep in
     const sx = Lp.x, sy = Lp.y;
     const smoke = T > OUT_T ? (T - OUT_T) : -1;
     body = (
@@ -122,7 +122,7 @@ export const HPartC: React.FC = () => {
     // frame him a touch wider and left of centre (he faces left): the empty black behind him fills the right
     const K = 0.74, H = { x: flip ? 430 : 650, y: 880, ppm: H0.ppm * K };
     const A = { x: H.x + (A0.x - H0.x) * K, y: H.y + (A0.y - H0.y) * K, ppm: A0.ppm * K };
-    const k = sm((T - CUT2) / (CUT3 - CUT2)), z = 1.04 + 0.1 * k;
+    const k = clamp01((T - CUT2) / (CUT3 - CUT2)), z = 1.04 + 0.16 * k;
     const tremble = 0.35 * Math.sin(T * 23) * Math.sin(T * 3.1);
     const nape = { x: H.x + (flip ? 1 : -1) * 0.2 * H.ppm, y: H.y + 0.12 * H.ppm };
     const back = flip ? 1 : -1;
@@ -153,7 +153,7 @@ export const HPartC: React.FC = () => {
     const b = T >= CUT3B;
     const flip = b ? !away : away;
     const turn = b ? mix(0.8, 1.0, sm((T - CUT3B) / 0.9)) : mix(1.0, 0.8, sm((T - 33.05) / 0.5));
-    const z = b ? 1.85 + 0.5 * sm((T - CUT3B) / (PC_T1 - CUT3B)) : 1.0 + 0.04 * sm((T - CUT3) / (CUT3B - CUT3));
+    const z = b ? 1.85 + 0.6 * clamp01((T - CUT3B) / (PC_T1 - CUT3B)) : 1.0 + 0.04 * sm((T - CUT3) / (CUT3B - CUT3));
     const fx = b ? H.x + (flip ? -1 : 1) * 0.05 * H.ppm : A.x, fy = b ? H.y : 960;
     const tStill = b ? 33.6 + 0.35 * sm((T - CUT3B) / 1.2) : 32.5 + (T - CUT3) * 0.3;
     const look = b ? 0.35 : mix(0.2, -1.0, sm((T - 32.85) / 0.35));
