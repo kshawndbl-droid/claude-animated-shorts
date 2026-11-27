@@ -30,10 +30,10 @@ import { HPreview, PREVIEW_FRAMES } from "../../templates/hidebehind/Preview";
 import { CreatureSheet } from "../../templates/hidebehind/CreatureSheet";
 import { HScareTest, SCARE_FRAMES } from "../../templates/hidebehind/ScareTest";
 import { FaceTest } from "../../templates/hidebehind/FaceTest";
-import { HPartD, PARTD_FRAMES } from "../../templates/hidebehind/PartD";
-import { HFull, FULL_FRAMES } from "../../templates/hidebehind/Full";
+import { HPartD, PARTD_FRAMES as H_PARTD_FRAMES } from "../../templates/hidebehind/PartD";
+import { HFull, FULL_FRAMES as H_FULL_FRAMES } from "../../templates/hidebehind/Full";
 import { HPartA, PART_A_FRAMES } from "../../templates/hidebehind/PartA";
-import { HPartC, PARTC_FRAMES } from "../../templates/hidebehind/PartC";
+import { HPartC, PARTC_FRAMES as H_PARTC_FRAMES } from "../../templates/hidebehind/PartC";
 import { PartC, PARTC_FRAMES } from "../../templates/tsavo3d/PartC";
 import { ShortB, B_FRAMES } from "../../templates/mailed/ShortB";
 
@@ -59,11 +59,11 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="HCreature" component={CreatureSheet} durationInFrames={1} fps={30} width={1080} height={1920} />
     <Composition id="HScareTest" component={HScareTest} durationInFrames={SCARE_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="HFace" component={FaceTest} durationInFrames={1} fps={30} width={1080} height={1920} />
-    <Composition id="HFull" component={HFull} durationInFrames={FULL_FRAMES} fps={30} width={1080} height={1920} />
-    <Composition id="HPartD" component={HPartD} durationInFrames={PARTD_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="HFull" component={HFull} durationInFrames={H_FULL_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="HPartD" component={HPartD} durationInFrames={H_PARTD_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="HPartA" component={HPartA} durationInFrames={PART_A_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="HPartB" component={HPreview} durationInFrames={PREVIEW_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: false, clean: true }} />
-    <Composition id="HPartC" component={HPartC} durationInFrames={PARTC_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="HPartC" component={HPartC} durationInFrames={H_PARTC_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="HWalkTest" component={HWalkTest} durationInFrames={H_WALK_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="HStandTest" component={HStandTest} durationInFrames={H_STAND_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="JWalkTest" component={JWalkTest} durationInFrames={J_WALK_FRAMES} fps={30} width={1080} height={1920} />
