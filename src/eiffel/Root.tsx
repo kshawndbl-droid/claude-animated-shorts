@@ -13,6 +13,7 @@ import { EnvTest, EnvTest2, EnvTest3, ENVTEST_FRAMES } from "../../templates/tsa
 import { ToonWalkTest, ToonStandTest, TOON_WALK_FRAMES, TOON_STAND_FRAMES } from "../../templates/tsavo3d/ToonTest";
 import { JWalkTest, JStandTest, J_WALK_FRAMES, J_STAND_FRAMES } from "../../templates/jorogumo/CharTest";
 import { HWalkTest, HStandTest, H_WALK_FRAMES, H_STAND_FRAMES } from "../../templates/hidebehind/CharTest";
+import { JDWalkTest, JDStandTest, JD_WALK_FRAMES, JD_STAND_FRAMES } from "../../templates/jerseydevil/CharTest";
 import { HPreview, PREVIEW_FRAMES } from "../../templates/hidebehind/Preview";
 import { CreatureSheet } from "../../templates/hidebehind/CreatureSheet";
 import { HScareTest, SCARE_FRAMES } from "../../templates/hidebehind/ScareTest";
@@ -46,6 +47,8 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="HPartB" component={HPreview} durationInFrames={PREVIEW_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: false, clean: true }} />
     <Composition id="HWalkTest" component={HWalkTest} durationInFrames={H_WALK_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="HStandTest" component={HStandTest} durationInFrames={H_STAND_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="JDWalkTest" component={JDWalkTest} durationInFrames={JD_WALK_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="JDStandTest" component={JDStandTest} durationInFrames={JD_STAND_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="JWalkTest" component={JWalkTest} durationInFrames={J_WALK_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="JStandTest" component={JStandTest} durationInFrames={J_STAND_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="ToonStandTest" component={ToonStandTest} durationInFrames={TOON_STAND_FRAMES} fps={30} width={1080} height={1920} />
