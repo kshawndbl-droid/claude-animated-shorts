@@ -146,8 +146,8 @@ const S_Creep: React.FC<ShotP> = ({ T, a }) => {
     <AbsoluteFill>
       <Plate shot="creep" f={f} />
       <Svg>
-        {lion([-0.4, -1.4], [-1.0, 6.6], a - 1.0, "c2", 0.6, 1)}
-        {lion([1.6, -1.0], [1.0, 8.5], a - 1.4, "c1", 0.66, 0)}
+        {lion([0.0, 4.6], [-0.6, 10.0], a - 0.4, "c2", 0.6, 1)}
+        {lion([1.4, 3.2], [0.8, 9.5], a - 0.7, "c1", 0.66, 0)}
       </Svg>
     </AbsoluteFill>
   );
