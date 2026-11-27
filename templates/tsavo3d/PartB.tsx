@@ -157,7 +157,7 @@ const S_Leap: React.FC<ShotP> = ({ T, a }) => {
 // the branches (the fence fg pass stays over it).
 const S_Crawl: React.FC<ShotP> = ({ T, a }) => {
   const t = T - a, f = plateFrame(t, 60), cam = camCrawl as CamJ;
-  const from: [number, number] = [-14.05, 2.41], to: [number, number] = [-12.25, 3.67];
+  const from: [number, number] = [-14.7, 1.95], to: [number, number] = [-13.1, 3.05];
   const k = sm((t - 0.15) / 1.8), g: [number, number] = [mixc(from[0], to[0], k), mixc(from[1], to[1], k)];
   const L = project(cam, f, [g[0], g[1], 0]);
   const dir = project(cam, f, [to[0], to[1], 0]).x > project(cam, f, [from[0], from[1], 0]).x;
