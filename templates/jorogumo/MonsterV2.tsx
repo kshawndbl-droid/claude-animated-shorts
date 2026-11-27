@@ -110,7 +110,6 @@ const Hair: React.FC<{ cx: number; cy: number; s: number; floor: number }> = ({ 
     threads.push(`M${P(x0, y0)} Q${P(x0 + side * 20, (y0 + y1) / 2)} ${P(x1, y1)}`);
   }
   return <g>
-    <path d={threads.join(" ")} stroke="#d8d4e4" strokeOpacity={0.55} strokeWidth={1.8} fill="none" />
     <path d={`M${P(0, -150)} Q${P(-150, -150)} ${P(-140, 20)} Q${P(-150, 150)} ${P(-96, 236)} L${P(-60, 210)} Q${P(-96, 120)} ${P(-104, 0)} Q${P(-100, -110)} ${P(0, -128)}
       Q${P(100, -110)} ${P(104, 0)} Q${P(96, 120)} ${P(60, 210)} L${P(96, 236)} Q${P(150, 150)} ${P(140, 20)} Q${P(150, -150)} ${P(0, -150)} Z`} fill="#0e0a10" stroke={INK} strokeWidth={5 * s} />
     {[-1, 1].map((sd) => <path key={sd} d={`M${P(sd * 20, -140)} Q${P(sd * 120, -120)} ${P(sd * 124, 40)}`} stroke="#ffffff" strokeOpacity={0.12} strokeWidth={4} fill="none" />)}
