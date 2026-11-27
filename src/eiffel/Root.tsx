@@ -23,6 +23,7 @@ import { JFull, J_FULL_FRAMES } from "../../templates/jorogumo/Full";
 import { ShortB, B_FRAMES } from "../../templates/mailed/ShortB";
 import { AhzCreatureSheet } from "../../templates/ahuizotl/CreatureSheet";
 import { AhzWalkTest, AhzStandTest, AHZ_WALK_FRAMES, AHZ_STAND_FRAMES } from "../../templates/ahuizotl/CharTest";
+import { AhzStylePreview, AHZ_PREVIEW_FRAMES } from "../../templates/ahuizotl/StylePreview";
 
 export const EiffelRoot: React.FC = () => (
   <>
@@ -58,5 +59,6 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="AhzCreatureV1" component={AhzCreatureSheet} durationInFrames={1} fps={30} width={1080} height={1920} />
     <Composition id="AhzWalkTest" component={AhzWalkTest} durationInFrames={AHZ_WALK_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="AhzStandTest" component={AhzStandTest} durationInFrames={AHZ_STAND_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="AhzStylePreview" component={AhzStylePreview} durationInFrames={AHZ_PREVIEW_FRAMES} fps={30} width={1080} height={1920} />
   </>
 );

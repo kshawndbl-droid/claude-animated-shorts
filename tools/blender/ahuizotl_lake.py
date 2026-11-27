@@ -27,6 +27,23 @@ SHOTS = {
     # bank (y = 0) 2.1 m in front of the lens; the reeds stand in the shallows behind it, densest on the right where he
     # stops at the water's edge. Wide (2400 px) so the walk test can pan with him.
     "chartest": dict(loc=(0.5, -2.1, 0.95), look=(0.5, 6.6, -0.43), lens=28, focus=(0.5, 0.1, 0.9), fstop=4.0),
+    # style-preview shots (templates/ahuizotl/StylePreview.tsx): portrait 9:16 plates rendered at 1.25x (1350x2400) with
+    # a FIXED field of view ("fixed": the sensor maps to the frame height whatever the resolution), so a 2D push-in of up
+    # to 1.25x never upscales the plate. He stands on the bank at (0.9, 0.25) facing +x; all cameras stay on the land
+    # side (he always faces screen right, toward the reeds). The small reed clumps at the water's edge right in front of
+    # him are left out of these plates ("noedge"): that clump is drawn in 2D in Remotion (it has to jerk and part).
+    # wide: from up the bank behind him, the bank, him, the edge and the dense reed bed out in the shallows
+    "wide": dict(loc=(0.2, -2.5, 1.55), look=(1.6, 1.4, 0.55), lens=30, focus=(0.9, 0.25, 1.0), fstop=5.6, fixed=True, noedge=True),
+    # ots: low behind his near shoulder, looking past him across the edge onto the dark reed bed
+    "ots": dict(loc=(0.6, -0.3, 1.5), look=(2.6, 1.7, 0.8), lens=28, focus=(2.4, 1.9, 0.9), fstop=4.0, fixed=True, noedge=True),
+    # med: full figure from the bank, a little to his front, the edge and the reeds behind him on the right
+    "med": dict(loc=(0.55, -1.75, 1.2), look=(1.25, 0.9, 0.82), lens=30, focus=(0.9, 0.25, 1.0), fstop=4.0, fixed=True, noedge=True),
+    # close: head and shoulders, the reeds soft behind
+    "close": dict(loc=(0.82, -0.75, 1.48), look=(1.2, 0.8, 1.38), lens=45, focus=(0.95, 0.25, 1.45), fstop=2.8, fixed=True, noedge=True),
+    # react: wider medium from the bank, a little to his left: room for his step back, the edge clump on the right
+    "react": dict(loc=(0.4, -1.9, 1.2), look=(0.95, 0.9, 0.85), lens=26, focus=(0.75, 0.25, 1.0), fstop=4.0, fixed=True, noedge=True),
+    # edge: low at the waterline, right at the edge clump in front of him (the gap where the eyes show)
+    "edge": dict(loc=(1.15, 0.15, 0.4), look=(1.85, 1.6, 0.0), lens=32, focus=(1.8, 1.45, 0.1), fstop=4.0, fixed=True, noedge=True),
 }
 SHOT = arg("--shot", "chartest")
 WATER_Z = -0.07
@@ -424,6 +441,8 @@ def build():
     stands = [(2.4, 1.6, 2), (3.2, 1.95, 0), (2.9, 2.7, 2), (3.9, 1.5, 1), (4.5, 2.4, 2), (5.3, 1.8, 0), (6.2, 2.5, 2), (7.2, 1.7, 1),
               (1.85, 1.35, 3), (1.55, 1.7, 3), (-1.2, 1.8, 1), (-2.0, 2.6, 0), (-3.4, 1.9, 2), (-4.3, 2.5, 0), (-5.2, 1.6, 1),
               (-6.2, 2.4, 2), (-0.4, 3.8, 3), (0.6, 5.5, 3)]
+    if SHOTS[SHOT].get("noedge"):
+        stands = [st for st in stands if not (1.4 < st[0] < 2.0 and st[1] < 1.8)]
     for x, y, k in stands:
         # no cast shadows from the near stands: the bank stays an even moonlit ground for the cast (their long striped
         # shadows toward the lens fought with the character's own shadow)
@@ -499,7 +518,7 @@ def shot_camera(sc, name, w, h):
     c = ts.link(bpy.data.objects.new("cam", bpy.data.cameras.new("cam")))
     # vertical sensor fit: the sensor's 36 mm map to the plate's height, so a 1920-tall plate keeps the same pixel focal
     # length as the 1080x1920 frame (CharTest's project() is 1920-based) and a wide plate just adds width
-    c.data.sensor_fit, c.data.sensor_height, c.data.sensor_width = "VERTICAL", 36 * h / 1920, 36
+    c.data.sensor_fit, c.data.sensor_height, c.data.sensor_width = "VERTICAL", 36 if S.get("fixed") else 36 * h / 1920, 36
     c.data.clip_start, c.data.clip_end = 0.05, 2000
     c.data.lens = S["lens"]
     c.data.dof.use_dof = True
@@ -522,7 +541,7 @@ if __name__ == "__main__":
     out = os.path.abspath(arg("--out", f"public/ahuizotl/{SHOT}/"))
     os.makedirs(out, exist_ok=True)
     bpy.context.view_layer.update()
-    json.dump({"shot": SHOT, "w": W, "h": H, "frames": {"1": {"m": [list(r) for r in cam.matrix_world], "lens": cam.data.lens, "sensor": 36 * H / 1920}}},
+    json.dump({"shot": SHOT, "w": W, "h": H, "frames": {"1": {"m": [list(r) for r in cam.matrix_world], "lens": cam.data.lens, "sensor": cam.data.sensor_height}}},
               open(os.path.join(out, "cam.json"), "w"))
     if arg("--save"):
         bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(arg("--save")))
