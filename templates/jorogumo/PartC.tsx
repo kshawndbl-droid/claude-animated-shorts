@@ -9,7 +9,7 @@
 import React from "react";
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
 import { INK } from "./kimono";
-import { Face, Hair, Leg, LEGS_L, mirror } from "./MonsterV2";
+import { Face, Hair, Leg, LEGS_L, MonsterBody, mirror } from "./MonsterV2";
 import { LADY, LAMP, Lit, SAMURAI, sm } from "./CharTest";
 
 const FPS = 30, OFF = 25.2, DUR = 8.7;
@@ -201,7 +201,7 @@ export const JPartC: React.FC = () => {
     const d = T - LUNGE;
     // REVEAL on the end of "legs.": hard cut to her calm human face; in 4 frames it transforms into the approved true
     // face (cracks race across, the eyes flood black, extra eyes open, the grin tears ear to ear) while it lunges
-    const morph = sm(clamp01((d - 1 / FPS) / (4 / FPS)));
+    const morph = sm(clamp01((d - 3 / FPS) / (5 / FPS)));
     const lunge = clamp01((d - 1 / FPS) / (5 / FPS));        // 5 frames from close to filling the screen
     const s = d < 0 ? 0 : lerp(2.4, 6.2, 1 - Math.pow(1 - lunge, 2)) + 1.0 * Math.max(0, d - 6 / FPS);
     const shake = d > 5 / FPS ? 26 * Math.exp(-(d - 5 / FPS) / 0.35) : 0;
@@ -210,27 +210,28 @@ export const JPartC: React.FC = () => {
     const flash = bump(T, SLASH + 0.08, BLACK - 0.02, 0.02) + 0.15 * Math.exp(-Math.max(0, d) / 0.05) * (d >= 0 ? 1 : 0);
     const cy = 840 + 20 * lunge;                          // face centre: eyes and grin both on screen when it fills
     const legs = [...LEGS_L.map((l, i) => ({ l, i })), ...LEGS_L.map((l, i) => ({ l: mirror(l), i: i + 4 }))];
-    const human = 1 - sm(clamp01((d - 1.5 / FPS) / (2 / FPS)));   // her face as we know it, then gone into the lunge
+    const human = 1 - sm(clamp01((d - 3 / FPS) / (2 / FPS)));
+    const legsK = sm(clamp01((d - 3 / FPS) / (7 / FPS)));               // legs burst out over ~7 frames
+    const rear = sm(clamp01((d - 0.3) / 0.7));                           // then she rears up toward him
+    const pull = sm(clamp01((d - 3 / FPS) / (9 / FPS)));                 // camera pulls back from her face to show all of her
+    const bodyS = lerp(2.3, 1.2, pull) + 0.6 * rear;   // her face as we know it, then gone into the lunge
     const ppmL = 1700 * (1 + 0.4 * lunge);
     const sl = d - (SLASH - LUNGE), cut = sl < 0 ? 0 : clamp01(sl / (3 / FPS));
     const L2 = Math.hypot(1280, 1080);
     content = <>
       <AbsoluteFill style={{ backgroundColor: "#050306" }} />
-      {human > 0.01 && <><CloseBg I={0.6} dx={200} /><svg width={1080} height={1920} style={{ position: "absolute", opacity: human }}>
+      <CloseBg I={0.6} dx={200} />{human > 0.01 && <><svg width={1080} height={1920} style={{ position: "absolute", opacity: human }}>
         <Lit id="ladyc" flick={0.8} x={540} y={840 + HEAD * ppmL} ppm={ppmL} look={LADY} lamp={{ x: -200, y: 700 }} noShadow flip
           pose={{ t: T, expr: "eerie", lookX: 0.9, glide: true, blink: false, tilt: -12, armNear: [8, 72], armFar: [6, 78] }} />
       </svg></>}
+      {/* FULL-BODY REVEAL: the camera pulls back as she rises; eight legs burst out of her kimono, the abdomen swells
+          behind her, the face turns into the true face; then she rears toward him (toward camera), jaw working */}
       <svg width={1080} height={1920} style={{ position: "absolute", opacity: 1 - human, transform: `translate(${sx}px,${sy}px)` }}>
-        <defs>
-          <linearGradient id="chitin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#4a2442" /><stop offset="0.5" stopColor="#2a1226" /><stop offset="1" stopColor="#12060f" /></linearGradient>
-          <radialGradient id="under" cx="50%" cy="80%" r="70%"><stop offset="0" stopColor="#ff7040" stopOpacity={0.28} /><stop offset="1" stopColor="#000" stopOpacity={0} /></radialGradient>
-        </defs>
-        {/* her legs flare out around the face while it is still small (scaled about the face centre) */}
-        <g transform={`translate(540,${cy}) scale(${s * 0.9}) translate(-540,-1030)`} opacity={clamp01(1.6 - s / 3) * sm(clamp01(d / (2 / FPS)))}>
-          {legs.map((g) => <Leg key={g.i} p={g.l} seed={g.i} />)}
+        <rect width={1080} height={1920} fill="#000" opacity={0.15} />
+        <g transform={`translate(540,${lerp(840, 1150, pull) - 80 * rear}) scale(${bodyS}) translate(-540,-1030)`} style={{ filter: "brightness(1.25)" }}>
+          <MonsterBody k={legsK} morph={morph} jaw={jaw} t={T} />
         </g>
-        <Hair cx={540} cy={cy} s={s} floor={1920} />
-        <Face cx={540} cy={cy} s={s} jaw={jaw} morph={morph} />
+        <defs><radialGradient id="under" cx="50%" cy="80%" r="70%"><stop offset="0" stopColor="#ff7040" stopOpacity={0.28} /><stop offset="1" stopColor="#000" stopOpacity={0} /></radialGradient></defs>
         <rect width={1080} height={1920} fill="url(#under)" style={{ mixBlendMode: "screen" }} />
       </svg>
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.7) 100%)" }} />

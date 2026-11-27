@@ -134,7 +134,7 @@ while tt < 28.6:
     tt += 0.16 - 0.1 * (tt - 27.0) / 1.7
 mono += sum(np.sin(2 * np.pi * f * t) for f in (110, 116.5, 155.6)) / 3 * ramp(26.8, 28.5) * (1 - ramp(28.5, 28.7)) * db(-24)
 # FINAL scare (as the approved Hidebehind v3 hit): 29.0-29.6, then hard silence
-A, C = 29.2, 30.28  # the reveal: cut to her face on the end of "legs." (29.17); his slash (30.28) cuts her off
+A, C = 29.3, 30.28  # the reveal: cut to her face on the end of "legs." (29.17); his slash (30.28) cuts her off
 n = int((C - A) * SR); u = np.arange(n) / SR
 f0 = (480 + 520 * (1 - np.exp(-u / 0.12))) * (1 + 0.035 * np.sin(2 * np.pi * 6.5 * u))
 src = sawtooth(2 * np.pi * np.cumsum(f0) / SR) + 0.6 * rng.standard_normal(n)

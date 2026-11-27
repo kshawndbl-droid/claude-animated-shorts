@@ -189,3 +189,35 @@ export const JMonsterV2: React.FC = () => {
     </AbsoluteFill>
   );
 };
+
+/** the approved true form as one piece for animation: legs unfold (k 0 -> 1), face morph and jaw; drawn in sheet space */
+export const MonsterBody: React.FC<{ k: number; morph: number; jaw: number; t: number }> = ({ k, morph, jaw, t }) => {
+  const FLOOR = 1540, kk = Math.max(0, Math.min(1, k));
+  const legs = [...LEGS_L.map((l, i) => ({ l, i })), ...LEGS_L.map((l, i) => ({ l: mirror(l), i: i + 4 }))].map((g) => {
+    const r = g.l[0], ki = Math.max(0, Math.min(1, kk * 1.25 - (g.i % 4) * 0.08));
+    const tw = 6 * Math.sin(t * 9 + g.i * 1.7) * ki;   // the tips twitch once they are out
+    return { ...g, l: g.l.map(([x, y], n) => n === 0 ? [x, y] as V : [r[0] + (x - r[0]) * ki + (n > 2 ? tw : 0), r[1] + (y - r[1]) * ki] as V) };
+  });
+  const back = legs.filter((g) => g.i % 4 >= 2), front = legs.filter((g) => g.i % 4 < 2);
+  const ab = 0.35 + 0.65 * kk;   // the abdomen swells up behind her as the legs come out
+  return <g>
+    <defs>
+      <radialGradient id="abd" cx="38%" cy="30%" r="80%"><stop offset="0" stopColor="#6a3462" /><stop offset="0.45" stopColor="#3a1a36" /><stop offset="1" stopColor="#12060f" /></radialGradient>
+      <linearGradient id="chitin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#4a2442" /><stop offset="0.5" stopColor="#2a1226" /><stop offset="1" stopColor="#12060f" /></linearGradient>
+    </defs>
+    {back.map((g) => <Leg key={g.i} p={g.l} seed={g.i} />)}
+    <g transform={`translate(540,1000) scale(${ab}) translate(-540,-1000)`}>
+      <ellipse cx={540} cy={800} rx={250} ry={225} fill="url(#abd)" stroke={INK} strokeWidth={8} />
+      <path d="M300,830 Q540,900 780,830 L776,880 Q540,955 304,880 Z" fill={LADY.obi} stroke={INK} strokeWidth={5} />
+      <path d="M330,848 Q540,912 750,848" stroke={LADY.obiDark} strokeWidth={5} fill="none" />
+      {[[470, 690, 1], [610, 720, 0.8], [540, 620, 0.7]].map(([x, y, q], i) => <g key={i}>{[0, 50, 100, 150, 200, 250, 300].map((r) =>
+        <path key={r} d={`M${x},${y} q${22 * q * Math.cos(r * Math.PI / 180)},${22 * q * Math.sin(r * Math.PI / 180) - 14 * q} ${40 * q * Math.cos(r * Math.PI / 180)},${40 * q * Math.sin(r * Math.PI / 180)}`} stroke="#c42030" strokeWidth={4 * q} fill="none" strokeLinecap="round" />)}</g>)}
+      <path d="M420,640 Q470,600 540,596" stroke="#ffffff" strokeOpacity={0.35} strokeWidth={14} strokeLinecap="round" fill="none" />
+    </g>
+    {[-1, 1].map((sd) => <path key={sd} opacity={morph} d={`M${540 + sd * 34},1150 Q${540 + sd * 52},${1215 + 20 * jaw} ${540 + sd * 18},${1252 + 30 * jaw} Q${540 + sd * 30},1205 ${540 + sd * 14},1160 Z`} fill="#140a0e" stroke={INK} strokeWidth={4} />)}
+    {front.map((g) => <Leg key={g.i} p={g.l} seed={g.i} />)}
+    <Hair cx={540} cy={1030} s={1} floor={FLOOR} />
+    <Face cx={540} cy={1030} s={1} jaw={jaw} morph={morph} />
+  </g>;
+};
+
