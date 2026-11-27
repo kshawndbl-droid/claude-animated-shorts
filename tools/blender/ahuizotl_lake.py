@@ -42,6 +42,13 @@ SHOTS = {
     "close": dict(loc=(0.82, -0.75, 1.48), look=(1.2, 0.8, 1.38), lens=45, focus=(0.95, 0.25, 1.45), fstop=2.8, fixed=True, noedge=True),
     # react: wider medium from the bank, a little to his left: room for his step back, the edge clump on the right
     "react": dict(loc=(0.4, -1.9, 1.2), look=(0.95, 0.9, 0.85), lens=26, focus=(0.75, 0.25, 1.0), fstop=4.0, fixed=True, noedge=True),
+    # v2 staging (user feedback: he stood too close to the water): he stops further up the bank at (0.9, -2.0), about
+    # 3 m from the waterline, with open mud between him and the reeds (room for his later walk down to the edge, line 6)
+    "wide2": dict(loc=(1.6, -5.3, 1.45), look=(1.23, 1.7, 0.3), lens=30, focus=(0.9, -2.0, 1.0), fstop=5.6, fixed=True, noedge=True),
+    "ots2": dict(loc=(1.3, -3.0, 1.5), look=(1.45, 1.4, 0.75), lens=26, focus=(1.8, 1.4, 0.8), fstop=4.0, fixed=True, noedge=True),
+    "med2": dict(loc=(1.2, -4.0, 1.2), look=(1.11, 0.0, 0.58), lens=30, focus=(0.9, -2.0, 1.0), fstop=4.0, fixed=True, noedge=True),
+    "close2": dict(loc=(0.82, -3.0, 1.48), look=(1.2, -1.45, 1.38), lens=45, focus=(0.95, -2.0, 1.45), fstop=2.8, fixed=True, noedge=True),
+    "react2": dict(loc=(1.1, -4.6, 1.25), look=(0.86, -0.7, 0.7), lens=30, focus=(0.7, -2.0, 1.0), fstop=4.0, fixed=True, noedge=True),
     # edge: low at the waterline, right at the edge clump in front of him (the gap where the eyes show)
     "edge": dict(loc=(1.15, 0.15, 0.4), look=(1.85, 1.6, 0.0), lens=32, focus=(1.8, 1.45, 0.1), fstop=4.0, fixed=True, noedge=True),
 }

@@ -21,6 +21,11 @@ import camMed from "../../stories/ahuizotl/sets/med.json";
 import camClose from "../../stories/ahuizotl/sets/close.json";
 import camEdge from "../../stories/ahuizotl/sets/edge.json";
 import camReact from "../../stories/ahuizotl/sets/react.json";
+import camWide2 from "../../stories/ahuizotl/sets/wide2.json";
+import camOts2 from "../../stories/ahuizotl/sets/ots2.json";
+import camMed2 from "../../stories/ahuizotl/sets/med2.json";
+import camClose2 from "../../stories/ahuizotl/sets/close2.json";
+import camReact2 from "../../stories/ahuizotl/sets/react2.json";
 import { sm, walk } from "./CharTest";
 import { FPose, Fisherman, reach } from "./fisherman";
 import { AHZ, GlowEye } from "./creature";
@@ -52,6 +57,7 @@ const mkCam = (j: unknown, plate: string): Cam => {
 };
 const CAMS = {
   wide: mkCam(camWide, "wide"), ots: mkCam(camOts, "ots"), med: mkCam(camMed, "med"), close: mkCam(camClose, "close"), edge: mkCam(camEdge, "edge"), react: mkCam(camReact, "react"),
+  wide2: mkCam(camWide2, "wide2"), ots2: mkCam(camOts2, "ots2"), med2: mkCam(camMed2, "med2"), close2: mkCam(camClose2, "close2"), react2: mkCam(camReact2, "react2"),
 };
 type ShotName = keyof typeof CAMS;
 /** world point -> 1080x1920 display px, pixels per metre at that depth, depth */
@@ -69,7 +75,11 @@ const right = (c: Cam): V3 => { const r: V3 = [c.m[0][0], c.m[1][0], 0], l = Mat
 /* ------------------------------------------------------------------ world */
 const WATER_Z = -0.07;
 const MOON_DIR: V3 = (() => { const v = [0.15, 0.94, 0.3], l = Math.hypot(...v); return v.map((a) => a / l) as V3; })();
-const HERE = { x: 0.9, y: 0.25, z: 0.02 };   // where he stands on the bank, facing +x (toward the reeds)
+type Here = { x: number; y: number; z: number };
+/** where he stands on the bank, facing +x (toward the reeds). v1: right above the waterline (y ~ 1.0); v2 (user
+ *  feedback "too close to the water"): about 3 m further up the bank, open mud between him and the reeds, leaving room
+ *  for his walk down to the edge on line 6 */
+const HERES: Record<number, Here> = { 1: { x: 0.9, y: 0.25, z: 0.02 }, 2: { x: 0.9, y: -2.0, z: 0.02 } };
 const EYES: V3 = [1.8, 1.55, -0.005];        // where the eyes show, in the gap of the edge clump
 
 /** wind: steady breeze; it dies on "stopped" (the world holds its breath); a little comes back after the scare */
@@ -247,6 +257,9 @@ const Mist: React.FC<{ c: Cam; T: number; id: string; amt?: number }> = ({ c, T,
 const MoonDamp: React.FC<{ c: Cam; id: string }> = ({ c, id }) => {
   const C = c.pos, p = proj(c, [C[0] + MOON_DIR[0] * 1000, C[1] + MOON_DIR[1] * 1000, C[2] - MOON_DIR[2] * 1000]);
   if (p.y > 2200 || p.x < -300 || p.x > 1380) return null;
+  // only where the mirrored ray actually meets the water (from far up the bank it lands on the mud: nothing to cover)
+  const hitY = C[1] + MOON_DIR[1] * (C[2] - WATER_Z) / MOON_DIR[2];
+  if (hitY < 1.0) return null;
   return <g>
     <defs>
       <radialGradient id={`md-${id}`}><stop offset="0" stopColor="#47505d" stopOpacity={1} /><stop offset="0.56" stopColor="#47505d" stopOpacity={1} />
@@ -319,7 +332,7 @@ const CALL_ARM = reach([0, 0], [0.215, 0.035]);
 const ARM_REST: [number, number] = [4, 13], ARM_REST_F: [number, number] = [3, 12];
 const mixA = (a: [number, number], b: [number, number], k: number): [number, number] => [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
 /** his pose and where he stands, from the absolute time T */
-const fisher = (T: number): { pose: FPose; x: number } => {
+const fisher = (T: number, HERE: Here): { pose: FPose; x: number } => {
   const blink = (at: number) => Math.abs(T - at) < 0.055;
   const f = Math.round((T - OFF) * FPS);
   if (f < CUT_B) {   // stopped on the bank, looking out at the reeds where the crying is
@@ -357,8 +370,8 @@ const fisher = (T: number): { pose: FPose; x: number } => {
 /* ------------------------------------------------------------------ one shot */
 type Move = { z: number; ax: number; ay: number; px: number; py: number };
 const Shot: React.FC<{ name: ShotName; T: number; mv: Move; children?: React.ReactNode; fg?: Fg[]; fgBlur?: number; clumpBlur?: number;
-  him?: "lit" | "silhouette" | null; mist?: number; edge?: boolean }> =
-  ({ name, T, mv, children, fg, fgBlur = 8, clumpBlur = 0, him = "lit", mist = 1, edge = false }) => {
+  him?: "lit" | "silhouette" | null; mist?: number; edge?: boolean; here: Here }> =
+  ({ name, T, mv, children, fg, fgBlur = 8, clumpBlur = 0, him = "lit", mist = 1, edge = false, here: HERE }) => {
     const c = CAMS[name];
     // keep the plate covering the frame: clamp the pan to what the zoom allows
     const px = Math.max(-(1080 - mv.ax) * (mv.z - 1), Math.min(mv.ax * (mv.z - 1), mv.px));
@@ -366,7 +379,7 @@ const Shot: React.FC<{ name: ShotName; T: number; mv: Move; children?: React.Rea
     const tf = `translate(${mv.ax + px}px,${mv.ay + py}px) scale(${mv.z}) translate(${-mv.ax}px,${-mv.ay}px)`;
     const zf = 1 + (mv.z - 1) * 1.6;
     const tff = `translate(${mv.ax + px * 1.6}px,${mv.ay + py * 1.6}px) scale(${zf}) translate(${-mv.ax}px,${-mv.ay}px)`;
-    const F = fisher(T);
+    const F = fisher(T, HERE);
     const feet = proj(c, [F.x, HERE.y, HERE.z]), head = proj(c, [F.x, HERE.y, HERE.z + 1.66]);
     const ppm = (feet.y - head.y) / 1.66;
     return <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#03050a" }}>
@@ -398,31 +411,34 @@ const Shot: React.FC<{ name: ShotName; T: number; mv: Move; children?: React.Rea
   };
 
 /* ------------------------------------------------------------------ the preview */
-export const AhzStylePreview: React.FC<{ clean?: boolean }> = ({ clean }) => {
+export const AhzStylePreview: React.FC<{ clean?: boolean; v?: number }> = ({ clean, v = 1 }) => {
+  const HERE = HERES[v];
+  // v2 uses its own plates for every shot with him in it; the scare shot at the waterline is shared
+  const n = (s: "wide" | "ots" | "med" | "close" | "react"): ShotName => (v === 2 ? `${s}2` : s) as ShotName;
   const f = useCurrentFrame(), t = f / FPS, T = t + OFF;
   let shot: React.ReactNode;
   let dark = 0, flash = 0;
   if (f < CUT_B) {
     // wide: slow push-in on him and the reeds he is looking at
     const k = sm(f / CUT_B) * 0.6 + 0.4 * (f / CUT_B);
-    const h = proj(CAMS.wide, [HERE.x + 0.3, HERE.y + 0.6, 1.0]);
-    shot = <Shot name="wide" T={T} mv={{ z: lerp(1.02, 1.13, k), ax: h.x, ay: h.y, px: lerp(0, -18, k), py: 0 }} fg={[[-40, 5, 1.1, 60], [1150, 4, 0.9, -80]]} fgBlur={9} />;
+    const h = proj(CAMS[n("wide")], [HERE.x + 0.3, HERE.y + 0.6, 1.0]);
+    shot = <Shot name={n("wide")} here={HERE} T={T} mv={{ z: lerp(1.02, v === 2 ? 1.2 : 1.13, k), ax: h.x, ay: h.y, px: lerp(0, -18, k), py: 0 }} fg={[[-40, 5, 1.1, 60], [1150, 4, 0.9, -80]]} fgBlur={9} />;
   } else if (f < CUT_C) {
     // over his shoulder onto the dark reeds: a slow lateral drift and push
     const k = (f - CUT_B) / (CUT_C - CUT_B);
-    const a = proj(CAMS.ots, [2.5, 1.9, 0.9]);
-    shot = <Shot name="ots" T={T} mv={{ z: lerp(1.05, 1.14, k), ax: a.x, ay: a.y, px: lerp(30, -30, 0.5 * k + 0.5 * sm(k)), py: lerp(-6, 12, k) }} him="silhouette" clumpBlur={1.5} />;
+    const a = proj(CAMS[n("ots")], v === 2 ? [1.9, 1.5, 0.9] : [2.5, 1.9, 0.9]);
+    shot = <Shot name={n("ots")} here={HERE} T={T} mv={{ z: lerp(1.05, 1.14, k), ax: a.x, ay: a.y, px: lerp(30, -30, 0.5 * k + 0.5 * sm(k)), py: lerp(-6, 12, k) }} him="silhouette" clumpBlur={1.5} />;
     dark = 0.08;
   } else if (f < CUT_D) {
     // medium: he leans in and calls
     const k = (f - CUT_C) / (CUT_D - CUT_C);
-    const a = proj(CAMS.med, [HERE.x + 0.15, HERE.y, 1.25]);
-    shot = <Shot name="med" T={T} mv={{ z: lerp(1.03, 1.1, k), ax: a.x, ay: a.y, px: 0, py: 0 }} fg={[[1160, 5, 1.0, -120]]} clumpBlur={1} />;
+    const a = proj(CAMS[n("med")], [HERE.x + 0.15, HERE.y, 1.25]);
+    shot = <Shot name={n("med")} here={HERE} T={T} mv={{ z: lerp(1.03, 1.1, k), ax: a.x, ay: a.y, px: 0, py: 0 }} fg={[[1160, 5, 1.0, -120]]} clumpBlur={1} />;
   } else if (f < SCARE_F) {
     // close: "stopped." everything holds; a very slow drift on his uneasy face, the night closing in a little
     const k = (f - CUT_D) / (SCARE_F - CUT_D);
-    const a = proj(CAMS.close, [HERE.x + 0.08, HERE.y, 1.5]);
-    shot = <Shot name="close" T={T} mv={{ z: lerp(1.04, 1.12, k), ax: a.x, ay: a.y, px: lerp(10, -10, k), py: lerp(-8, 8, k) }} clumpBlur={7} mist={0.8} />;
+    const a = proj(CAMS[n("close")], [HERE.x + 0.08, HERE.y, 1.5]);
+    shot = <Shot name={n("close")} here={HERE} T={T} mv={{ z: lerp(1.04, 1.12, k), ax: a.x, ay: a.y, px: lerp(10, -10, k), py: lerp(-8, 8, k) }} clumpBlur={7} mist={0.8} />;
     dark = 0.16 * sm(k * 1.3);
   } else if (f < CUT_F) {
     // SCARE 1: hard cut low at the waterline, snap-zoom into the gap, the reeds jerk apart, the eyes, a shake
@@ -430,7 +446,7 @@ export const AhzStylePreview: React.FC<{ clean?: boolean }> = ({ clean }) => {
     const a = proj(CAMS.edge, EYES);
     const z = lerp(1.0, 1.2, easeOut(d / 0.13)) + 0.035 * sm((d - 0.2) / 1.2);
     const sh = Math.exp(-d / 0.2), sx = 16 * sh * Math.sin(d * 71), sy = 11 * sh * Math.sin(d * 53 + 1.3);
-    shot = <Shot name="edge" T={T} mv={{ z, ax: a.x, ay: a.y, px: sx, py: sy }} him={null} edge>
+    shot = <Shot name="edge" here={HERE} T={T} mv={{ z, ax: a.x, ay: a.y, px: sx, py: sy }} him={null} edge>
       <Ripples c={CAMS.edge} T={T} at={[EYES[0], EYES[1], WATER_Z]} t0={SCARE_T} n={3} amp={0.8} />
       <Ripples c={CAMS.edge} T={T} at={[EYES[0], EYES[1], WATER_Z]} t0={SCARE_T + 0.36} n={2} amp={1} />
       <Lurker c={CAMS.edge} T={T} />
@@ -440,11 +456,11 @@ export const AhzStylePreview: React.FC<{ clean?: boolean }> = ({ clean }) => {
     // back on him: he steps back, startled, staring at the reeds that are still moving
     const k = (f - CUT_F) / (AHZ_PREVIEW_FRAMES - CUT_F);
     const d = T - (OFF + CUT_F / FPS);
-    const a = proj(CAMS.react, [HERE.x - 0.1, HERE.y, 0.9]);
+    const a = proj(CAMS[n("react")], [HERE.x - 0.1, HERE.y, 0.9]);
     const sh = Math.exp(-d / 0.25), sx = 6 * sh * Math.sin(d * 47), sy = 4 * sh * Math.sin(d * 39 + 0.7);
-    shot = <Shot name="react" T={T} mv={{ z: 1.1 - 0.035 * easeOut(k * 1.6) - 0.045 * k, ax: a.x, ay: a.y, px: sx + lerp(-14, 14, k), py: sy }} fg={[[1160, 5, 1.0, -120]]} clumpBlur={1}>
-      <Ripples c={CAMS.react} T={T} at={[EYES[0], EYES[1], WATER_Z]} t0={SCARE_T} n={3} amp={0.8} />
-      <Ripples c={CAMS.react} T={T} at={[1.9, 1.45, WATER_Z]} t0={18.3} n={2} amp={0.7} />
+    shot = <Shot name={n("react")} here={HERE} T={T} mv={{ z: 1.1 - 0.035 * easeOut(k * 1.6) - 0.045 * k, ax: a.x, ay: a.y, px: sx + (v === 2 ? lerp(-28, 28, k) : lerp(-14, 14, k)), py: sy + (v === 2 ? lerp(6, -6, k) : 0) }} fg={[[1160, 5, 1.0, -120]]} clumpBlur={1}>
+      <Ripples c={CAMS[n("react")]} T={T} at={[EYES[0], EYES[1], WATER_Z]} t0={SCARE_T} n={3} amp={0.8} />
+      <Ripples c={CAMS[n("react")]} T={T} at={[1.9, 1.45, WATER_Z]} t0={18.3} n={2} amp={0.7} />
     </Shot>;
     dark = 0.06;
   }
@@ -461,3 +477,6 @@ export const AhzStylePreview: React.FC<{ clean?: boolean }> = ({ clean }) => {
     </AbsoluteFill>
   );
 };
+
+/** v2: the same span and scare, with him standing a few metres up the bank */
+export const AhzStylePreviewV2: React.FC = () => <AhzStylePreview v={2} />;
