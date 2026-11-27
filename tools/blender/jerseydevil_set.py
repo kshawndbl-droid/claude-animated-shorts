@@ -29,8 +29,17 @@ SHACK_Y, SW, SD, WALL_H = 7.0, 4.4, 3.4, 2.3
 CAMS = {
     # character tests: still camera beside the path, the shack behind the walker
     "chartest": ((0.25, 0.9, 1.35), (0.0, 9.0, 1.45), 22, (0.0, 3.5, 0.9), 4.0),
+    # full video, part B (all still cameras; moves are 2.5D pushes/pans on oversized plates in Remotion)
+    "ext1": ((0.6, -2.6, 1.75), (0.0, 8.0, 2.35), 24, (0.0, 7.0, 1.5), 5.6),        # wide: the shack in the pines
+    "in1": ((-1.75, 7.45, 1.35), (1.7, 8.9, 1.0), 19, (1.1, 8.75, 1.0), 4.0),        # inside: him at the fire
+    "in3": ((1.35, 10.0, 1.35), (-1.1, 7.0, 1.4), 22, (-1.1, 7.0, 1.45), 4.0),      # inside: the window, him in front
+    "in4": ((-1.7, 9.9, 1.0), (1.6, 8.6, 2.75), 17, (1.6, 8.7, 2.4), 4.0),          # inside: rafters + chimney breast
+    "in5": ((0.55, 9.75, 0.75), (1.85, 8.7, 0.72), 24, (1.75, 8.7, 0.7), 2.8),       # close: the hearth opening
+    "flue": ((30.0, 30.0, 0.2), (30.0, 30.03, 5.0), 16, (30.0, 30.0, 2.5), 8.0),     # POV straight up the flue
 }
+FIRE = float(arg("--fire", "1"))   # hearth fire strength (render hi = 1 and lo ~ 0.7, cross-fade in Remotion)
 SHOT = F.SHOT
+INTERIOR = SHOT.startswith("in") or SHOT == "flue"
 C = CAMS[SHOT]
 F.SHOTS[SHOT] = dict(n=1, t0=0.0, keys=[(1, C[0], C[1], C[2])], focus=C[3], fstop=C[4])
 
@@ -242,6 +251,99 @@ def shack(boards, shingles, stone, trim, glass_mat, iron, pelt):
     return cx, ys
 
 
+def interior(boards, stone, trim, iron, pelt):
+    """the inside of the shack: plank floor, rafters, the fieldstone fireplace on the right wall with a low fire, a
+    table with a lantern, a stool, shelves, traps and pelts on the walls; and the flue (a separate stone tube far away,
+    for the POV straight up the chimney to a square of night sky)"""
+    y0 = SHACK_Y
+    floor = plank_mat("floor", (0.03, 0.022, 0.016), (0.1, 0.075, 0.055), False, 6.0)
+    box("floor", (0, y0 + SD / 2, 0.07), (SW - 0.1, SD - 0.1, 0.14), floor)
+    for i, yy in enumerate((y0 + 0.75, y0 + 1.7, y0 + 2.65)):
+        box(f"rafter{i}", (0, yy, WALL_H + 0.12), (SW - 0.1, 0.14, 0.16), trim)
+    box("ridgebeam", (0, y0 + SD / 2, WALL_H + 1.27), (SW, 0.16, 0.16), trim)
+    for s_ in (-1, 1):
+        for i in range(4):
+            xx = -1.6 + i * 1.07
+            box(f"spar{s_}{i}", (xx, y0 + SD / 2 + s_ * SD / 4, WALL_H + 0.12 + 0.6), (0.08, SD / 2 / math.cos(math.radians(36)), 0.1), trim, rot=(-s_ * math.radians(36), 0, 0))
+    # fireplace on the inside of the right wall: hearthstone, two jambs, a lintel, back, and the breast up to the roof
+    hx, hy = SW / 2 - 0.36, y0 + SD / 2
+    box("hearthstone", (hx - 0.18, hy, 0.17), (0.95, 1.7, 0.06), stone)
+    box("jambL", (hx, hy - 0.58, 0.55), (0.6, 0.36, 0.9), stone)
+    box("jambR", (hx, hy + 0.58, 0.55), (0.6, 0.36, 0.9), stone)
+    box("lintel", (hx, hy, 1.15), (0.62, 1.55, 0.36), stone)
+    box("fireback", (SW / 2 - 0.08, hy, 0.6), (0.06, 0.85, 1.0), ts.flat_mat("soot", (0.012, 0.01, 0.009), rough=0.95))
+    box("mantel", (hx - 0.32, hy, 1.36), (0.2, 1.75, 0.09), trim)
+    box("breast", (hx + 0.08, hy, 2.4), (0.45, 1.15, 2.1), stone)
+    # the flue mouth above the fire (dark), the fire: split logs, glowing coals, flame tongues
+    box("fluemouth", (hx + 0.05, hy, 1.0), (0.4, 0.75, 0.05), ts.flat_mat("fluedark", (0.0, 0.0, 0.0)))
+    fb = F.bark_mat("firelog", (0.02, 0.012, 0.008), (0.07, 0.04, 0.025))
+    gr = ts.flat_mat("coals", (1.0, 0.28, 0.05), emit=6.0 * FIRE)
+    for j, (a, b) in enumerate((((hx - 0.15, hy - 0.3), (hx + 0.12, hy + 0.25)), ((hx + 0.1, hy - 0.28), (hx - 0.12, hy + 0.3)))):
+        lo = F.log(f"firelog{j}", a, b, 0.07, fb, gr)
+        lo.location.z = 0.27 + 0.08 * j
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(hx, hy, 0.215))
+    o = bpy.context.object
+    o.scale = (0.45, 0.7, 1)
+    o.data.materials.append(gr)
+    flame = ts.flat_mat("flame", (1.0, 0.45, 0.1), emit=14.0 * FIRE)
+    for j in range(7):
+        bpy.ops.mesh.primitive_cone_add(radius1=0.05 + 0.03 * rnd.random(), radius2=0.0, depth=0.22 + 0.2 * rnd.random(),
+                                        location=(hx + rnd.uniform(-0.12, 0.08), hy + rnd.uniform(-0.25, 0.25), 0.42))
+        o = bpy.context.object
+        o.data.materials.append(flame)
+        o.visible_shadow = False
+    for nm, e, loc in (("firelight", 90.0, (hx - 0.25, hy, 0.55)), ("fireglow", 25.0, (hx - 0.6, hy, 0.4))):
+        la = bpy.data.lights.new(nm, "POINT")
+        la.energy, la.color, la.shadow_soft_size = e * FIRE, (1.0, 0.42, 0.13), 0.15
+        ts.link(bpy.data.objects.new(nm, la)).location = loc
+    # table with a lamp (unlit: the fire is the light), a stool, a shelf with jars, traps, pelts, a bunk
+    tw = plank_mat("tabletop", (0.05, 0.035, 0.025), (0.14, 0.1, 0.07), False, 8.0)
+    box("table", (-1.2, y0 + 2.6, 0.82), (1.1, 0.65, 0.06), tw)
+    for dx in (-0.48, 0.48):
+        for dy in (-0.26, 0.26):
+            box("tleg", (-1.2 + dx, y0 + 2.6 + dy, 0.47), (0.06, 0.06, 0.66), trim)
+    box("stool", (0.45, y0 + 2.2, 0.42), (0.36, 0.36, 0.05), tw)
+    for dx in (-0.14, 0.14):
+        box("sleg", (0.45 + dx, y0 + 2.2, 0.27), (0.04, 0.3, 0.28), trim)
+    box("shelf", (-SW / 2 + 0.2, y0 + 1.7, 1.6), (0.22, 1.2, 0.04), trim)
+    jar = ts.flat_mat("jar", (0.12, 0.1, 0.06), rough=0.3)
+    for j in range(5):
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.05, depth=0.14 + 0.06 * (j % 2), location=(-SW / 2 + 0.2, y0 + 1.25 + j * 0.22, 1.7))
+        bpy.context.object.data.materials.append(jar)
+    box("bunk", (-SW / 2 + 0.5, y0 + SD - 0.6, 0.45), (0.9, 1.0, 0.1), tw)
+    box("blanket", (-SW / 2 + 0.5, y0 + SD - 0.6, 0.53), (0.86, 0.95, 0.07), ts.flat_mat("wool", (0.18, 0.05, 0.04), rough=1.0))
+    for i, (px, py, pz) in enumerate(((-SW / 2 + 0.08, y0 + 0.8, 1.7), (-SW / 2 + 0.08, y0 + 1.1, 1.5), (0.9, y0 + SD - 0.08, 1.8), (1.3, y0 + SD - 0.08, 1.6))):
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.12, minor_radius=0.009, location=(px, py, pz),
+                                         rotation=((math.radians(90), 0, math.radians(90)) if px < 0 else (math.radians(90), 0, 0)))
+        bpy.context.object.data.materials.append(iron)
+    for i, (px, py, pz, rz) in enumerate(((-0.4, y0 + SD - 0.08, 1.5, 0), (-SW / 2 + 0.08, y0 + 2.4, 1.4, 90))):
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.3, location=(px, py, pz))
+        o = bpy.context.object
+        o.scale = (0.7, 0.1, 1.2) if rz == 0 else (0.1, 0.7, 1.2)
+        o.data.materials.append(pelt)
+    # moonlight through the window: a cold area light outside the pane, shining in
+    la = bpy.data.lights.new("winmoon", "AREA")
+    la.shape, la.size, la.energy, la.color = "SQUARE", 0.9, float(arg("--winmoon", "120")), (0.5, 0.62, 1.0)
+    o = ts.link(bpy.data.objects.new("winmoon", la))
+    o.location = (-1.1, y0 - 0.9, 1.9)
+    o.rotation_euler = (math.radians(-70), 0, 0)
+    # the flue: a stone tube 3.5 m tall, open to the night sky at the top, soot black lower down
+    fx, fy = 30.0, 30.0
+    soot = ts.flat_mat("soot2", (0.01, 0.009, 0.008), rough=1.0)
+    for nm, loc, size in (("fw1", (fx - 0.25, fy, 1.8), (0.1, 0.6, 3.6)), ("fw2", (fx + 0.25, fy, 1.8), (0.1, 0.6, 3.6)),
+                          ("fw3", (fx, fy - 0.3, 1.8), (0.6, 0.1, 3.6)), ("fw4", (fx, fy + 0.3, 1.8), (0.6, 0.1, 3.6))):
+        box(nm, loc, size, stone)
+        box(nm + "s", (loc[0] * 0.999 + fx * 0.001, loc[1], 0.8), (size[0] * 1.01, size[1] * 1.01, 1.6), soot)
+    la = bpy.data.lights.new("fluemoon", "SPOT")
+    la.energy, la.color, la.spot_size = 300.0, (0.55, 0.68, 1.0), math.radians(25)
+    o = ts.link(bpy.data.objects.new("fluemoon", la))
+    o.location = (fx + 0.1, fy, 6.5)
+    o.rotation_euler = (0, math.radians(3), 0)
+    la = bpy.data.lights.new("flueember", "POINT")
+    la.energy, la.color = 6.0 * FIRE, (1.0, 0.4, 0.12)
+    ts.link(bpy.data.objects.new("flueember", la)).location = (fx, fy, 0.05)
+
+
 def pitch_pine_variants(bark, needles):
     """short, crooked Pine Barrens pitch pines: the shared conifer builder, shorter (9-15 m), canopy-only high up"""
     vs = [F.tree_mesh(f"pine{i}", rnd.uniform(22, 30), i * 11 + 5, bark, needles) for i in range(6)]
@@ -330,9 +432,13 @@ def build():
     trim = plank_mat("trim", (0.03, 0.025, 0.02), (0.09, 0.075, 0.06), True, 3.0)
     stone = stone_mat()
     glass = ts.flat_mat("windowglow", (1.0, 0.5, 0.18), emit=float(arg("--window", "6")))
+    if INTERIOR:  # seen from inside: a dark night pane with a faint cold sheen
+        glass = ts.flat_mat("windownight", (0.05, 0.07, 0.12), emit=0.25)
     iron = ts.flat_mat("iron", (0.03, 0.03, 0.032), rough=0.5, metal=0.8)
     pelt = F.bark_mat("pelt", (0.05, 0.03, 0.018), (0.2, 0.13, 0.07), stretch=0.6)
     shack(boards, shingles, stone, trim, glass, iron, pelt)
+    if INTERIOR:
+        interior(boards, stone, trim, iron, pelt)
     placed = pines(pitch_pine_variants(bark, needles))
     scrub(scrubm, placed)
     # firelight spilling from the window and under the door onto the sand (warm, small)
@@ -344,7 +450,8 @@ def build():
         o.location = loc
         o.rotation_euler = (math.radians(90 + 25), 0, 0)  # facing -y, tilted down to the sand
     # a faint glow from inside the chimney top (the fire below)
-    F.ground_mist()
+    if not INTERIOR:
+        F.ground_mist()
 
     sc.render.engine = "BLENDER_EEVEE"
     ee = sc.eevee

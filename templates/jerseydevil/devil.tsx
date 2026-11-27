@@ -164,25 +164,39 @@ export const JerseyDevil: React.FC<{ x: number; y: number; ppm: number; p?: Devi
   );
 };
 
-/** the attack close-up: the horse-skull face head-on, filling the screen (jaw dropping, ember eyes flaring, horns out
- *  past the frame), lit hard from below by the fire and from behind by the flue's darkness. Head space: centre (0,0),
- *  skull about 0.8 wide x 1.4 tall. */
+/** the attack close-up (like the Hidebehind's): the horse-skull face head-on, filling the screen. The muzzle splits
+ *  open across the whole face, cheek to cheek, the lower jaw drops far down, rows of long crooked teeth, black throat,
+ *  dark gums, torn stretched corners, saliva strings; ember eyes flaring; horns out past the frame; fire from below.
+ *  Head space: centre (0,0), skull about 0.8 wide; open 0..1 (jaw drop). */
 export const DevilFace: React.FC<{ x: number; y: number; size: number; open?: number; t?: number; id?: string }> = ({ x, y, size, open = 1, t = 0, id = "df" }) => {
-  const J = 0.05 + 0.32 * open, tw = Math.sin(t * 40) * 0.004;
+  const J = 0.06 + 0.5 * open, tw = Math.sin(t * 40) * 0.004;
   const rnd = (i: number) => { const v = Math.sin(i * 91.7 + 3.1) * 43758.5453; return v - Math.floor(v); };
-  // front skull: wide brow, long tapering face to a broad muzzle with nostril pits
-  const skull = `M-0.36,-0.58 C-0.22,-0.72 0.22,-0.72 0.36,-0.58 C0.44,-0.44 0.4,-0.26 0.3,-0.12 C0.24,0.02 0.24,0.2 0.26,0.36
-    C0.28,0.48 0.2,0.56 0,0.57 C-0.2,0.56 -0.28,0.48 -0.26,0.36 C-0.24,0.2 -0.24,0.02 -0.3,-0.12 C-0.4,-0.26 -0.44,-0.44 -0.36,-0.58 Z`;
-  const jaw = `M-0.22,0.5 C-0.2,${(0.6 + J).toFixed(3)} -0.1,${(0.66 + J).toFixed(3)} 0,${(0.67 + J).toFixed(3)} C0.1,${(0.66 + J).toFixed(3)} 0.2,${(0.6 + J).toFixed(3)} 0.22,0.5 Z`;
-  const teethU = Array.from({ length: 10 }, (_, i) => { const u = (i + 0.5) / 10, xx = -0.22 + u * 0.44, L = 0.05 + 0.06 * rnd(i) + 0.04 * open;
-    return <path key={"u" + i} d={`M${(xx - 0.018).toFixed(3)},0.5 L${(xx + 0.018).toFixed(3)},0.5 L${(xx + (rnd(i + 5) - 0.5) * 0.02).toFixed(3)},${(0.5 + L).toFixed(3)} Z`} fill={rnd(i + 3) > 0.75 ? "#a89a7a" : "#e2d6ba"} stroke={INK} strokeWidth={0.004} />; });
-  const teethL = Array.from({ length: 9 }, (_, i) => { const u = (i + 0.5) / 9, xx = -0.2 + u * 0.4, b = 0.6 + J - 0.04 * Math.abs(u - 0.5), L = 0.05 + 0.05 * rnd(i + 20) + 0.03 * open;
-    return <path key={"l" + i} d={`M${(xx - 0.016).toFixed(3)},${b.toFixed(3)} L${(xx + 0.016).toFixed(3)},${b.toFixed(3)} L${xx.toFixed(3)},${(b - L).toFixed(3)} Z`} fill={rnd(i + 23) > 0.75 ? "#a89a7a" : "#e2d6ba"} stroke={INK} strokeWidth={0.004} />; });
+  const M = 0.14;                       // mouth line (upper lip edge)
+  const n = (v: number) => v.toFixed(3);
+  // upper skull: wide brow, long face down to a mouth line that runs right across, corners torn up into the cheeks
+  const upper = `M-0.36,-0.58 C-0.22,-0.72 0.22,-0.72 0.36,-0.58 C0.44,-0.44 0.4,-0.26 0.32,-0.1 C0.3,0.0 0.36,0.06 0.42,${n(M - 0.02)}
+    C0.3,${n(M + 0.02)} 0.12,${n(M)} 0,${n(M + 0.01)} C-0.12,${n(M)} -0.3,${n(M + 0.02)} -0.42,${n(M - 0.02)} C-0.36,0.06 -0.3,0.0 -0.32,-0.1
+    C-0.4,-0.26 -0.44,-0.44 -0.36,-0.58 Z`;
+  const B = M + J;                      // top of the dropped lower jaw
+  const lower = `M-0.38,${n(B)} C-0.2,${n(B - 0.03)} 0.2,${n(B - 0.03)} 0.38,${n(B)} C0.36,${n(B + 0.18)} 0.24,${n(B + 0.36)} 0,${n(B + 0.4)} C-0.24,${n(B + 0.36)} -0.36,${n(B + 0.18)} -0.38,${n(B)} Z`;
+  const mouth = `M-0.46,${n(M - 0.04)} C-0.3,${n(M)} 0.3,${n(M)} 0.46,${n(M - 0.04)} C0.44,${n(M + J * 0.6)} 0.36,${n(B + 0.04)} 0,${n(B + 0.06)} C-0.36,${n(B + 0.04)} -0.44,${n(M + J * 0.6)} -0.46,${n(M - 0.04)} Z`;
+  const tooth = (k: string, xx: number, base: number, L: number, w: number, dir: number, i: number) => {
+    const lean = (rnd(i + 7) - 0.5) * 0.05;
+    return <path key={k} d={`M${n(xx - w)},${n(base)} Q${n(xx + lean)},${n(base + dir * L * 0.6)} ${n(xx + lean * 1.5)},${n(base + dir * L)} Q${n(xx + w * 0.3)},${n(base + dir * L * 0.5)} ${n(xx + w)},${n(base)} Z`}
+      fill={rnd(i + 3) > 0.8 ? "#a3946f" : "#ddd0b2"} stroke={INK} strokeWidth={0.004} />;
+  };
+  const teethU = Array.from({ length: 16 }, (_, i) => { const u = (i + 0.5) / 16, xx = -0.4 + u * 0.8;
+    return tooth("u" + i, xx, M + 0.005 - 0.03 * Math.abs(u - 0.5) ** 2 * 4 * 0.4, 0.07 + 0.13 * rnd(i) * (1 - Math.abs(u - 0.5)) + 0.05 * open, 0.017 + 0.01 * rnd(i + 40), 1, i); });
+  const teethL = Array.from({ length: 14 }, (_, i) => { const u = (i + 0.5) / 14, xx = -0.34 + u * 0.68;
+    return tooth("l" + i, xx, B - 0.01 - 0.03 * (1 - Math.abs(u - 0.5) * 2) * 0.5, 0.06 + 0.11 * rnd(i + 20) * (1 - Math.abs(u - 0.5)) + 0.04 * open, 0.016 + 0.01 * rnd(i + 60), -1, i + 30); });
+  const drool = [-0.25, -0.05, 0.12, 0.3].map((xx, i) => <path key={"d" + i}
+    d={`M${n(xx)},${n(M + 0.07)} Q${n(xx + 0.02 * Math.sin(t * 3 + i))},${n(M + J * 0.55)} ${n(xx + 0.012)},${n(B - 0.03)}`}
+    stroke="rgba(215,220,200,0.55)" strokeWidth={0.006} fill="none" />);
   const eye = (sx: number) => <g>
     <path d={`M${sx - 0.13 * Math.sign(sx)},-0.3 C${sx - 0.06 * Math.sign(sx)},-0.36 ${sx + 0.1 * Math.sign(sx)},-0.34 ${sx + 0.14 * Math.sign(sx)},-0.24 C${sx + 0.06 * Math.sign(sx)},-0.16 ${sx - 0.1 * Math.sign(sx)},-0.18 ${sx - 0.13 * Math.sign(sx)},-0.3 Z`} fill="#000" />
-    <circle cx={sx} cy={-0.26} r={0.075} fill={`url(#${id}-eye)`} opacity={0.5} />
-    <circle cx={sx} cy={-0.26} r={0.03} fill={`url(#${id}-eye)`} />
-    <ellipse cx={sx} cy={-0.26} rx={0.006} ry={0.02} fill="#200400" />
+    <circle cx={sx} cy={-0.26} r={0.08} fill={`url(#${id}-eye)`} opacity={0.5} />
+    <circle cx={sx} cy={-0.26} r={0.032} fill={`url(#${id}-eye)`} />
+    <ellipse cx={sx} cy={-0.26} rx={0.006} ry={0.022} fill="#200400" />
   </g>;
   return (
     <g transform={`translate(${x},${y}) scale(${size}) translate(${tw},0)`}>
@@ -193,29 +207,39 @@ export const DevilFace: React.FC<{ x: number; y: number; size: number; open?: nu
         </linearGradient>
         <filter id={`${id}-tex`}><feTurbulence type="fractalNoise" baseFrequency="12 5" numOctaves={4} seed={7} /><feColorMatrix values="0 0 0 0 0.05  0 0 0 0 0.04  0 0 0 0 0.03  0 0 0 1.5 -0.35" /></filter>
         <filter id={`${id}-rough`} x="-0.2" y="-0.2" width="1.4" height="1.4"><feTurbulence type="fractalNoise" baseFrequency="8" numOctaves={3} seed={3} result="n" /><feDisplacementMap in="SourceGraphic" in2="n" scale={0.02} /></filter>
-        <clipPath id={`${id}-clip`}><path d={skull} /></clipPath>
+        <clipPath id={`${id}-clipU`}><path d={upper} /></clipPath>
+        <clipPath id={`${id}-clipL`}><path d={lower} /></clipPath>
       </defs>
       <g filter={`url(#${id}-rough)`}>
-        {/* horns sweeping out and up past the frame */}
         {[-1, 1].map((s) => <g key={s}>
           <path d={`M${0.26 * s},-0.6 C${0.5 * s},-0.9 ${0.95 * s},-0.95 ${1.15 * s},-0.7 C${1.05 * s},-0.82 ${0.7 * s},-0.8 ${0.38 * s},-0.48 Z`} fill="#3b3128" stroke={INK} strokeWidth={0.016} />
-          {[0.2, 0.35, 0.5, 0.65, 0.8].map((k, i) => <path key={i} d={`M${(0.3 + 0.8 * k) * s},${(-0.6 - 0.32 * Math.sin(k * 2.8)).toFixed(3)} l${(0.03 * s).toFixed(3)},0.07`} stroke="#15100c" strokeWidth={0.014} />)}
+          {[0.2, 0.35, 0.5, 0.65, 0.8].map((k, i) => <path key={i} d={`M${(0.3 + 0.8 * k) * s},${n(-0.6 - 0.32 * Math.sin(k * 2.8))} l${n(0.03 * s)},0.07`} stroke="#15100c" strokeWidth={0.014} />)}
         </g>)}
-        {/* leathery hide on the neck/cheeks behind the skull */}
-        <path d="M-0.42,-0.4 C-0.5,-0.1 -0.44,0.4 -0.32,0.8 C-0.1,0.9 0.1,0.9 0.32,0.8 C0.44,0.4 0.5,-0.1 0.42,-0.4 C0.2,-0.2 -0.2,-0.2 -0.42,-0.4 Z" fill={HIDE} stroke={INK} strokeWidth={0.016} />
-        <path d={jaw} fill="#1a0505" stroke={INK} strokeWidth={0.014} />
+        {/* leathery hide of the neck and cheeks behind the skull, stretching with the jaw */}
+        <path d={`M-0.44,-0.4 C-0.56,-0.1 -0.54,${n(0.3 + J * 0.5)} -0.36,${n(B + 0.45)} C-0.1,${n(B + 0.55)} 0.1,${n(B + 0.55)} 0.36,${n(B + 0.45)} C0.54,${n(0.3 + J * 0.5)} 0.56,-0.1 0.44,-0.4 C0.2,-0.2 -0.2,-0.2 -0.44,-0.4 Z`} fill={HIDE} stroke={INK} strokeWidth={0.016} />
+        {/* the mouth: dark gums, black throat */}
+        <path d={mouth} fill="#2c0606" stroke={INK} strokeWidth={0.016} />
+        <path d={`M-0.36,${n(M + 0.05)} C-0.2,${n(M + 0.09)} 0.2,${n(M + 0.09)} 0.36,${n(M + 0.05)} C0.3,${n(B - 0.04)} 0.15,${n(B - 0.02)} 0,${n(B - 0.01)} C-0.15,${n(B - 0.02)} -0.3,${n(B - 0.04)} -0.36,${n(M + 0.05)} Z`} fill="#000" />
+        {/* skin torn and stretched at the corners */}
+        <path d={`M-0.44,${n(M - 0.03)} L-0.5,${n(M - 0.1)} M-0.44,${n(M)} L-0.52,${n(M + 0.0)} M-0.43,${n(M + 0.04)} L-0.5,${n(M + 0.09)} M0.44,${n(M - 0.03)} L0.5,${n(M - 0.1)} M0.44,${n(M)} L0.52,${n(M)} M0.43,${n(M + 0.04)} L0.5,${n(M + 0.09)}`} stroke="#0d0907" strokeWidth={0.01} />
+        {drool}
         {teethL}
-        <path d={skull} fill="#b9ab90" stroke={INK} strokeWidth={0.02} />
-        <g clipPath={`url(#${id}-clip)`}>
-          <rect x={-0.5} y={-0.8} width={1} height={1.5} filter={`url(#${id}-tex)`} />
-          {/* cracks and bone ridges */}
-          <path d="M0,-0.68 C0.02,-0.5 -0.03,-0.35 0.0,-0.15 C0.02,0.0 -0.01,0.2 0.0,0.35 M-0.2,-0.6 C-0.15,-0.5 -0.2,-0.42 -0.16,-0.36 M0.18,-0.62 C0.14,-0.52 0.2,-0.46 0.15,-0.4" stroke="#3a3024" strokeWidth={0.012} fill="none" />
+        <path d={lower} fill="#a99b80" stroke={INK} strokeWidth={0.02} />
+        <g clipPath={`url(#${id}-clipL)`}>
+          <rect x={-0.5} y={-0.2} width={1} height={2} filter={`url(#${id}-tex)`} />
+          <path d={`M-0.12,${n(B + 0.02)} L-0.09,${n(B + 0.15)} L-0.13,${n(B + 0.24)} M0.15,${n(B + 0.03)} L0.11,${n(B + 0.12)}`} stroke="#3a3024" strokeWidth={0.012} fill="none" />
+          <rect x={-0.5} y={-0.2} width={1} height={2} fill="rgba(255,110,40,0.16)" />
+        </g>
+        <path d={upper} fill="#b9ab90" stroke={INK} strokeWidth={0.02} />
+        <g clipPath={`url(#${id}-clipU)`}>
+          <rect x={-0.5} y={-0.8} width={1} height={1.2} filter={`url(#${id}-tex)`} />
+          <path d="M0,-0.68 C0.02,-0.5 -0.03,-0.35 0.0,-0.15 M-0.2,-0.6 C-0.15,-0.5 -0.2,-0.42 -0.16,-0.36 M0.18,-0.62 C0.14,-0.52 0.2,-0.46 0.15,-0.4" stroke="#3a3024" strokeWidth={0.012} fill="none" />
           <path d="M-0.34,-0.44 C-0.2,-0.5 0.2,-0.5 0.34,-0.44" stroke="#e0d4b8" strokeWidth={0.02} fill="none" opacity={0.6} />
-          <path d="M-0.27,-0.05 C-0.2,0.1 -0.2,0.25 -0.22,0.4 M0.27,-0.05 C0.2,0.1 0.2,0.25 0.22,0.4" stroke="#3a3024" strokeWidth={0.03} fill="none" opacity={0.6} />
+          <path d="M-0.3,-0.05 C-0.25,0.03 -0.3,0.08 -0.36,0.1 M0.3,-0.05 C0.25,0.03 0.3,0.08 0.36,0.1" stroke="#2a2018" strokeWidth={0.035} fill="none" opacity={0.6} />
           {eye(-0.2)}{eye(0.2)}
-          {/* flared nostril pits on the muzzle */}
-          <path d="M-0.14,0.32 C-0.18,0.38 -0.13,0.46 -0.06,0.43 C-0.05,0.38 -0.08,0.32 -0.14,0.32 Z M0.14,0.32 C0.18,0.38 0.13,0.46 0.06,0.43 C0.05,0.38 0.08,0.32 0.14,0.32 Z" fill="#000" />
-          <rect x={-0.5} y={-0.8} width={1} height={1.5} fill={`url(#${id}-under)`} />
+          {/* flared nostril pits just above the split */}
+          <path d="M-0.13,-0.04 C-0.17,0.0 -0.12,0.07 -0.05,0.05 C-0.04,0.0 -0.07,-0.04 -0.13,-0.04 Z M0.13,-0.04 C0.17,0.0 0.12,0.07 0.05,0.05 C0.04,0.0 0.07,-0.04 0.13,-0.04 Z" fill="#000" />
+          <rect x={-0.5} y={-0.8} width={1} height={1.2} fill={`url(#${id}-under)`} />
         </g>
         {teethU}
       </g>

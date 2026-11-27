@@ -16,7 +16,7 @@ export const DevilSheet: React.FC = () => (
       <g clipPath="url(#cu)">
         <radialGradient id="fire" cx="0.5" cy="1" r="0.9"><stop offset="0" stopColor="#ff8a30" stopOpacity={0.5} /><stop offset="1" stopColor="#ff8a30" stopOpacity={0} /></radialGradient>
         <rect x={560} y={130} width={490} height={600} fill="url(#fire)" />
-        <DevilFace x={805} y={450} size={330} open={1} t={1} />
+        <DevilFace x={805} y={380} size={300} open={1} t={1} />
       </g>
       <rect x={600} y={820} width={450} height={720} rx={18} fill="#050507" stroke="#333" strokeWidth={3} />
       <clipPath id="cu2"><rect x={600} y={820} width={450} height={720} rx={18} /></clipPath>
