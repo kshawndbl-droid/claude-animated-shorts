@@ -59,7 +59,17 @@ for _k, _fs in (("pA", 4.0), ("pB", 2.8), ("pC", 2.8), ("pE", 2.8)):
                      keys=[(i + 1, fr["cam"], fr["look"], fr["lens"]) for i, fr in enumerate(_P["frames"])],
                      focus=[(fr["logger"]["x"], fr["logger"]["y"], 0.9) if fr["logger"] else (HIDE[0], HIDE[1], 1.3) for fr in _P["frames"]],
                      lantern=[fr["lantern"] for fr in _P["frames"]])
+# extra shot plans (e.g. stories/hidebehind/sets/partD_paths.json): same schema; they do NOT change the forest layout
+# (the sight-line clearing stays the preview's), so every part sees the identical forest
+for _f in (arg("--paths") or "").split(","):
+    if _f:
+        for _k, _P in json.load(open(os.path.join(ROOT, _f))).items():
+            SHOTS[_k] = dict(n=_P["n"], t0=_P["t0"], fstop=_P.get("fstop", 2.8), mblur=_P.get("mblur", False),
+                             keys=[(i + 1, fr["cam"], fr["look"], fr["lens"]) for i, fr in enumerate(_P["frames"])],
+                             focus=[fr.get("focus") or ((fr["logger"]["x"], fr["logger"]["y"], 0.9) if fr.get("logger") else fr["look"]) for fr in _P["frames"]],
+                             lantern=[fr.get("lantern") for fr in _P["frames"]])
 SHOT = arg("--shot", "chartest")
+DAWN = bool(arg("--dawn"))
 # the lantern: warm kerosene point light, small radius, soft shadows, a hard influence cutoff so it lights only a pool
 LANTERN = dict(color=(1.0, 0.55, 0.22), radius=0.05, cutoff=float(arg("--lcut", "3.0")), base=float(arg("--lantern", "30")))
 
@@ -752,7 +762,7 @@ def lights_world(sc):
     upm = _maprange(nd, ln, sk.outputs[2], 0.1, 0.6)
     stars = _math(nd, ln, "MULTIPLY", st.outputs[0], upm.outputs[0])
     stars = _math(nd, ln, "MULTIPLY", stars.outputs[0], 0.12, clamp=False)
-    base = _mix(nd, ln, upm.outputs[0], (0.003, 0.0045, 0.009), (0.0015, 0.0025, 0.006)).outputs[2]
+    base = _mix(nd, ln, upm.outputs[0], *(((0.035, 0.042, 0.055), (0.05, 0.058, 0.072)) if DAWN else ((0.003, 0.0045, 0.009), (0.0015, 0.0025, 0.006)))).outputs[2]
     add = _mix(nd, ln, 1.0, base, (0.0, 0.0, 0.0), "ADD")
     ln.new(stars.outputs[0], add.inputs[7])
     ln.new(add.outputs[2], bg.inputs[0])
@@ -766,23 +776,28 @@ def lights_world(sc):
     # the moon: high, behind and to the right -> cold rim light on the trunks, long shadows toward camera, shafts in the mist
     mo = bpy.data.lights.new("moon", "SUN")
     mo.energy, mo.color, mo.angle = float(arg("--moon", "3.0")), (0.52, 0.66, 1.0), math.radians(1.0)
+    if DAWN:  # cold grey first light: a low, soft, colourless sun and a bright overcast sky, no camp glow
+        mo.energy, mo.color, mo.angle = float(arg("--sun", "1.6")), (0.8, 0.84, 0.92), math.radians(6.0)
     o = ts.link(bpy.data.objects.new("moon", mo))
     o.rotation_euler = (math.radians(-42), 0, math.radians(-35))  # light travels toward -y (camera) and a bit -x
     # a faint cold skylight filtering down through gaps
     fl = bpy.data.lights.new("sky", "AREA")
     fl.shape, fl.size, fl.size_y = "RECTANGLE", 26.0, 26.0
     fl.energy, fl.color = float(arg("--sky", "260")), (0.4, 0.5, 0.85)
+    if DAWN:
+        fl.energy, fl.color = float(arg("--sky", "2600")), (0.62, 0.68, 0.78)
     fl.volume_factor = 0.0
     o = ts.link(bpy.data.objects.new("sky", fl))
     o.location = (-1.5, 4.0, 11.0)
     # the camp: a very faint warm glow far down the trail
     cl = bpy.data.lights.new("camp", "POINT")
-    cl.energy, cl.color, cl.shadow_soft_size = float(arg("--camp", "500")), (1.0, 0.45, 0.15), 1.0
+    cl.energy, cl.color, cl.shadow_soft_size = (0.0 if DAWN else float(arg("--camp", "500"))), (1.0, 0.45, 0.15), 1.0
     o = ts.link(bpy.data.objects.new("camp", cl))
     o.location = (CAMP[0], CAMP[1], 1.3)
     bpy.ops.mesh.primitive_uv_sphere_add(radius=0.35, location=(CAMP[0], CAMP[1] - 0.5, 0.9))
     f = bpy.context.object
     f.name = "campfire"
+    f.hide_render = DAWN
     f.data.materials.append(ts.flat_mat("fire", (1.0, 0.45, 0.12), emit=5))
     f.visible_shadow = False
 
