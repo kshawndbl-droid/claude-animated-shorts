@@ -32,14 +32,14 @@ const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const sm = (v: number) => { const c = clamp01(v); return c * c * (3 - 2 * c); };
 const pad = (f: number) => String(f).padStart(4, "0");
 
-// two men from the camp (not the hero: different shirts, caps and beards)
-export const FOREMAN: ToonLook = {
-  skin: "#d2a283", top: "#2f4a5e", topDark: "#1d3040", check: "1", legs: "#5a5048", legsDark: "#3a342e", boots: "#2e2016",
-  hair: "#8a8a84", beard: "#a8a59c", toque: "#7a2e24", toqueDark: "#521d16", braces: "#1e1a16", belt: "#2a1c12",
+// two men from the camp: the same looks as in Part A (templates/hidebehind/PartA.tsx, OLD and MAC)
+export const OLD: ToonLook = {
+  skin: "#d2a383", top: "#5a4630", topDark: "#3a2c1e", legs: "#3e3a34", legsDark: "#28251f", boots: "#2e2016",
+  hair: "#a8a49c", beard: "#cfcac0", toque: "#2e4636", toqueDark: "#1e3024", braces: "#1f1a16", belt: "#24180e",
 };
-export const YOUNG: ToonLook = {
-  skin: "#e2b898", top: "#6e6a3a", topDark: "#48452a", legs: "#3e4248", legsDark: "#282b30", boots: "#3a2618",
-  hair: "#2a1c12", beard: "#3a2616", toque: "#2c3a4c", toqueDark: "#1c2634", braces: "#2a2420", belt: "#22160e",
+export const MAC: ToonLook = {
+  skin: "#e0b493", top: "#2d4472", topDark: "#1b2a4c", check: "1", legs: "#5a5146", legsDark: "#3b352d", boots: "#3a2618",
+  hair: "#1e140c", beard: "#2a1a0e", toque: "#9a6a26", toqueDark: "#6b4818", braces: "#3a2a1c", belt: "#2a1c12",
 };
 
 // dawn set-up (world metres, ground z = 0): the lantern where his tracks end; his tracks come from deeper in the trail
@@ -132,8 +132,8 @@ export const HPartD: React.FC = () => {
             <DeadLantern x={Lp.x} y={Lp.y} ppm={Lp.ppm} />
           </g>
           <g style={{ filter: "brightness(0.62) saturate(0.55)" }}>
-            <Finder f={f} T={T} look={YOUNG} start={m2s} stop={m2e} tIn={39.7} tStop={42.2} tUp={42.7} />
-            <Finder f={f} T={T} look={FOREMAN} start={m1s} stop={m1e} tIn={39.5} tStop={41.9} tUp={42.4} />
+            <Finder f={f} T={T} look={MAC} start={m2s} stop={m2e} tIn={39.7} tStop={42.2} tUp={42.7} />
+            <Finder f={f} T={T} look={OLD} start={m1s} stop={m1e} tIn={39.5} tStop={41.9} tUp={42.4} />
           </g>
         </svg>
         <Grade fr={fr} cold={0.12} />
