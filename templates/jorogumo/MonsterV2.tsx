@@ -24,7 +24,7 @@ const segPath = (a: V, b: V, wa: number, wb: number) => {
   return `M${pt(a1)} Q${pt(m1)} ${pt(b1)} A${(wb / 2).toFixed(1)},${(wb / 2).toFixed(1)} 0 0 1 ${pt(b2)} Q${pt(m2)} ${pt(a2)} A${(wa / 2).toFixed(1)},${(wa / 2).toFixed(1)} 0 0 1 ${pt(a1)} Z`;
 };
 
-const Leg: React.FC<{ p: V[]; s?: number; seed: number }> = ({ p, s = 1, seed }) => {
+export const Leg: React.FC<{ p: V[]; s?: number; seed: number }> = ({ p, s = 1, seed }) => {
   const W = [34, 30, 22, 13, 3].map((w) => w * s);
   const segs = [0, 1, 2, 3].map((i) => ({ a: p[i], b: p[i + 1], wa: W[i], wb: W[i + 1] * (i === 3 ? 1 : 1.05) }));
   // bristles: short stiff hairs on both edges, raked toward the tip
@@ -56,13 +56,14 @@ const Leg: React.FC<{ p: V[]; s?: number; seed: number }> = ({ p, s = 1, seed })
 };
 
 /** her face: cracked porcelain, black eyes with pinpoint red, extra small eyes, a too-wide needle-tooth grin */
-const Face: React.FC<{ cx: number; cy: number; s: number }> = ({ cx, cy, s }) => {
+export const Face: React.FC<{ cx: number; cy: number; s: number; jaw?: number }> = ({ cx, cy, s, jaw = 0 }) => {
   const P = (x: number, y: number) => `${(cx + x * s).toFixed(1)},${(cy + y * s).toFixed(1)}`;
   const teeth: string[] = [];
   for (let k = 0; k <= 18; k++) {
     const t = k / 18, x = -78 + 156 * t, yTop = 52 + 26 * Math.pow(Math.abs(t - 0.5) * 2, 2) * -1 + 8, up = k % 2 ? 1 : 0;
     teeth.push(`M${P(x - 3, yTop + 2)} L${P(x, yTop + 13 + 4 * up)} L${P(x + 3, yTop + 2)} Z`);
-    teeth.push(`M${P(x - 3, yTop + 34)} L${P(x, yTop + 22 - 4 * up)} L${P(x + 3, yTop + 34)} Z`);
+    const dj = jaw * 34 * (1 - Math.pow(2 * t - 1, 2)); // the jaw drops most in the middle of the grin
+    teeth.push(`M${P(x - 3, yTop + 34 + dj)} L${P(x, yTop + 22 - 4 * up + dj)} L${P(x + 3, yTop + 34 + dj)} Z`);
   }
   const cracks = [
     [[-20, -96], [-28, -70], [-18, -52], [-34, -30], [-30, -12]],
@@ -93,7 +94,7 @@ const Face: React.FC<{ cx: number; cy: number; s: number }> = ({ cx, cy, s }) =>
       <path d={`M${P(x + (i ? 6 : -6), 2)} Q${P(x + (i ? 10 : -10), 30)} ${P(x + (i ? 4 : -4), 52)}`} stroke="#2a1a22" strokeOpacity={0.5} strokeWidth={4 * s} fill="none" strokeLinecap="round" />
     </g>)}
     {/* the grin, stretched almost ear to ear */}
-    <path d={`M${P(-84, 54)} Q${P(0, 98)} ${P(84, 54)} Q${P(0, 120)} ${P(-84, 54)} Z`} fill="#12060a" stroke={INK} strokeWidth={4 * s} />
+    <path d={`M${P(-84, 54)} Q${P(0, 98)} ${P(84, 54)} Q${P(0, 120 + 68 * jaw)} ${P(-84, 54)} Z`} fill="#12060a" stroke={INK} strokeWidth={4 * s} />
     <path d={teeth.join(" ")} fill="#efe6da" stroke={INK} strokeWidth={0.8 * s} />
     <path d={`M${P(-84, 54)} Q${P(0, 98)} ${P(84, 54)}`} stroke={LADY.lips} strokeWidth={6 * s} fill="none" strokeLinecap="round" />
     <path d={`M${P(-84, 54)} l${-10 * s},${-8 * s} M${P(84, 54)} l${10 * s},${-8 * s}`} stroke="#3a2a2a" strokeWidth={3 * s} strokeLinecap="round" />
@@ -101,7 +102,7 @@ const Face: React.FC<{ cx: number; cy: number; s: number }> = ({ cx, cy, s }) =>
 };
 
 /** hair: parted over the porcelain face, falling long, then splitting into web threads glued to the floor */
-const Hair: React.FC<{ cx: number; cy: number; s: number; floor: number }> = ({ cx, cy, s, floor }) => {
+export const Hair: React.FC<{ cx: number; cy: number; s: number; floor: number }> = ({ cx, cy, s, floor }) => {
   const P = (x: number, y: number) => `${(cx + x * s).toFixed(1)},${(cy + y * s).toFixed(1)}`;
   const threads: string[] = [];
   for (let k = 0; k < 16; k++) {
@@ -119,13 +120,13 @@ const Hair: React.FC<{ cx: number; cy: number; s: number; floor: number }> = ({ 
   </g>;
 };
 
-const LEGS_L: V[][] = [
+export const LEGS_L: V[][] = [
   [[488, 1040], [440, 990], [330, 640], [150, 860], [96, 1500]],
   [[478, 1070], [400, 1040], [215, 760], [70, 1040], [50, 1520]],
   [[480, 1105], [410, 1110], [250, 930], [140, 1230], [175, 1545]],
   [[492, 1135], [450, 1160], [340, 1080], [290, 1320], [330, 1555]],
 ];
-const mirror = (l: V[]): V[] => l.map(([x, y]) => [1080 - x, y]);
+export const mirror = (l: V[]): V[] => l.map(([x, y]) => [1080 - x, y]);
 
 export const JMonsterV2: React.FC = () => {
   const FLOOR = 1540;
