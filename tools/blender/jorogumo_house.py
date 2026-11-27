@@ -22,6 +22,9 @@ SHOTS = {
     # v2: lower, closer and wider so the room fills the 9:16 frame (ceiling beams above, tatami below), shallow focus
     # on the walk line 2.1 m in front of the lens, a dark post and a hanging web close to the lens for depth
     "chartest": dict(n=1, keys=[(1, (0.0, -3.4, 1.12), (0.0, 6.0, 0.95), 22)], focus=(0.0, -1.3, 0.9), fstop=2.4),
+    # Part B close-up: lens a hand above the tatami, looking along the floor past his folded feet toward the lantern;
+    # the feet are drawn in Remotion at (-0.25, 0.2, 0) in sharp focus, the lantern glows out of focus behind
+    "anklecu": dict(n=1, keys=[(1, (-0.3, -0.85, 0.2), (0.6, 3.0, 0.12), 24)], focus=(-0.25, 0.2, 0.06), fstop=1.8),
 }
 SHOT = arg("--shot", "chartest")
 W, D0, D1, H = 4.2, -5.0, 6.0, 2.7  # room half-width, front/back wall y, ceiling height

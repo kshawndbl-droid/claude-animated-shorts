@@ -41,16 +41,18 @@ export const at = (dd: number, s: number) => project(cam, 1, [s, -3.4 + dd, 0.05
 export const LAMP = project(cam, 1, [1.05, 1.5, 0.42]);
 
 /** one cast member with light: shading from its own blurred silhouette (so it reads as round, not flat) */
-export const Lit: React.FC<{ id: string; x: number; y: number; ppm: number; look: KLook; pose: KPose; flip?: boolean; flick: number }> =
-  ({ id, x, y, ppm, look, pose, flip, flick }) => {
-    const dx = LAMP.x - x, away = dx > 0 ? -1 : 1, dist = Math.abs(dx) / ppm;
+export const Lit: React.FC<{ id: string; x: number; y: number; ppm: number; look: KLook; pose: KPose; flip?: boolean; flick: number;
+  lamp?: { x: number; y: number }; noShadow?: boolean }> =
+  ({ id, x, y, ppm, look, pose, flip, flick, lamp, noShadow }) => {
+    const LAMP_ = lamp ?? LAMP;
+    const dx = LAMP_.x - x, away = dx > 0 ? -1 : 1, dist = Math.abs(dx) / ppm;
     const len = Math.min(2.2, 0.6 + dist * 0.45) * ppm;      // the farther from the lantern, the longer the shadow
     return <g>
       <defs>
         <filter id={`lit-${id}`} x="-30%" y="-30%" width="160%" height="160%" colorInterpolationFilters="sRGB">
           <feGaussianBlur in="SourceAlpha" stdDeviation={ppm * 0.035} result="b" />
           <feDiffuseLighting in="b" surfaceScale={ppm * 0.03} diffuseConstant={1.05 * flick} lightingColor="#ffc890" result="warm">
-            <fePointLight x={LAMP.x} y={LAMP.y - ppm * 0.3} z={ppm * 1.4} />
+            <fePointLight x={LAMP_.x} y={LAMP_.y - ppm * 0.3} z={ppm * 1.4} />
           </feDiffuseLighting>
           <feDiffuseLighting in="b" surfaceScale={ppm * 0.03} diffuseConstant={0.55} lightingColor="#a8b8f0" result="cool">
             <feDistantLight azimuth={-90} elevation={40} />
@@ -70,9 +72,9 @@ export const Lit: React.FC<{ id: string; x: number; y: number; ppm: number; look
         <filter id={`blur-${id}`} x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation={ppm * 0.04} /></filter>
       </defs>
       {/* long shadow on the floor, thrown away from the lantern */}
-      <g filter={`url(#blur-${id})`} transform={`translate(${x},${y}) scale(${away},1)`}>
+      {!noShadow && <g filter={`url(#blur-${id})`} transform={`translate(${x},${y}) scale(${away},1)`}>
         <path d={`M0,${-0.05 * ppm} L${len},${-0.16 * ppm} L${len},${0.1 * ppm} L0,${0.06 * ppm} Z`} fill={`url(#sh-${id})`} opacity={0.9 * flick} />
-      </g>
+      </g>}
       <g filter={`url(#lit-${id})`}>
         <Kimono x={x} y={y} ppm={ppm} look={look} pose={pose} flip={flip} />
       </g>
