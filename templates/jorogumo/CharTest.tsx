@@ -11,7 +11,7 @@ import camTest from "../../stories/jorogumo/sets/chartest.json";
 const FPS = 30;
 export const J_WALK_FRAMES = 7 * FPS, J_STAND_FRAMES = 7 * FPS;
 type CamJ = { frames: Record<string, { m: number[][]; lens: number; sensor: number }> };
-const project = (cam: CamJ, f: number, p: [number, number, number]) => {
+export const project = (cam: CamJ, f: number, p: [number, number, number]) => {
   const c = cam.frames[String(f)] ?? cam.frames["1"], m = c.m;
   const d = [p[0] - m[0][3], p[1] - m[1][3], p[2] - m[2][3]];
   const X = m[0][0] * d[0] + m[1][0] * d[1] + m[2][0] * d[2];
@@ -21,9 +21,9 @@ const project = (cam: CamJ, f: number, p: [number, number, number]) => {
   return { x: 540 + (fpx * X) / z, y: 960 - (fpx * Y) / z, ppm: fpx / z };
 };
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-const sm = (v: number) => { const c = clamp01(v); return c * c * (3 - 2 * c); };
+export const sm = (v: number) => { const c = clamp01(v); return c * c * (3 - 2 * c); };
 /** distance walked at speed V between t0 and t1 with eased starts and stops (integrated, so feet never slide) */
-const walk = (T: number, t0: number, t1: number, V: number, ease = 0.6) => {
+export const walk = (T: number, t0: number, t1: number, V: number, ease = 0.6) => {
   const v = (t: number) => V * sm((t - t0) / ease) * sm((t1 - t) / ease);
   let s = 0; const dt = 1 / 240;
   for (let t = t0; t < Math.min(T, t1); t += dt) s += v(t) * dt;
@@ -36,12 +36,12 @@ export const LADY: KLook = { kind: "lady", skin: "#f3e4dc", top: "#3e2040", topD
   hair: "#120e14", sock: "#f2eee6", sole: "#2a1a14", obi: "#c9a24a", obiDark: "#8a6a2a", collar: "#f1ebe4", stride: 0.3, lift: 0.12, sleeve: 0.46,
   lips: "#b0142c", pin: "#c4202c", pattern: "#c9c4d6", flower: "#c42030" };
 
-const cam = camTest as CamJ;
-const at = (dd: number, s: number) => project(cam, 1, [s, -3.4 + dd, 0.05]);
-const LAMP = project(cam, 1, [1.05, 1.5, 0.42]);
+export const cam = camTest as CamJ;
+export const at = (dd: number, s: number) => project(cam, 1, [s, -3.4 + dd, 0.05]);
+export const LAMP = project(cam, 1, [1.05, 1.5, 0.42]);
 
 /** one cast member with light: shading from its own blurred silhouette (so it reads as round, not flat) */
-const Lit: React.FC<{ id: string; x: number; y: number; ppm: number; look: KLook; pose: KPose; flip?: boolean; flick: number }> =
+export const Lit: React.FC<{ id: string; x: number; y: number; ppm: number; look: KLook; pose: KPose; flip?: boolean; flick: number }> =
   ({ id, x, y, ppm, look, pose, flip, flick }) => {
     const dx = LAMP.x - x, away = dx > 0 ? -1 : 1, dist = Math.abs(dx) / ppm;
     const len = Math.min(2.2, 0.6 + dist * 0.45) * ppm;      // the farther from the lantern, the longer the shadow
@@ -80,7 +80,7 @@ const Lit: React.FC<{ id: string; x: number; y: number; ppm: number; look: KLook
   };
 
 /** dust drifting through the moonlit air: slow, deterministic, the same speed every frame (no jitter) */
-const Dust: React.FC<{ t: number }> = ({ t }) => {
+export const Dust: React.FC<{ t: number }> = ({ t }) => {
   const motes = Array.from({ length: 46 }, (_, i) => {
     const r = (k: number) => { const v = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return v - Math.floor(v); };
     const x = ((r(1) * 1080 + t * (8 + r(2) * 14) + 20 * Math.sin(t * 0.4 + i)) % 1140) - 30;
