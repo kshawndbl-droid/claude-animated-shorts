@@ -29,7 +29,13 @@ SHOTS = {
     # Part B close-up: lens a hand above the tatami, looking along the floor past his folded feet toward the lantern;
     # the feet are drawn in Remotion at (-0.25, 0.2, 0) in sharp focus, the lantern glows out of focus behind
     "anklecu": dict(n=1, keys=[(1, (-0.3, -0.85, 0.2), (0.6, 3.0, 0.12), 24)], focus=(-0.25, 0.2, 0.06), fstop=1.8),
+    # Part D (dawn, render with --light dawn): the empty room the morning after, her biwa left on the tatami and a
+    # trail of black drips running to the back-left corner post and up it into the rafters
+    "dawn_wide": dict(n=1, keys=[(1, (2.0, -1.3, 1.2), (-0.7, 3.4, 0.3), 20)], focus=(0.9, 1.0, 0.1), fstop=4.0),
+    # the trail and the climb up the wall into the rafters: ONE tall plate (--tall 2.2) panned bottom to top in Remotion
+    "dawn_climb": dict(n=1, keys=[(1, (-2.55, 3.45, 1.25), (-4.1, 5.8, 1.25), 19)], focus=(-3.9, 5.4, 1.0), fstop=5.6),
 }
+LIGHT = arg("--light", "night")
 SHOT = arg("--shot", "chartest")
 W, D0, D1, H = 4.2, -5.0, 6.0, 2.7  # room half-width, front/back wall y, ceiling height
 
@@ -186,7 +192,7 @@ def shoji(x0, x1, y, wood, paper, torn):
     box("lintel", ((x0 + x1) / 2, y, hgt + 0.05), (x1 - x0, 0.1, 0.1), wood)
 
 
-def andon(loc, wood, glow):
+def andon(loc, wood, glow, lit=True):
     x, y = loc
     for dx in (-0.14, 0.14):
         for dy in (-0.14, 0.14):
@@ -196,6 +202,8 @@ def andon(loc, wood, glow):
     for z in (0.2, 0.63):
         box("ring", (x, y, z), (0.31, 0.31, 0.03), wood)
     box("base", (x, y, 0.06), (0.32, 0.32, 0.03), wood)
+    if not lit:
+        return
     li = bpy.data.lights.new("lamp", "POINT")
     li.energy, li.color, li.shadow_soft_size = 45, (1.0, 0.5, 0.2), 0.1
     o = ts.link(bpy.data.objects.new("lamp", li))
@@ -226,16 +234,78 @@ def cobweb(corner, out1, out2, m, n_rad=7, n_ring=6):
         curve("ring", pts, m, r=0.0016)
 
 
+def biwa(loc, rot):
+    """her lute, dropped on the tatami: a lacquered pear-shaped body, a short neck with a bent-back pegbox, four strings"""
+    lac = stain_mat("lacquer", (0.26, 0.11, 0.05), (0.1, 0.04, 0.02), scale=6.0, rough=0.35)
+    pale = ts.flat_mat("biwaface", (0.36, 0.17, 0.07), rough=0.45)
+    x, y = loc
+    c, sn = math.cos(rot), math.sin(rot)
+    P = lambda u, v, z: (x + u * c - v * sn, y + u * sn + v * c, z)  # noqa: E731  (u along the neck)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, location=P(0, 0, 0.05))
+    b = bpy.context.object
+    b.scale, b.rotation_euler[2] = (0.27, 0.17, 0.045), rot
+    b.data.materials.append(lac)
+    ts.smooth(b)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=16, location=P(0.0, 0, 0.068))
+    f = bpy.context.object
+    f.scale, f.rotation_euler[2] = (0.25, 0.155, 0.03), rot
+    f.data.materials.append(pale)
+    ts.smooth(f)
+    box("neck", P(0.36, 0, 0.07), (0.24, 0.045, 0.03), lac, rot=rot, bevel=0.008)
+    pb = box("pegbox", P(0.53, 0, 0.055), (0.13, 0.05, 0.03), lac, rot=rot, bevel=0.008)
+    pb.rotation_euler[1] = math.radians(18)
+    for k, du in enumerate((0.49, 0.53, 0.57, 0.61)):
+        box("peg", P(du, 0.045 * (1 if k % 2 else -1), 0.06), (0.012, 0.07, 0.012), lac, rot=rot)
+    box("bridge", P(-0.13, 0, 0.1), (0.02, 0.1, 0.012), ts.flat_mat("bridge", (0.05, 0.03, 0.02)), rot=rot)
+    sm_ = ts.flat_mat("silk", (0.85, 0.8, 0.7), rough=0.4)
+    for v in (-0.033, -0.011, 0.011, 0.033):
+        curve("string", [P(-0.13, v, 0.105), P(0.48, v * 0.6, 0.09)], sm_, r=0.0012)
+    # the bachi (plectrum) fell beside it
+    bc = box("bachi", P(0.05, -0.32, 0.012), (0.16, 0.09, 0.01), ts.flat_mat("bachi", (0.55, 0.48, 0.36), rough=0.5), rot=rot + 0.9)
+    bc.scale[1] = 0.07
+
+
+def blood_trail(m):
+    """dark drips (legend's black blood, never a body): from the cushion to the back-left corner post, then up it"""
+    r = random.Random(77)
+    a, b = (0.55, 0.75), (-4.1, 5.5)
+    n = 44
+    for i in range(n):
+        k = i / (n - 1)
+        x = a[0] + (b[0] - a[0]) * k + 0.18 * math.sin(k * 7.0)
+        y = a[1] + (b[1] - a[1]) * k + 0.12 * math.sin(k * 5.0 + 1)
+        for j in range(r.choice((1, 1, 2))):
+            bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=8, location=(x + r.uniform(-0.05, 0.05), y + r.uniform(-0.05, 0.05), 0.0505))
+            o = bpy.context.object
+            s = r.uniform(0.012, 0.035) * (1.2 if j == 0 else 0.55)
+            o.scale = (s * r.uniform(1.0, 3.2), s * r.uniform(0.6, 1.0), 0.0015)
+            o.rotation_euler[2] = math.atan2(b[1] - a[1], b[0] - a[0]) + r.uniform(-0.4, 0.4)
+            o.data.materials.append(m)
+            ts.smooth(o)
+    # up the wall beside the corner post (pale plaster, so the dark runs read), wavering up to the beam and the web
+    for i in range(46):
+        k = i / 45
+        z = 0.05 + k * (H - 0.15)
+        y = 5.55 + 0.12 * math.sin(k * 9.0) + r.uniform(-0.04, 0.04)
+        x = -W + (0.028 if z < 0.9 else 0.004)
+        ln = r.uniform(0.03, 0.09)
+        o = box("smear", (x, y, z), (0.003, r.uniform(0.015, 0.045), ln), m)
+        if r.random() < 0.35:  # a drip running down from it
+            dl = r.uniform(0.06, 0.25)
+            box("run", (x, y + r.uniform(-0.01, 0.01), z - dl / 2), (0.003, 0.007, dl), m)
+
+
 def build():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
     sc.render.fps = 30
     wo = bpy.data.worlds.new("night")
     wo.use_nodes = True
-    wo.node_tree.nodes["Background"].inputs[0].default_value = (0.004, 0.006, 0.014, 1)
+    DAWN = LIGHT == "dawn"
+    wo.node_tree.nodes["Background"].inputs[0].default_value = (0.02, 0.024, 0.032, 1) if DAWN else (0.004, 0.006, 0.014, 1)
     wo.node_tree.nodes["Background"].inputs[1].default_value = 1.0
     vol = wo.node_tree.nodes.new("ShaderNodeVolumePrincipled")
-    vol.inputs["Density"].default_value = 0.022
+    vol.inputs["Density"].default_value = 0.03 if DAWN else 0.022
     vol.inputs["Anisotropy"].default_value = 0.35
     vol.inputs["Color"].default_value = (0.7, 0.75, 0.9, 1)
     wo.node_tree.links.new(vol.outputs[0], wo.node_tree.nodes["World Output"].inputs["Volume"])
@@ -245,13 +315,13 @@ def build():
     beam = wood_mat("beam", (0.04, 0.025, 0.018), (0.12, 0.075, 0.045))
     tatami(tatami_mat(), ts.flat_mat("cloth", (0.03, 0.03, 0.035), rough=0.9))
     # moonlit paper with water stains; the moon is behind it
-    paper = stain_mat("paper", (0.78, 0.8, 0.86), (0.5, 0.48, 0.42), scale=4.0, rough=0.9, emit=(0.6, 0.7, 1.0), emit_k=0.55)
+    paper = stain_mat("paper", (0.78, 0.8, 0.86), (0.5, 0.48, 0.42), scale=4.0, rough=0.9, emit=(0.78, 0.8, 0.86) if DAWN else (0.6, 0.7, 1.0), emit_k=0.8 if DAWN else 0.55)
     torn = {(0, 1, 2), (0, 2, 2), (0, 1, 3), (1, 3, 5), (2, 0, 1), (2, 1, 1), (3, 2, 4), (3, 2, 5), (3, 3, 5), (4, 0, 6)}
     shoji(-W, W, D1, wood, paper, torn)
     plaster = stain_mat("plaster", (0.22, 0.19, 0.15), (0.08, 0.07, 0.06), scale=2.0)
     box("ranma", (0, D1 + 0.02, (1.95 + H) / 2 + 0.05), (2 * W, 0.06, H - 1.95), plaster)
     # outside: a dark moonlit garden wall far behind the torn panes
-    box("outside", (0, D1 + 3.0, 1.5), (14, 0.1, 5), stain_mat("garden", (0.05, 0.07, 0.12), (0.02, 0.03, 0.05), emit=(0.25, 0.32, 0.5), emit_k=0.5))
+    box("outside", (0, D1 + 3.0, 1.5), (14, 0.1, 5), stain_mat("garden", (0.05, 0.07, 0.12), (0.02, 0.03, 0.05), emit=(0.25, 0.32, 0.5), emit_k=0.5)).visible_shadow = not DAWN
     # left wall: stained plaster over a plank wainscot; right wall: faded fusuma doors, one left ajar on darkness
     box("lwall", (-W - 0.05, (D0 + D1) / 2, H / 2), (0.1, D1 - D0, H), plaster)
     for i in range(18):
@@ -271,10 +341,15 @@ def build():
     for i in range(22):
         box("ceil", (-W + (i + 0.5) * 2 * W / 22, (D0 + D1) / 2, H + 0.02), (2 * W / 22 - 0.01, D1 - D0, 0.03), wood)
     # the lantern she plays by, her cushion, and a fallen roof tile (the house is abandoned)
-    andon((1.05, 1.5), beam, ts.flat_mat("andon", (1.0, 0.5, 0.2), emit=1.6))
+    andon((1.05, 1.5), beam, ts.flat_mat("andon", (0.55, 0.5, 0.42) if DAWN else (1.0, 0.5, 0.2), emit=0.0 if DAWN else 1.6), lit=not DAWN)
+    web = ts.flat_mat("web", (0.75, 0.76, 0.8), rough=0.5, emit=0.25)
+    if DAWN:
+        biwa((0.95, 0.35), 2.3)
+        blood_trail(ts.flat_mat("blackblood", (0.008, 0.004, 0.006), rough=0.12))
+        # a fresh web high in the corner above the post, where the trail ends
+        cobweb((-W + 0.1, D1 - 0.1, H - 0.02), (-W + 0.1, D1 - 0.1, H - 0.7), (-W + 0.75, D1 - 0.1, H - 0.02), web, n_rad=9, n_ring=8)
     box("zabuton", (0.4, 1.85, 0.05), (0.55, 0.6, 0.08), stain_mat("cushion", (0.32, 0.06, 0.07), (0.15, 0.03, 0.04)), rot=0.15, bevel=0.03)
     box("tile", (-2.2, 1.2, 0.03), (0.28, 0.22, 0.03), ts.flat_mat("tile", (0.12, 0.12, 0.13)), rot=0.6)
-    web = ts.flat_mat("web", (0.75, 0.76, 0.8), rough=0.5, emit=0.25)
     cobweb((-W + 0.12, D1 - 0.12, H - 0.18), (-W + 0.12, D1 - 0.12, H - 1.0), (-W + 0.9, D1 - 0.12, H - 0.18), web)
     cobweb((W - 0.12, D1 - 0.12, H - 0.18), (W - 0.12, D1 - 0.12, H - 0.8), (W - 0.12, D1 - 0.9, H - 0.18), web)
     cobweb((-W + 0.1, 2.0 - 0.1, H - 0.17), (-W + 0.1, 1.2, H - 0.17), (-W + 0.1, 1.9, H - 0.9), web)
@@ -290,17 +365,27 @@ def build():
         box("brace", (-3.75, 5.55, H - 0.45), (0.1, 0.9, 0.1), beam, rot=0.0).rotation_euler = (math.radians(40), 0, 0)
     # warm bounce from the lantern up onto the ceiling, so the top of the frame is a lit ceiling, not black
     bo = bpy.data.lights.new("bounce", "AREA")
-    bo.size, bo.energy, bo.color = 2.0, 22, (1.0, 0.6, 0.3)
+    bo.size, bo.energy, bo.color = 2.0, (0 if DAWN else 22), (1.0, 0.6, 0.3)
     o = ts.link(bpy.data.objects.new("bounce", bo))
     o.location, o.rotation_euler = (0.9, 1.5, 0.9), (math.radians(180), 0, 0)
     # light: moon behind the screens, the lantern, and a faint cold fill
     mo = bpy.data.lights.new("moon", "AREA")
     mo.shape, mo.size, mo.size_y = "RECTANGLE", 8.0, 2.5
-    mo.energy, mo.color = 900, (0.55, 0.65, 1.0)
+    mo.energy, mo.color = (1500, (0.78, 0.82, 0.95)) if DAWN else (900, (0.55, 0.65, 1.0))
     o = ts.link(bpy.data.objects.new("moon", mo))
     o.location, o.rotation_euler = (0.0, D1 + 1.2, 1.4), (math.radians(-90), 0, 0)
+    if DAWN:  # grey morning skylight filling the room from above, soft (the room reads; no lantern now)
+        sk = bpy.data.lights.new("sky", "AREA")
+        sk.shape, sk.size, sk.size_y, sk.energy, sk.color = "RECTANGLE", 7.0, 9.0, 700, (0.7, 0.75, 0.88)
+        o = ts.link(bpy.data.objects.new("sky", sk))
+        o.location = (0.0, 0.5, H - 0.05)
+    if DAWN:  # low sun just risen: a hard shaft through the torn panes, slanting down across the floor
+        su = bpy.data.lights.new("sun", "SUN")
+        su.energy, su.color, su.angle = 2.2, (1.0, 0.86, 0.7), math.radians(1.5)
+        o = ts.link(bpy.data.objects.new("sun", su))
+        o.rotation_euler = (math.radians(-68), math.radians(-14), math.radians(-8))
     fl = bpy.data.lights.new("fill", "AREA")
-    fl.size, fl.energy, fl.color = 4.0, 500, (0.45, 0.55, 0.9)
+    fl.size, fl.energy, fl.color = (6.0, 1400, (0.62, 0.68, 0.85)) if DAWN else (4.0, 500, (0.45, 0.55, 0.9))
     o = ts.link(bpy.data.objects.new("fill", fl))
     o.location, o.rotation_euler = (0.0, -3.0, H - 0.1), (math.radians(30), 0, 0)
     sc.render.engine = "BLENDER_EEVEE"
@@ -349,7 +434,10 @@ if __name__ == "__main__":
     sc = build()
     cam = shot_camera(sc, SHOT)
     res = int(arg("--res", "720"))
-    sc.render.resolution_x, sc.render.resolution_y = res, int(res * SHOTS[SHOT].get("ar", 16 / 9))
+    tall = float(arg("--tall", "1"))
+    sc.render.resolution_x, sc.render.resolution_y = res, int(round(res * SHOTS[SHOT].get("ar", 16 / 9 * tall)))
+    if tall != 1:  # taller frame, same pixel focal length (sensor maps to 16:9 height), so projection stays 1920-based
+        cam.data.sensor_fit, cam.data.sensor_height = "VERTICAL", 36 * tall
     fg = arg("--fg")
     if fg:  # foreground layer: only what is nearer than FG metres, on transparency, laid over the cast
         sc.render.film_transparent = True
