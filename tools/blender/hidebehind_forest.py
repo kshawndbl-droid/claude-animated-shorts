@@ -59,6 +59,15 @@ for _k, _fs in (("pA", 4.0), ("pB", 2.8), ("pC", 2.8), ("pE", 2.8)):
                      keys=[(i + 1, fr["cam"], fr["look"], fr["lens"]) for i, fr in enumerate(_P["frames"])],
                      focus=[(fr["logger"]["x"], fr["logger"]["y"], 0.9) if fr["logger"] else (HIDE[0], HIDE[1], 1.3) for fr in _P["frames"]],
                      lantern=[fr["lantern"] for fr in _P["frames"]])
+# PART C shots (story 26.5 - 37.7 s): still cameras from stories/hidebehind/sets/partc_paths.json
+# (tools/hidebehind_partc_paths.py); c1L/c1D are the same camera with the lantern lit / out
+_PC = os.path.join(ROOT, "stories", "hidebehind", "sets", "partc_paths.json")
+if os.path.exists(_PC):
+    for _k, _P in json.load(open(_PC)).items():
+        _fr = _P["frames"][0]
+        _foc = (_fr["look"][0], _fr["look"][1], _fr["look"][2]) if _k.startswith("c1") else (_fr["logger"]["x"], _fr["logger"]["y"], 1.19)
+        SHOTS[_k] = dict(n=1, t0=_P["t0"], fstop={"c1L": 2.0, "c1D": 2.0, "c2": 1.8, "c3": 2.4}.get(_k, 2.8),
+                         keys=[(1, _fr["cam"], _fr["look"], _fr["lens"])], focus=_foc, lantern=[_fr["lantern"]])
 SHOT = arg("--shot", "chartest")
 # the lantern: warm kerosene point light, small radius, soft shadows, a hard influence cutoff so it lights only a pool
 LANTERN = dict(color=(1.0, 0.55, 0.22), radius=0.05, cutoff=float(arg("--lcut", "3.0")), base=float(arg("--lantern", "30")))
