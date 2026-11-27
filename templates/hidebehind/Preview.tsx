@@ -88,7 +88,7 @@ const Man: React.FC<{ shot: string; f: number; T: number; pf: PF; expr: "neutral
   );
 };
 
-export const HPreview: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }) => {
+export const HPreview: React.FC<{ withAudio?: boolean; clean?: boolean }> = ({ withAudio = true, clean = false }) => {
   const fr = useCurrentFrame(), T = T0 + fr / FPS;
   let shot = ORDER[0];
   for (const s of ORDER) if (T >= P[s].t0 - 1e-6) shot = s;
@@ -142,10 +142,10 @@ export const HPreview: React.FC<{ withAudio?: boolean }> = ({ withAudio = true }
         <filter id="gr"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves={2} seed={grain} /></filter>
         <rect width={1080} height={1920} filter="url(#gr)" />
       </svg>
-      <Subtitles words={WORDS.filter((w) => w.s >= T0 - 0.05 && w.s < T1 - 0.2)} style={sub} offset={-T0} />
+      {!clean && <Subtitles words={WORDS.filter((w) => w.s >= T0 - 0.05 && w.s < T1 - 0.2)} style={sub} offset={-T0} />}
       {withAudio && <Audio src={staticFile("hidebehind/mix_v3.wav")} startFrom={Math.round(T0 * FPS)} />}
-      {fadeIn > 0 && <AbsoluteFill style={{ background: "#000", opacity: fadeIn }} />}
-      {fadeOut > 0 && <AbsoluteFill style={{ background: "#000", opacity: fadeOut }} />}
+      {!clean && fadeIn > 0 && <AbsoluteFill style={{ background: "#000", opacity: fadeIn }} />}
+      {!clean && fadeOut > 0 && <AbsoluteFill style={{ background: "#000", opacity: fadeOut }} />}
     </AbsoluteFill>
   );
 };

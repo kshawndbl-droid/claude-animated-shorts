@@ -39,6 +39,7 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="HCreature" component={CreatureSheet} durationInFrames={1} fps={30} width={1080} height={1920} />
     <Composition id="HScareTest" component={HScareTest} durationInFrames={SCARE_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
     <Composition id="HFace" component={FaceTest} durationInFrames={1} fps={30} width={1080} height={1920} />
+    <Composition id="HPartB" component={HPreview} durationInFrames={PREVIEW_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: false, clean: true }} />
     <Composition id="HWalkTest" component={HWalkTest} durationInFrames={H_WALK_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="HStandTest" component={HStandTest} durationInFrames={H_STAND_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="JWalkTest" component={JWalkTest} durationInFrames={J_WALK_FRAMES} fps={30} width={1080} height={1920} />
