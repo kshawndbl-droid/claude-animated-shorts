@@ -20,6 +20,13 @@ import { JPartA, JPartAOpen, J_PARTA_FRAMES, J_OPEN_FRAMES } from "../../templat
 import { JPartB, J_PARTB_FRAMES } from "../../templates/jorogumo/PartB";
 import { JPartD, J_PARTD_FRAMES } from "../../templates/jorogumo/PartD";
 import { JFull, J_FULL_FRAMES } from "../../templates/jorogumo/Full";
+import { HWalkTest, HStandTest, H_WALK_FRAMES, H_STAND_FRAMES } from "../../templates/hidebehind/CharTest";
+import { HPreview, PREVIEW_FRAMES } from "../../templates/hidebehind/Preview";
+import { CreatureSheet } from "../../templates/hidebehind/CreatureSheet";
+import { HScareTest, SCARE_FRAMES } from "../../templates/hidebehind/ScareTest";
+import { FaceTest } from "../../templates/hidebehind/FaceTest";
+import { HPartD, PARTD_FRAMES } from "../../templates/hidebehind/PartD";
+import { HFull, FULL_FRAMES } from "../../templates/hidebehind/Full";
 import { ShortB, B_FRAMES } from "../../templates/mailed/ShortB";
 
 export const EiffelRoot: React.FC = () => (
@@ -38,6 +45,15 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="EnvTest2" component={EnvTest2} durationInFrames={ENVTEST_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="EnvTest" component={EnvTest} durationInFrames={ENVTEST_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="ToonWalkTest" component={ToonWalkTest} durationInFrames={TOON_WALK_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="HPreview" component={HPreview} durationInFrames={PREVIEW_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
+    <Composition id="HCreature" component={CreatureSheet} durationInFrames={1} fps={30} width={1080} height={1920} />
+    <Composition id="HScareTest" component={HScareTest} durationInFrames={SCARE_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: true }} />
+    <Composition id="HFace" component={FaceTest} durationInFrames={1} fps={30} width={1080} height={1920} />
+    <Composition id="HFull" component={HFull} durationInFrames={FULL_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="HPartD" component={HPartD} durationInFrames={PARTD_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="HPartB" component={HPreview} durationInFrames={PREVIEW_FRAMES} fps={30} width={1080} height={1920} defaultProps={{ withAudio: false, clean: true }} />
+    <Composition id="HWalkTest" component={HWalkTest} durationInFrames={H_WALK_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="HStandTest" component={HStandTest} durationInFrames={H_STAND_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="JWalkTest" component={JWalkTest} durationInFrames={J_WALK_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="JMonsterSheet" component={JMonsterSheet} durationInFrames={1} fps={30} width={1080} height={1920} />
     <Composition id="JMonsterV2" component={JMonsterV2} durationInFrames={1} fps={30} width={1080} height={1920} />

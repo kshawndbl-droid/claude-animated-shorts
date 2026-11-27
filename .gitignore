@@ -22,3 +22,7 @@ public/medusa/art/
 public/medusa/art3/
 # spider woman plates and preview mix: shipped as tars in project files (shorts/jorogumo/assets/), not in git
 public/jorogumo/
+
+# Hidebehind render assets (large, kept in project files)
+public/hidebehind/
+stories/hidebehind/final/voice.wav
