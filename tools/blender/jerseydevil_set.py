@@ -35,7 +35,7 @@ CAMS = {
     "in3": ((1.35, 10.0, 1.35), (-1.1, 7.0, 1.4), 22, (-1.1, 7.0, 1.45), 4.0),      # inside: the window, him in front
     "in4": ((-1.7, 9.9, 1.0), (1.6, 8.6, 2.75), 17, (1.6, 8.7, 2.4), 4.0),          # inside: rafters + chimney breast
     "in5": ((0.55, 9.75, 0.75), (1.85, 8.7, 0.72), 24, (1.75, 8.7, 0.7), 2.8),       # close: the hearth opening
-    "flue": ((30.0, 30.0, 0.2), (30.0, 30.03, 5.0), 16, (30.0, 30.0, 2.5), 8.0),     # POV straight up the flue
+    "flue": ((30.0, 30.0, 1.4), (30.0, 30.03, 5.0), 16, (30.0, 30.0, 2.5), 8.0),     # POV straight up the flue
 }
 FIRE = float(arg("--fire", "1"))   # hearth fire strength (render hi = 1 and lo ~ 0.7, cross-fade in Remotion)
 SHOT = F.SHOT
@@ -277,13 +277,13 @@ def interior(boards, stone, trim, iron, pelt):
     # the flue mouth above the fire (dark), the fire: split logs, glowing coals, flame tongues
     box("fluemouth", (hx + 0.05, hy, 1.0), (0.4, 0.75, 0.05), ts.flat_mat("fluedark", (0.0, 0.0, 0.0)))
     fb = F.bark_mat("firelog", (0.02, 0.012, 0.008), (0.07, 0.04, 0.025))
-    gr = ts.flat_mat("coals", (1.0, 0.28, 0.05), emit=6.0 * FIRE)
+    gr = ts.flat_mat("coals", (1.0, 0.28, 0.05), emit=2.2 * FIRE)
     for j, (a, b) in enumerate((((hx - 0.15, hy - 0.3), (hx + 0.12, hy + 0.25)), ((hx + 0.1, hy - 0.28), (hx - 0.12, hy + 0.3)))):
         lo = F.log(f"firelog{j}", a, b, 0.07, fb, gr)
         lo.location.z = 0.27 + 0.08 * j
     bpy.ops.mesh.primitive_plane_add(size=1, location=(hx, hy, 0.215))
     o = bpy.context.object
-    o.scale = (0.45, 0.7, 1)
+    o.scale = (0.32, 0.55, 1)
     o.data.materials.append(gr)
     flame = ts.flat_mat("flame", (1.0, 0.45, 0.1), emit=14.0 * FIRE)
     for j in range(7):
@@ -292,7 +292,8 @@ def interior(boards, stone, trim, iron, pelt):
         o = bpy.context.object
         o.data.materials.append(flame)
         o.visible_shadow = False
-    for nm, e, loc in (("firelight", 90.0, (hx - 0.25, hy, 0.55)), ("fireglow", 25.0, (hx - 0.6, hy, 0.4))):
+        o.hide_render = True   # flames are drawn in 2D (animated) in Remotion; the light stays
+    for nm, e, loc in (("firelight", float(arg("--firelight", "55")), (hx - 0.25, hy, 0.55)), ("fireglow", 15.0, (hx - 0.6, hy, 0.4))):
         la = bpy.data.lights.new(nm, "POINT")
         la.energy, la.color, la.shadow_soft_size = e * FIRE, (1.0, 0.42, 0.13), 0.15
         ts.link(bpy.data.objects.new(nm, la)).location = loc
@@ -321,12 +322,19 @@ def interior(boards, stone, trim, iron, pelt):
         o = bpy.context.object
         o.scale = (0.7, 0.1, 1.2) if rz == 0 else (0.1, 0.7, 1.2)
         o.data.materials.append(pelt)
+    # the window from inside: a cold moonlit pane (night sky, pine silhouettes are drawn in 2D), frame and muntins
+    wx, wz = -1.1, 1.45
+    box("pane_in", (wx, y0 + 0.065, wz), (0.78, 0.01, 0.62), ts.flat_mat("winsky", (0.16, 0.24, 0.42), emit=float(arg("--winsky", "1.2"))))
+    for dx, dz, sz in ((0, 0.34, (0.9, 0.07, 0.07)), (0, -0.34, (0.95, 0.1, 0.07)), (-0.42, 0, (0.07, 0.07, 0.74)), (0.42, 0, (0.07, 0.07, 0.74)),
+                       (0, 0, (0.04, 0.05, 0.62)), (0, 0.0, (0.78, 0.05, 0.035))):
+        box("wframe_in", (wx + dx, y0 + 0.09, wz + dz), sz, trim)
+    box("sill_in", (wx, y0 + 0.14, wz - 0.37), (0.95, 0.16, 0.04), trim)
     # moonlight through the window: a cold area light outside the pane, shining in
     la = bpy.data.lights.new("winmoon", "AREA")
     la.shape, la.size, la.energy, la.color = "SQUARE", 0.9, float(arg("--winmoon", "120")), (0.5, 0.62, 1.0)
     o = ts.link(bpy.data.objects.new("winmoon", la))
-    o.location = (-1.1, y0 - 0.9, 1.9)
-    o.rotation_euler = (math.radians(-70), 0, 0)
+    o.location = (-1.1, y0 + 0.25, 1.45)
+    o.rotation_euler = (math.radians(-75), 0, 0)
     # the flue: a stone tube 3.5 m tall, open to the night sky at the top, soot black lower down
     fx, fy = 30.0, 30.0
     soot = ts.flat_mat("soot2", (0.01, 0.009, 0.008), rough=1.0)
@@ -340,7 +348,7 @@ def interior(boards, stone, trim, iron, pelt):
     o.location = (fx + 0.1, fy, 6.5)
     o.rotation_euler = (0, math.radians(3), 0)
     la = bpy.data.lights.new("flueember", "POINT")
-    la.energy, la.color = 6.0 * FIRE, (1.0, 0.4, 0.12)
+    la.energy, la.color = 25.0 * FIRE, (1.0, 0.4, 0.12)
     ts.link(bpy.data.objects.new("flueember", la)).location = (fx, fy, 0.05)
 
 
