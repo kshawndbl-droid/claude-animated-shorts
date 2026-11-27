@@ -43,6 +43,19 @@ SHOTS = {
     # character test plate: a still camera inside the camp at dusk looking east across the line, for walks across frame
     "chartest": dict(n=1, light="dusk", keys=[(1, (-1.5, 0.5, 1.0), (10.0, 4.5, 1.3), 28)],
                      focus=(1.8, 1.7, 0.8), fstop=5.6),
+    # Part C. Night of 9 Dec 1898: Patterson's raised platform (machan) by the camp under the moon, slow low push-in
+    "platform": dict(n=107, light="night", keys=[(1, (18.6, -9.6, 1.3), (14, -2, 3.3), 26), (107, (17.4, -8.0, 1.6), (14, -2, 3.4), 30)],
+                     focus=(14, -2, 3.2), fstop=4.0),
+    # on the platform beside Patterson, looking down over the dark grass toward the camp fires (still plate)
+    "aim": dict(n=1, light="night", keys=[(1, (16.2, -3.9, 4.15), (8.5, 3.5, 0.6), 30)], focus=(9.5, 3.0, 0.5), fstop=5.6),
+    # the next morning: eight men carry the lion along the line (low sun = early morning); slow pan with them
+    "carry": dict(n=111, light="dusk", exposure=-0.1, keys=[(1, (0.0, -13.0, 1.4), (12.0, -5.5, 1.0), 26), (111, (0.5, -13.3, 1.4), (12.4, -8.2, 1.0), 26)],
+                  focus=(7.6, -8.2, 0.8), fstop=5.6),
+    # 29 Dec: tracking Patterson through the tall grass at first light, low among the stalks
+    "track": dict(n=114, light="dusk", exposure=-0.1, keys=[(1, (-7.6, -15.2, 0.85), (-5.6, -11.0, 0.8), 28), (114, (-4.6, -15.0, 0.85), (-2.6, -10.8, 0.8), 28)],
+                  focus=(-5.0, -11.0, 0.6), fstop=4.0),
+    # the second lion in the grass ahead, seen past Patterson's shoulder (still plate; shots and shake are 2D)
+    "shots": dict(n=1, light="dusk", exposure=-0.1, keys=[(1, (-1.2, -12.6, 1.05), (5.5, -6.2, 0.6), 30)], focus=(4.6, -7.0, 0.6), fstop=5.6),
 }
 SHOT = arg("--shot", "patterson")
 LIGHT = SHOTS[SHOT]["light"]
@@ -695,7 +708,10 @@ def build():
     lowc = veg.fine_grass("grass_low", 700, ((-7, 2), (-15.5, -11)), rnd, hs=(0.45, 0.9))
     parts = [near, far, lowc]
     # each shot gets a dense patch of grass where its camera looks closest
-    dense = {"envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9))}.get(SHOT)
+    dense = {"envtest": ((-9, 9), (-6.5, 5)), "patterson": ((-3, 9), (-8, 4)), "grass": ((-8, 3), (-16, -9)), "track": ((-9, 0), (-15, -9)),
+             "shots": ((-1, 8), (-11, -4)), "platform": ((9, 19), (-7, 2)), "carry": ((5.8, 14), (-14, -2))}.get(SHOT)
+    if SHOT in ("platform", "aim"):
+        machan((14.0, -2.0))
     if dense:
         parts.append(veg.fine_grass("grass_dense", int(16 * (dense[0][1] - dense[0][0]) * (dense[1][1] - dense[1][0])), dense, rnd,
                                     skip=lambda x, y: track(x, y) or math.hypot(x + 2.5, y - 10.5) < 12.8))
@@ -713,9 +729,41 @@ def build():
         ee.shadow_resolution_scale = 0.5
     sc.view_settings.view_transform = "AgX"
     sc.view_settings.look = "AgX - Medium High Contrast" if LIGHT == "dusk" else "AgX - High Contrast"
-    sc.view_settings.exposure = float(arg("--exposure", "-0.4" if LIGHT == "dusk" else "0.3"))
+    sc.view_settings.exposure = float(arg("--exposure", str(SHOTS[SHOT].get("exposure", -0.4 if LIGHT == "dusk" else 0.3))))
     sc.render.image_settings.file_format = "PNG"
     return sc
+
+
+def machan(c):
+    """Patterson's raised platform: four rough poles lashed together, a plank deck about 3 m up, a low rail at the back
+    and sides, and a ladder of poles and rungs"""
+    wood = mat("machanwood", (0.3, 0.2, 0.12), rough=0.9)
+    x0, y0 = c
+    for dx in (-0.8, 0.8):
+        for dy in (-0.8, 0.8):
+            bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=0.07, depth=3.9, location=(x0 + dx, y0 + dy, 1.95),
+                                                rotation=(math.radians(rnd.uniform(-2, 2)), math.radians(rnd.uniform(-2, 2)), 0))
+            bpy.context.object.data.materials.append(wood)
+    for i in range(9):
+        bpy.ops.mesh.primitive_cube_add(location=(x0, y0 - 0.85 + i * 0.212, 3.0))
+        o = bpy.context.object
+        o.scale = (0.95, 0.1, 0.04)
+        o.rotation_euler = (0, 0, math.radians(rnd.uniform(-1.5, 1.5)))
+        o.data.materials.append(wood)
+    for (a, b) in [((-0.8, 0.8), (0.8, 0.8)), ((-0.8, -0.8), (-0.8, 0.8)), ((0.8, -0.8), (0.8, 0.8))]:
+        p, q = Vector((x0 + a[0], y0 + a[1], 3.55)), Vector((x0 + b[0], y0 + b[1], 3.55))
+        bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.04, depth=(q - p).length, location=(p + q) / 2)
+        o = bpy.context.object
+        o.rotation_euler = (q - p).to_track_quat("Z", "Y").to_euler()
+        o.data.materials.append(wood)
+    for dx in (-0.25, 0.25):  # ladder on the far side
+        bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.035, depth=3.3, location=(x0 - 1.35, y0 + dx, 1.55), rotation=(0, math.radians(-14), 0))
+        bpy.context.object.data.materials.append(wood)
+    for k in range(9):
+        z = 0.3 + k * 0.33
+        bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.025, depth=0.55, location=(x0 - 1.35 - (z - 1.55) * math.tan(math.radians(-14)), y0, z),
+                                            rotation=(math.pi / 2, 0, 0))
+        bpy.context.object.data.materials.append(wood)
 
 
 def shot_camera(sc, name):
