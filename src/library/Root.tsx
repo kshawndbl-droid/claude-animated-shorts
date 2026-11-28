@@ -5,7 +5,7 @@ import { Composition } from "remotion";
 import { LibWalkTest, LibStandTest, H_WALK_FRAMES, H_STAND_FRAMES } from "../../library/tests/RigRegression";
 import { HWalkTest, HStandTest } from "../../templates/hidebehind/CharTest";
 import { DaylightTest, DAYLIGHT_FRAMES } from "../../library/tests/DaylightTest";
-import { SceneFromJson } from "../../library/templates/Scene";
+import { SceneFromJson, kzSceneMetadata, KzSceneProps } from "../../library/templates/Scene";
 import { CatWardrobe, CatFaces, CatMotions, CatBodies } from "../../library/catalog/CharacterSheet";
 
 const V = { fps: 30, width: 1080, height: 1920 } as const;
@@ -21,5 +21,7 @@ export const LibraryRoot: React.FC = () => (
     <Composition id="CatBodies" component={CatBodies} durationInFrames={1} {...V} />
     <Composition id="DaylightTest" component={DaylightTest} durationInFrames={DAYLIGHT_FRAMES} {...V} />
     <Composition id="KzDemo" component={SceneFromJson} defaultProps={{ src: "kz-demo/scene.json" }} durationInFrames={Math.round(31.5 * 30)} {...V} />
+    <Composition id="KzScene" component={SceneFromJson} calculateMetadata={kzSceneMetadata}
+      defaultProps={{ src: "kz-demo/scene.json", from: 0, duration: 31.5, captions: true, withAudio: true } as KzSceneProps} {...V} durationInFrames={1} />
   </>
 );

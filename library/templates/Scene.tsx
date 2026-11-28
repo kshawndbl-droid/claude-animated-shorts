@@ -148,6 +148,10 @@ const transitionLayer = (shot: ResolvedShot, T: number) => {
   }
 };
 
+/** props for the generic KzScene composition (tools/kz.py renders any Short through it) */
+export type KzSceneProps = { src: string; from?: number; duration?: number; captions?: boolean; withAudio?: boolean };
+export const kzSceneMetadata = ({ props }: { props: KzSceneProps }) => ({ durationInFrames: Math.max(1, Math.round((props.duration ?? 10) * 30)) });
+
 export const SceneFromJson: React.FC<{ src: string; from?: number; captions?: boolean; withAudio?: boolean }> = ({ src, from = 0, captions = true, withAudio = true }) => {
   const [scene] = useJsonFiles<SceneSpec>([src]);
   if (!scene) return <AbsoluteFill style={{ background: "#000" }} />;
@@ -173,6 +177,8 @@ export const SceneView: React.FC<{ scene: SceneSpec; from?: number; captions?: b
         <ShotView scene={scene} shot={shot} cam={cams[idx]} T={T} fr={fr} />
       </AbsoluteFill>
       {transitionLayer(shot, T)}
+      {next?.transition === "dip" && <FX.DipToBlack T={T} at={next.t0} d={0.25} />}
+      {next?.transition === "fade" && <FX.Fade T={T} at={next.t0} d={0.35} dir="out" />}
       {shots[0].t0 === 0 && <FX.Fade T={T} at={0} d={0.35} />}
       <FX.Fade T={T} at={shots[shots.length - 1].t1} d={0.6} dir="out" />
       {captions && words && <Subtitles words={words} style={sub} offset={-from} />}

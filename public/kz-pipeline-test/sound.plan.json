@@ -1,0 +1,50 @@
+{
+ "genre": "history",
+ "duration": 16.0,
+ "voice": "/home/user/claude-animated-shorts/public/kz-pipeline-test/voice.wav",
+ "words": "/home/user/claude-animated-shorts/public/kz-pipeline-test/words.json",
+ "ambience": [
+  {
+   "kind": "field",
+   "from": 0.0,
+   "to": 12.3
+  },
+  {
+   "kind": "shore",
+   "from": 12.3,
+   "to": 15.0
+  }
+ ],
+ "music": {
+  "genre": "history"
+ },
+ "hits": [
+  {
+   "kind": "boom",
+   "at": 0.0
+  },
+  {
+   "kind": "sting",
+   "at": 4.905
+  },
+  {
+   "kind": "musket",
+   "at": 10.85
+  },
+  {
+   "kind": "cannon",
+   "at": 13.2
+  }
+ ],
+ "steps": [
+  {
+   "surface": "dirt",
+   "from": 3.4000000000000004,
+   "to": 4.9,
+   "rate": 1.8,
+   "gain": 0.6
+  }
+ ],
+ "gains": {},
+ "out": "mix.wav"
+}

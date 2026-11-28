@@ -1,0 +1,59 @@
+{
+ "set": "shore",
+ "args": [
+  "--set",
+  "shore",
+  "--light",
+  "golden",
+  "--cam",
+  "wide",
+  "--stage",
+  "0,0",
+  "--quality",
+  "final",
+  "--layers",
+  "depth",
+  "--out",
+  "/mnt/project-files/cache/plates/2d62a8e49bda6750/"
+ ],
+ "light": "golden",
+ "quality": {
+  "res": 1080,
+  "samples": 24,
+  "vsamples": 64,
+  "vtile": 8,
+  "shadow": 1.0
+ },
+ "stage": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "cam": {
+  "loc": [
+   0.0,
+   -7.5,
+   1.6
+  ],
+  "look": [
+   0.0,
+   0.0,
+   0.9
+  ],
+  "lens": 26
+ },
+ "marks": {
+  "stage": [
+   0,
+   0,
+   0
+  ],
+  "heading": 0.0,
+  "jetty": [
+   6,
+   4,
+   0.4
+  ]
+ },
+ "seconds": 29.5
+}

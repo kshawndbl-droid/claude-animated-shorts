@@ -1,0 +1,319 @@
+{
+ "slug": "kz-pipeline-test",
+ "genre": "history",
+ "grade": "history",
+ "words": "kz-pipeline-test/words.json",
+ "audio": "kz-pipeline-test/mix.wav",
+ "subtitles": {
+  "key": [
+   "1859,",
+   "pig",
+   "war.",
+   "potatoes,",
+   "shot",
+   "warships."
+  ]
+ },
+ "cast": {
+  "farmer": {
+   "look": "farmer",
+   "over": {
+    "hair": "#7a3a1e",
+    "beard": "#7a3a1e"
+   }
+  },
+  "red1": {
+   "look": "civilWarSoldier",
+   "over": {
+    "top": "#9a2a22",
+    "topDark": "#6a1a16"
+   }
+  }
+ },
+ "shots": [
+  {
+   "id": "s1",
+   "t0": 0.0,
+   "t1": 3.2,
+   "template": "intro",
+   "set": {
+    "set": "field",
+    "kind": "farm",
+    "light": "golden",
+    "cam": "low",
+    "stage": [
+     0,
+     0
+    ]
+   },
+   "actors": [
+    {
+     "who": "farmer",
+     "at": [
+      0,
+      0
+     ],
+     "face": "right",
+     "do": [
+      [
+       0,
+       "idle",
+       {
+        "expr": "neutral"
+       }
+      ],
+      [
+       1.6,
+       "lookAround",
+       {
+        "side": 1,
+        "expr": "smile"
+       }
+      ]
+     ]
+    }
+   ],
+   "title": {
+    "text": "San Juan Island",
+    "sub": "1859",
+    "at": 0.3,
+    "d": 2.3
+   }
+  },
+  {
+   "id": "s2",
+   "t0": 3.2,
+   "t1": 6.3,
+   "template": "discovery",
+   "set": {
+    "set": "field",
+    "kind": "farm",
+    "light": "golden",
+    "cam": "wide",
+    "stage": [
+     0,
+     0
+    ]
+   },
+   "move": {
+    "focus": "farmer"
+   },
+   "actors": [
+    {
+     "who": "farmer",
+     "path": [
+      [
+       -4,
+       0.2
+      ],
+      [
+       0,
+       0
+      ]
+     ],
+     "go": [
+      {
+       "t0": 3.2,
+       "t1": 5.0,
+       "speed": "fit"
+      }
+     ],
+     "do": [
+      [
+       3.2,
+       "idle",
+       {
+        "expr": "smile"
+       }
+      ],
+      [
+       5.0,
+       "point",
+       {
+        "height": -0.6,
+        "expr": "surprised"
+       }
+      ]
+     ]
+    }
+   ],
+   "sound": {
+    "steps": "dirt"
+   }
+  },
+  {
+   "id": "s3",
+   "t0": 6.3,
+   "t1": 10.2,
+   "template": "reaction",
+   "transition": "cut",
+   "set": {
+    "set": "field",
+    "kind": "farm",
+    "light": "golden",
+    "cam": "close",
+    "stage": [
+     0,
+     0
+    ],
+    "dist": 2.8,
+    "height": 1.1,
+    "aim": 0.75
+   },
+   "actors": [
+    {
+     "who": "farmer",
+     "at": [
+      0,
+      0
+     ],
+     "face": "right",
+     "do": [
+      [
+       6.3,
+       "idle",
+       {
+        "expr": "surprised"
+       }
+      ],
+      [
+       7.6,
+       "pose",
+       {
+        "expr": "angry",
+        "armNear": [
+         40,
+         80
+        ],
+        "handNear": "fist",
+        "lean": 4
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s4",
+   "t0": 10.2,
+   "t1": 12.3,
+   "template": "action",
+   "set": {
+    "set": "field",
+    "kind": "farm",
+    "light": "golden",
+    "cam": "medium",
+    "stage": [
+     0,
+     0
+    ]
+   },
+   "actors": [
+    {
+     "who": "farmer",
+     "at": [
+      0,
+      0
+     ],
+     "face": "right",
+     "hold": "rifle",
+     "do": [
+      [
+       10.2,
+       "aim"
+      ]
+     ]
+    }
+   ],
+   "move": {
+    "impacts": [
+     10.85
+    ]
+   },
+   "fx": [
+    [
+     "puff",
+     {
+      "at": [
+       1.2,
+       0,
+       1.35
+      ],
+      "t0": 10.85,
+      "size": 0.6
+     }
+    ]
+   ],
+   "sound": {
+    "hits": [
+     [
+      "musket",
+      10.85
+     ]
+    ]
+   }
+  },
+  {
+   "id": "s5",
+   "t0": 12.3,
+   "t1": 15.0,
+   "template": "recreation",
+   "transition": "flash",
+   "set": {
+    "set": "shore",
+    "light": "golden",
+    "cam": "wide",
+    "stage": [
+     0,
+     0
+    ]
+   },
+   "fx": [
+    [
+     "crowd",
+     {
+      "area": [
+       -3,
+       3,
+       0,
+       4
+      ],
+      "n": 9,
+      "looks": [
+       "civilWarSoldier"
+      ],
+      "face": [
+       1,
+       0
+      ],
+      "react": {
+       "at": 12.9,
+       "expr": "angry",
+       "arms": true
+      }
+     }
+    ],
+    [
+     "puff",
+     {
+      "at": [
+       8,
+       30,
+       0.5
+      ],
+      "t0": 13.2,
+      "size": 4
+     }
+    ]
+   ],
+   "sound": {
+    "hits": [
+     [
+      "cannon",
+      13.2
+     ]
+    ]
+   }
+  }
+ ]
+}
