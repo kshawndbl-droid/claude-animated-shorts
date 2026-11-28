@@ -24,6 +24,7 @@ import { ShortB, B_FRAMES } from "../../templates/mailed/ShortB";
 import { AhzCreatureSheet } from "../../templates/ahuizotl/CreatureSheet";
 import { AhzWalkTest, AhzStandTest, AHZ_WALK_FRAMES, AHZ_STAND_FRAMES } from "../../templates/ahuizotl/CharTest";
 import { AhzStylePreview, AhzStylePreviewV2, AHZ_PREVIEW_FRAMES } from "../../templates/ahuizotl/StylePreview";
+import { AhzPartD, AHZ_PARTD_FRAMES } from "../../templates/ahuizotl/PartD";
 
 export const EiffelRoot: React.FC = () => (
   <>
@@ -61,5 +62,6 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="AhzStandTest" component={AhzStandTest} durationInFrames={AHZ_STAND_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="AhzStylePreview" component={AhzStylePreview} durationInFrames={AHZ_PREVIEW_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="AhzStylePreviewV2" component={AhzStylePreviewV2} durationInFrames={AHZ_PREVIEW_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="AhzPartD" component={AhzPartD} durationInFrames={AHZ_PARTD_FRAMES} fps={30} width={1080} height={1920} />
   </>
 );
