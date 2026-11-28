@@ -1,0 +1,70 @@
+{
+ "set": "street",
+ "args": [
+  "--set",
+  "street",
+  "--period",
+  "victorian",
+  "--light",
+  "dusk",
+  "--cam",
+  "wide",
+  "--stage",
+  "0,7",
+  "--aim",
+  "2.0",
+  "--height",
+  "1.0",
+  "--quality",
+  "preview",
+  "--layers",
+  "depth",
+  "--out",
+  "/mnt/project-files/cache/plates/8e40fa1dc13ae466/"
+ ],
+ "light": "dusk",
+ "quality": {
+  "res": 540,
+  "samples": 6,
+  "vsamples": 24,
+  "vtile": 16,
+  "shadow": 0.5
+ },
+ "stage": [
+  0.0,
+  7.0,
+  0.0
+ ],
+ "cam": {
+  "loc": [
+   0.0,
+   -0.5,
+   1.0
+  ],
+  "look": [
+   0.0,
+   7.0,
+   2.0
+  ],
+  "lens": 26
+ },
+ "marks": {
+  "stage": [
+   0,
+   2.0,
+   0
+  ],
+  "path": [
+   [
+    0,
+    -10
+   ],
+   [
+    0,
+    60
+   ]
+  ],
+  "heading": 0.0
+ },
+ "seconds": 126.4
+}

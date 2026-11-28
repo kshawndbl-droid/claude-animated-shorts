@@ -635,7 +635,59 @@ def write_master(m, out):
     print("wrote", out)
 
 
+# ------------------------------------------------------------------ sound plan straight from a scene.json
+# (template hits mirror library/templates/templates.ts TEMPLATES; keep both in step)
+TEMPLATE_HITS = {"intro": lambda g: {"comedy": "whoosh", "horror": "riser"}.get(g, "boom"), "chase": lambda g: "whoosh",
+                 "discovery": lambda g: "sting", "reveal": lambda g: "sting"}
+HIT_AT = {"intro": 0.0, "chase": 0.0, "discovery": 0.55, "reveal": 0.08}     # fraction of the shot
+
+
+def set_ambience(st):
+    name, light, kind = st.get("set"), st.get("light", ""), st.get("kind", "")
+    night = light in ("night_moon", "dusk", "storm")
+    if light == "storm":
+        return "storm"
+    return {"forest": "forest_night" if night else "forest_day", "village": "village_night" if night else "village_day",
+            "street": "street_1800s", "field": "battlefield" if kind == "battlefield" else "field", "shore": "shore",
+            "desert": "desert", "interior": "tavern" if kind == "tavern" else ("fireside" if light == "candle" else "interior")}.get(name, "field")
+
+
+def scene_plan(scene, voice=None, words=None):
+    """a kz_sound plan from a scene spec: ambience per shot (merged while the place stays the same), the genre's music,
+    template hits, blows in action shots, footsteps for walking/running actors, and each shot's own sound list"""
+    g = scene.get("genre", "true")
+    amb, hits, steps = [], [], []
+    for sh in scene["shots"]:
+        k = sh.get("sound", {}).get("ambience") or set_ambience(sh["set"])
+        if amb and amb[-1]["kind"] == k and abs(amb[-1]["to"] - sh["t0"]) < 0.01:
+            amb[-1]["to"] = sh["t1"]
+        else:
+            amb.append({"kind": k, "from": sh["t0"], "to": sh["t1"]})
+        tp = sh["template"]
+        if tp in TEMPLATE_HITS:
+            hits.append({"kind": TEMPLATE_HITS[tp](g), "at": sh["t0"] + HIT_AT[tp] * (sh["t1"] - sh["t0"])})
+        for a in sh.get("actors", []):
+            for at, name, *_ in a.get("do", []):
+                if tp == "action" and name in ("punch", "swing"):
+                    hits.append({"kind": "impact", "at": at + 0.18})
+                if name == "fall":
+                    hits.append({"kind": "door_slam", "at": at + 0.45, "gain": 0.5})
+            for go in a.get("go", []):
+                fast = go.get("run")
+                steps.append({"surface": sh.get("sound", {}).get("steps", "dirt"), "from": go["t0"] + 0.2, "to": go["t1"] - 0.1,
+                              "rate": 3.0 if fast else 1.8, "gain": 0.8 if fast else 0.6})
+        for h in sh.get("sound", {}).get("hits", []):
+            hits.append({"kind": h[0], "at": h[1], **({"gain": h[2]} if len(h) > 2 else {})})
+    end = max(s["t1"] for s in scene["shots"])
+    return {"genre": g, "duration": end + 1.0, "voice": voice, "words": words, "ambience": amb, "music": {"genre": g},
+            "hits": hits, "steps": steps, "gains": {"ambience": 0.14, "music": 0.1} if not voice else {}}
+
+
 if __name__ == "__main__":
     pf = sys.argv[1]
     plan = json.load(open(pf))
+    if "shots" in plan:      # a scene.json: build the plan from it (optional voice/words args), keep a copy next to it
+        plan = scene_plan(plan, *(sys.argv[2:4]))
+        plan["out"] = "mix.wav"
+        json.dump(plan, open(os.path.join(os.path.dirname(os.path.abspath(pf)), "sound.plan.json"), "w"), indent=1)
     write_master(render_plan(plan, os.path.dirname(os.path.abspath(pf))), os.path.join(os.path.dirname(os.path.abspath(pf)), plan.get("out", "mix.wav")))

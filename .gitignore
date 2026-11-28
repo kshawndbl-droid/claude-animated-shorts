@@ -31,3 +31,5 @@ public/tsavo/*.mp4
 public/tsavo3d/
 public/library/**/*.png
 public/library/**/*.wav
+public/kz-demo/**/*.png
+public/kz-demo/*.wav

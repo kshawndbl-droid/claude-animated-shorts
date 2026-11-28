@@ -1,0 +1,70 @@
+{
+ "set": "field",
+ "args": [
+  "--set",
+  "field",
+  "--kind",
+  "battlefield",
+  "--light",
+  "overcast",
+  "--cam",
+  "medium",
+  "--stage",
+  "0,0",
+  "--quality",
+  "preview",
+  "--layers",
+  "depth",
+  "--out",
+  "/mnt/project-files/cache/plates/4e392b94e061b2cb/"
+ ],
+ "light": "overcast",
+ "quality": {
+  "res": 540,
+  "samples": 6,
+  "vsamples": 24,
+  "vtile": 16,
+  "shadow": 0.5
+ },
+ "stage": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "cam": {
+  "loc": [
+   0.0,
+   -3.8,
+   1.35
+  ],
+  "look": [
+   0.0,
+   0.0,
+   0.95
+  ],
+  "lens": 35
+ },
+ "marks": {
+  "stage": [
+   0,
+   0,
+   0
+  ],
+  "path": [
+   [
+    -60,
+    0.5
+   ],
+   [
+    0,
+    0.0
+   ],
+   [
+    60,
+    -0.8
+   ]
+  ],
+  "heading": 0.0
+ },
+ "seconds": 6.5
+}
