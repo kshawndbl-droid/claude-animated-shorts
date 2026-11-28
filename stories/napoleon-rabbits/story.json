@@ -1,0 +1,104 @@
+{
+ "title": "Napoleon vs the Rabbits, 1807",
+ "engine": "chatterbox",
+ "mood": "funny",
+ "voice": "bm_fable",
+ "lines": [
+  {
+   "text": "Napoleon conquered half of Europe... and then lost a fight to bunnies.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.5
+  },
+  {
+   "text": "It's July, eighteen-oh-seven. He has just signed a big peace treaty, and he wants to celebrate.",
+   "mood": "happy",
+   "emotion": 0.6,
+   "gap": 0.3
+  },
+  {
+   "text": "So his chief of staff, Berthier, plans a rabbit hunt.",
+   "mood": "funny",
+   "emotion": 0.6,
+   "gap": 0.4
+  },
+  {
+   "text": "There's just one problem. His men bought tame rabbits from local farmers. Hundreds of them. Maybe even thousands.",
+   "mood": "funny",
+   "emotion": 0.75,
+   "gap": 0.5
+  },
+  {
+   "text": "The cages open. The hunters raise their guns.",
+   "mood": "mystery",
+   "emotion": 0.6,
+   "gap": 0.4
+  },
+  {
+   "text": "But instead of running away... the rabbits run straight at Napoleon.",
+   "mood": "action",
+   "emotion": 0.9,
+   "gap": 0.3
+  },
+  {
+   "text": "They weren't scared. They thought it was feeding time.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.5
+  },
+  {
+   "text": "At first, everyone laughs. Then the bunnies just keep coming.",
+   "mood": "funny",
+   "emotion": 0.7,
+   "gap": 0.3
+  },
+  {
+   "text": "They swarm around his legs. He swings his riding crop. His men try sticks and whips.",
+   "mood": "action",
+   "emotion": 0.9,
+   "gap": 0.3
+  },
+  {
+   "text": "Nothing works.",
+   "mood": "funny",
+   "emotion": 0.9,
+   "gap": 0.5
+  },
+  {
+   "text": "The Emperor of France retreats... to his carriage.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "And the bunnies chase him all the way there.",
+   "mood": "funny",
+   "emotion": 0.9,
+   "gap": 0.3
+  },
+  {
+   "text": "Some accounts even say a few hopped right inside.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.5
+  },
+  {
+   "text": "The story comes from the memoirs of General Thiebault, so it may be a little exaggerated.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.4
+  },
+  {
+   "text": "But if it's true, the man who beat entire armies got chased off by hungry bunnies.",
+   "mood": "funny",
+   "emotion": 0.85,
+   "gap": 0.5
+  },
+  {
+   "text": "Eight years later, Napoleon met his Waterloo. But the rabbits? They got him first.",
+   "mood": "funny",
+   "emotion": 0.9,
+   "gap": 0.3
+  }
+ ]
+}

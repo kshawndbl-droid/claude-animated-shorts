@@ -1,0 +1,31 @@
+{
+  "name": "claude-animated-shorts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "voice": "cd templates/audio && BRIDGE_ROOT=../../out/bridge python3 voice_tts.py",
+    "audio": "cd templates/audio && BRIDGE_ROOT=../../out/bridge BRIDGE_AUDIO_OUT=../../out/bridge/audio python3 mix.py && cp ../../out/bridge/audio/mix.wav ../../public/bridge/mix.wav",
+    "stills": "node templates/scripts/bridge-stills.mjs",
+    "render": "node templates/scripts/bridge-render.mjs out/bridge/video.mp4 BridgeShort"
+  },
+  "dependencies": {
+    "@fontsource/montserrat": "^5.3.0",
+    "@react-three/fiber": "9.4.0",
+    "@react-three/postprocessing": "3.0.4",
+    "@remotion/bundler": "4.0.546",
+    "@remotion/cli": "4.0.546",
+    "@remotion/renderer": "4.0.546",
+    "@remotion/three": "4.0.546",
+    "postprocessing": "6.37.8",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.546",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.12",
+    "@types/three": "0.180.0",
+    "typescript": "5.9.2"
+  }
+}

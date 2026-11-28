@@ -1,0 +1,102 @@
+{
+ "title": "The Vasa, 1628",
+ "engine": "chatterbox",
+ "lines": [
+  {
+   "text": "In sixteen twenty-eight, the king of Sweden built the mightiest warship in the world.",
+   "mood": "mystery",
+   "emotion": 0.5,
+   "gap": 0.3
+  },
+  {
+   "text": "It sank... before it even left the harbor.",
+   "mood": "mystery",
+   "emotion": 0.6,
+   "gap": 0.6
+  },
+  {
+   "text": "Her name was the Vasa. Sixty-four guns. Main character energy.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "But before she sailed, thirty men ran across her deck, to test how steady she was.",
+   "mood": "serious",
+   "emotion": 0.5,
+   "gap": 0.3
+  },
+  {
+   "text": "After three runs, she was rocking so hard, the admiral stopped the test.",
+   "mood": "serious",
+   "emotion": 0.6,
+   "gap": 0.3
+  },
+  {
+   "text": "His big move? He said he wished the king were home. That was the plan.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.5
+  },
+  {
+   "text": "Tenth of August. The Vasa sets sail from Stockholm, flags out, full aura.",
+   "mood": "happy",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "A small gust tips her over. Slowly... she comes back up.",
+   "mood": "mystery",
+   "emotion": 0.4,
+   "gap": 0.7
+  },
+  {
+   "text": "Then a stronger gust hits.",
+   "mood": "action",
+   "emotion": 0.7,
+   "gap": 0.3
+  },
+  {
+   "text": "Her lower gunports are wide open, and the sea pours straight in!",
+   "mood": "action",
+   "emotion": 1.0,
+   "gap": 0.5
+  },
+  {
+   "text": "She sinks just thirteen hundred meters out. About thirty people die.",
+   "mood": "sad",
+   "emotion": 0.35,
+   "gap": 0.9
+  },
+  {
+   "text": "The problem? Too much weight, way too high. She was cooked from day one.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  },
+  {
+   "text": "And after the inquiry? Nobody was punished. No cap.",
+   "mood": "funny",
+   "emotion": 0.9,
+   "gap": 0.5
+  },
+  {
+   "text": "She lay in the mud for three hundred and thirty-three years.",
+   "mood": "serious",
+   "emotion": 0.4,
+   "gap": 0.3
+  },
+  {
+   "text": "Then in nineteen sixty-one, they lifted her out, and today she's the best-preserved seventeenth-century ship on Earth.",
+   "mood": "happy",
+   "emotion": 0.7,
+   "gap": 0.6
+  },
+  {
+   "text": "Fumbled her very first trip... and still became a legend.",
+   "mood": "funny",
+   "emotion": 0.8,
+   "gap": 0.3
+  }
+ ]
+}
