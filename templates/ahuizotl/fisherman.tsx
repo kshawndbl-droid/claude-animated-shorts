@@ -42,6 +42,10 @@ export type FPose = {
   slump?: number;
   /** breathing depth (1 = normal) */
   breath?: number;
+  /** (added for part C, optional: without it nothing changes) 0 standing .. 1 down on the far knee: the far foot stays
+   *  where it stands and rolls onto its toes, the near foot steps forward and plants, the hips go forward and down until
+   *  the far knee rests on the ground, the cloak and the loincloth flap drape lower */
+  kneel?: number;
 };
 
 export const FISHER: FLook = {
@@ -54,6 +58,10 @@ const HIP = 0.86, THIGH = 0.405, SHIN = 0.39, ANKLE = 0.075;
 const SHOULDER = 1.375, NECK = 1.405, HEAD_RX = 0.108, HEAD_RY = 0.128;
 const UPPER = 0.29, FORE = 0.265;
 const STANCE = 0.6;
+// the kneel (pose.kneel): the far foot rolls onto its toes where it stands (rel -0.07, pitch 65: the ankle ends at
+// about (0.067, -0.14)); the far knee rests on the ground (y -0.045) a shin length in front of it, with the hips right
+// above the knee; the near foot plants a step ahead
+const KNEEL_BACK = -0.07, KNEEL_TOE = 65, KNEEL_HIP: V = [0.43, -0.45], KNEEL_FRONT = 0.8;
 
 /** smooth closed (or open) path through points (Catmull-Rom as cubic Beziers) */
 export const spline = (pts: V[], closed = true, k = 1) => {
@@ -311,8 +319,9 @@ export const Fisherman: React.FC<{ id?: string; x: number; y: number; ppm: numbe
     const br = pose.breath ?? 1;
     const breath = (1 - w) * Math.sin(t * 1.55) * br;   // ~4 s breath cycle when standing
     const sway = (1 - w) * (0.008 * Math.sin(t * 0.55) + 0.003 * Math.sin(t * 1.3 + 0.4));   // slow weight shift
-    const hipY = -(HIP - 0.035 * w + 0.016 * w * mid) + (1 - w) * 0.002 * breath;
-    const hipX = sway;
+    const knl = clamp01(pose.kneel ?? 0);
+    const hipY = mix(-(HIP - 0.035 * w + 0.016 * w * mid) + (1 - w) * 0.002 * breath, KNEEL_HIP[1] + 0.002 * breath, knl);
+    const hipX = mix(sway, KNEEL_HIP[0], knl);
     const lean = 4.5 * w + (1 - w) * (0.5 * Math.sin(t * 0.55) + 0.8) + (pose.slump ?? 0);
     // arms follow the legs a touch late (follow-through)
     const armPh = Math.cos(2 * Math.PI * (near.loc - 0.07));
@@ -331,7 +340,11 @@ export const Fisherman: React.FC<{ id?: string; x: number; y: number; ppm: numbe
     const nA = armPts(shN[0], shN[1], nearA[0], nearA[1]);
     const fA = armPts(shF[0], shF[1], farA[0], farA[1]);
     const hipN: V = [hipX + 0.02 + 0.012 * w * -armPh, hipY], hipF: V = [hipX - 0.03 - 0.012 * w * -armPh, hipY - 0.01];
-    const fN = footPose(near.rel, near.lift, near.pitch), fF = footPose(far.rel, far.lift, far.pitch);
+    const stp = clamp01(knl / 0.6);
+    const fN = knl > 0 ? footPose(mix(near.rel, KNEEL_FRONT, smooth(stp)), mix(near.lift, 0.075 * Math.sin(Math.PI * stp), knl > 0.001 ? 1 : 0), near.pitch * (1 - knl))
+      : footPose(near.rel, near.lift, near.pitch);
+    const fF = knl > 0 ? footPose(mix(far.rel, KNEEL_BACK, knl), far.lift * (1 - knl), mix(far.pitch, KNEEL_TOE, smooth(knl))) : footPose(far.rel, far.lift, far.pitch);
+    const hd = 0.34 * knl;   // the cloak hem drops with the hips when he kneels (it drapes on the ground behind him)
     // cloth lag: the cloak and the loincloth flap drag behind the walk and swing with the legs; idle drift when standing
     const drag = -0.05 * w, ph = Math.sin(2 * Math.PI * (near.loc - 0.2));
     const cloakSw = drag + 0.02 * w * ph + (1 - w) * 0.006 * Math.sin(t * 0.9);
@@ -347,16 +360,16 @@ export const Fisherman: React.FC<{ id?: string; x: number; y: number; ppm: numbe
     const wrap = spline([[-0.122, -0.06], [0.0, -0.075], [0.118, -0.06], [0.122, 0.02], [0.1, 0.1], [0.05, 0.13], [-0.03, 0.11], [-0.1, 0.07], [-0.13, 0.0]]);
     const tie = `M-0.124,-0.04 Q0.0,-0.052 0.12,-0.038`;
     // flap in world space (hangs straight down from the front of the waist, it does not lean with the torso)
-    const fw = up(-0.02, 0.1);
-    const flap = spline([[fw[0] - 0.045, fw[1]], [fw[0] + 0.035, fw[1]], [fw[0] + 0.045 + flapSw * 0.5, fw[1] + 0.2], [fw[0] + 0.05 + flapSw, fw[1] + 0.36],
-      [fw[0] + 0.0 + flapSw, fw[1] + 0.375], [fw[0] - 0.04 + flapSw, fw[1] + 0.355], [fw[0] - 0.035 + flapSw * 0.5, fw[1] + 0.2]]);
+    const fw = up(-0.02, 0.1), fl = 1 - 0.5 * knl, fk = 0.16 * knl;   // kneeling: the flap lies forward over the front thigh
+    const flap = spline([[fw[0] - 0.045, fw[1]], [fw[0] + 0.035, fw[1]], [fw[0] + 0.045 + flapSw * 0.5 + fk * 0.6, fw[1] + 0.2 * fl], [fw[0] + 0.05 + flapSw + fk, fw[1] + 0.36 * fl],
+      [fw[0] + 0.0 + flapSw + fk, fw[1] + 0.375 * fl], [fw[0] - 0.04 + flapSw + fk * 0.8, fw[1] + 0.355 * fl], [fw[0] - 0.035 + flapSw * 0.5 + fk * 0.4, fw[1] + 0.2 * fl]]);
     // tilmatli: from the knot on the near shoulder over the back, hanging to the back of the knees
     const kn = up(top - 0.015, 0.05), nape = up(top - 0.005, -0.1), bk1 = up(top - 0.25, -0.135), bk2 = up(0.05, -0.135);
-    const hemB: V = [bk2[0] - 0.05 + cloakSw * 1.3, -0.46], hemF: V = [hipX + 0.01 + cloakSw, -0.45];
+    const hemB: V = [bk2[0] - 0.05 + cloakSw * 1.3 - 0.12 * knl, -0.46 + hd], hemF: V = [hipX + 0.01 + cloakSw - 0.1 * knl, -0.45 + hd];
     const cloak = spline([kn, [nape[0] + 0.02, nape[1] - 0.025], [nape[0] - 0.03, nape[1] + 0.03], bk1, [bk2[0] - 0.02 + cloakSw * 0.4, bk2[1]], hemB,
-      [(hemB[0] + hemF[0]) / 2, -0.44 + 0.01 * ph * w], hemF, [hipX + 0.0 + cloakSw * 0.3, hipY + 0.05], up(0.12, -0.07), up(top - 0.14, -0.02)]);
-    const cloakFold = spline([up(top - 0.06, -0.05), up(0.3, -0.11), [bk2[0] - 0.03 + cloakSw * 0.8, -0.48]], false);
-    const cloakFold2 = spline([up(top - 0.12, 0.0), up(0.15, -0.08), [hipX - 0.03 + cloakSw, -0.46]], false);
+      [(hemB[0] + hemF[0]) / 2, -0.44 + hd + 0.01 * ph * w], hemF, [hipX + 0.0 + cloakSw * 0.3, hipY + 0.05], up(0.12, -0.07), up(top - 0.14, -0.02)]);
+    const cloakFold = spline([up(top - 0.06, -0.05), up(0.3, -0.11), [bk2[0] - 0.03 + cloakSw * 0.8 - 0.1 * knl, -0.48 + hd]], false);
+    const cloakFold2 = spline([up(top - 0.12, 0.0), up(0.15, -0.08), [hipX - 0.03 + cloakSw - 0.08 * knl, -0.46 + hd]], false);
     return (
       <g transform={`translate(${P(x)},${P(y)}) scale(${P((flip ? -1 : 1) * ppm)},${P(ppm)})`}>
         <Arm a={fA} L={L} far />
@@ -371,7 +384,7 @@ export const Fisherman: React.FC<{ id?: string; x: number; y: number; ppm: numbe
           <path d="M-0.02,-0.03 Q0.02,0.05 0.06,0.1 M-0.08,-0.02 Q-0.06,0.04 -0.04,0.09" stroke={L.clothDark} strokeWidth={0.008} fill="none" opacity={0.8} />
         </g>
         <Two fill={L.cloth} ow={0.016} d={flap} />
-        <path d={`M${P(fw[0] - 0.03 + flapSw * 0.6)},${P(fw[1] + 0.33)} L${P(fw[0] + 0.035 + flapSw)},${P(fw[1] + 0.335)}`} stroke={L.clothDark} strokeWidth={0.008} opacity={0.8} />
+        <path d={`M${P(fw[0] - 0.03 + flapSw * 0.6 + fk * 0.8)},${P(fw[1] + 0.33 * fl)} L${P(fw[0] + 0.035 + flapSw + fk)},${P(fw[1] + 0.335 * fl)}`} stroke={L.clothDark} strokeWidth={0.008} opacity={0.8} />
         <Two fill={L.cloak} ow={0.018} d={cloak} />
         <path d={cloakFold} stroke={L.cloakDark} strokeWidth={0.012} fill="none" strokeLinecap="round" />
         <path d={cloakFold2} stroke={L.cloakDark} strokeWidth={0.009} fill="none" strokeLinecap="round" opacity={0.7} />
