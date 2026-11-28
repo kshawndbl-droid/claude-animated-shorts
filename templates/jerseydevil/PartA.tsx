@@ -11,8 +11,9 @@
 //                 and straightens, arms down; lightning (thunder 7.0 s) washes her cold blue
 //  s3  7.45-10.95 the cradle rocks on its own; on the wall behind it the firelight throws a shadow that grows hooves
 //                 (~8.7), wings (~9.25), a tail (~9.95), then swells huge toward the hearth
-//  s4  10.95-12.80 the hearth: a dark shape bursts out past the cradle into the fire and up the chimney (whoosh/flaps
-//                 11.07-11.95), the fire gutters, soot falls, the empty cradle still rocks; the push ends on the flue
+//  s4  10.95-12.80 the hearth: it goes up the chimney seen only as its huge winged shadow sweeping up the chimney
+//                 breast (whoosh/flaps 11.07-11.95), flames and sparks sucked up after it, the fire gutters, soot falls,
+//                 the empty cradle still rocks; the push ends on the flue
 // Video only (no audio, no subtitles): the main thread lays the approved mix v2 + subtitles over the assembled parts.
 import React from "react";
 import { AbsoluteFill, Img, staticFile, useCurrentFrame } from "remotion";
@@ -113,7 +114,7 @@ const Plates: React.FC<{ shot: string; k: number; fl: number; out: number }> = (
 };
 
 /** hearth flames (2D), base at screen (x, y), s = px per metre; g = 1 full fire .. 0 guttered to embers, lean = draught */
-const Flames: React.FC<{ x: number; y: number; s: number; t: number; k: number; g?: number; lean?: number; id: string }> = ({ x, y, s, t, k, g = 1, lean = 0, id }) => {
+const Flames: React.FC<{ x: number; y: number; s: number; t: number; k: number; g?: number; lean?: number; up?: number; id: string }> = ({ x, y, s, t, k, g = 1, lean = 0, up = 0, id }) => {
   const tongues = [-0.3, -0.18, -0.06, 0.06, 0.17, 0.28];
   return (
     <svg width={1080} height={1920} style={{ position: "absolute", overflow: "visible" }}>
@@ -125,8 +126,8 @@ const Flames: React.FC<{ x: number; y: number; s: number; t: number; k: number; 
       <ellipse cx={x} cy={y - 0.3 * s} rx={1.3 * s} ry={0.9 * s} fill={`url(#${id}g)`} opacity={(0.55 + 0.4 * k) * (0.35 + 0.65 * g)} style={{ mixBlendMode: "screen" }} />
       <g filter={`url(#${id}b)`} style={{ mixBlendMode: "screen" }}>
         {tongues.map((o, i) => {
-          const h = s * (0.42 + 0.26 * (1 - Math.abs(o) * 2.6) + 0.12 * Math.sin(t * (6 + i * 1.7) + i * 2.1) + 0.1 * k) * (0.15 + 0.85 * g);
-          const w = s * (0.07 + 0.03 * Math.sin(t * 5 + i)) * (0.6 + 0.4 * g);
+          const h = s * (0.42 + 0.26 * (1 - Math.abs(o) * 2.6) + 0.12 * Math.sin(t * (6 + i * 1.7) + i * 2.1) + 0.1 * k) * (0.15 + 0.85 * g) * (1 + 1.7 * up * (1 - Math.abs(o)));
+          const w = s * (0.07 + 0.03 * Math.sin(t * 5 + i)) * (0.6 + 0.4 * g) * (1 - 0.35 * up);
           const bx = x + o * s, sway = s * (0.05 * Math.sin(t * (4.1 + i) + i * 1.3) + lean * 0.35);
           return <path key={i} d={`M${bx - w},${y} Q${bx - w * 1.1},${y - h * 0.45} ${bx + sway},${y - h} Q${bx + w * 1.1},${y - h * 0.45} ${bx + w},${y} Z`} fill={`url(#${id}f)`} opacity={0.85} />;
         })}
@@ -233,35 +234,48 @@ const WallShadow: React.FC<{ bx: number; by: number; s: number; T: number; k: nu
   );
 };
 
-/** the dark shape bursting from the cradle into the hearth and up the flue (s4), with smeared trailing copies */
-const Burst: React.FC<{ cam: CamJ; T: number }> = ({ cam, T }) => {
-  const t0 = 11.08, t1 = 11.45;
-  if (T < t0 - 0.02 || T > t1 + 0.1) return null;
-  // path: up out of the cradle -> low across the hearthstone into the fire -> straight up into the throat
-  const path: P3[] = [[CR.x, CR.y - 0.05, 0.45], [0.1, 1.65, 0.55], [0.55, 2.0, 0.6], [0.6, 2.15, 1.25], [0.6, 2.2, 2.6]];
-  const at = (u: number): P3 => {
-    const n = path.length - 1, f = clamp01(u) * n, i = Math.min(n - 1, Math.floor(f)), w = f - i;
-    const a = path[Math.max(0, i - 1)], b = path[i], c = path[i + 1], d = path[Math.min(n, i + 2)];
-    // Catmull-Rom
-    return [0, 1, 2].map((j) => 0.5 * ((2 * b[j]) + (-a[j] + c[j]) * w + (2 * a[j] - 5 * b[j] + 4 * c[j] - d[j]) * w * w + (-a[j] + 3 * b[j] - 3 * c[j] + d[j]) * w * w * w)) as P3;
-  };
-  const u = (T - t0) / (t1 - t0);
-  const ease = (v: number) => v * v * (2.2 - 1.2 * v);
-  const copies = [0, 0.03, 0.06, 0.1, 0.14];
+/** the escape (s4): never the creature itself, only its shadow. Thrown by the fire below it, a huge winged shadow
+ *  sweeps up the face of the chimney breast and vanishes into the ceiling/flue as it goes up the chimney. */
+const ChimneyShadow: React.FC<{ cam: CamJ; T: number }> = ({ cam, T }) => {
+  const t0 = 11.02, t1 = 11.42;
+  if (T < t0 || T > t1 + 0.05) return null;
+  const u = clamp01((T - t0) / (t1 - t0)), e = u * u * (1.5 - 0.5 * u);
+  // on the bright fireback inside the opening, rising from below the logs up past the lintel into the throat
+  const base = project(cam, [0.6, 2.28, mix(-0.9, 1.9, e)]);
+  const ref = project(cam, [0.6, 2.28, 0.6]);
+  const H = mix(1.25, 1.6, e), sc = H / 2.4;
+  const wings = 0.5 + 0.5 * Math.sin((T - t0) * 30);                            // quick wing beats
+  const op = 0.92 * sm(u / 0.1);
+  const o = [[0.06, 0], [1.14, 0], [1.14, 1.05], [0.06, 1.05]].map(([x, z]) => project(cam, [x, 1.74, z]));
   return (
-    <svg width={1080} height={1920} style={{ position: "absolute", overflow: "visible" }}>
+    <svg width={1080} height={1920} style={{ position: "absolute", overflow: "visible", mixBlendMode: "multiply" }}>
       <defs>
-        <filter id="bblur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation={8} /></filter>
-        <filter id="bblur0" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation={3.5} /></filter>
+        <filter id="csb" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation={ref.ppm * 0.018} /></filter>
+        {/* the shadow falls only inside the fire opening (on the fireback); it slides up behind the lintel */}
+        <clipPath id="csclip"><polygon points={o.map((q) => `${q.x},${q.y}`).join(" ")} /></clipPath>
       </defs>
-      {copies.map((lag, i) => {
-        const uu = ease(clamp01(u - lag)), q = project(cam, at(uu)), q2 = project(cam, at(Math.min(1, uu + 0.04)));
-        const dir = (Math.atan2(q2.y - q.y, q2.x - q.x) * 180) / Math.PI;
-        const op = (i === 0 ? 0.97 : 0.45 / i) * (1 - sm((u - 0.92) / 0.15)) * sm((u + 0.05) / 0.1);
-        // body points along its flight: rotate so the head leads (the figure faces +x; up the flue it goes head first)
-        return <g key={i} opacity={op} filter={i > 0 ? "url(#bblur)" : "url(#bblur0)"} transform={`translate(${q.x} ${q.y}) rotate(${dir + 70})`}>
-          <JerseyDevil x={0} y={q.ppm * 0.45} ppm={q.ppm * 0.4} p={{ shadow: true, wings: 0.55 + 0.4 * Math.sin(T * 40 + i), glow: 0, rim: 0, crouch: 0.4, t: T * 4 }} />
-        </g>;
+      <g clipPath="url(#csclip)">
+        <g filter="url(#csb)" opacity={op} transform={`translate(${base.x} ${base.y}) scale(1 1.2)`}>
+          <JerseyDevil x={0} y={0} ppm={ref.ppm * sc} p={{ shadow: true, wings, glow: 0, rim: 0, t: T * 3, crouch: 0.1, open: 0.1 }} />
+        </g>
+      </g>
+    </svg>
+  );
+};
+
+/** sparks and embers sucked up out of the fire into the throat after it (s4) */
+const Sparks: React.FC<{ cam: CamJ; T: number }> = ({ cam, T }) => {
+  const u0 = T - 11.05;
+  if (u0 < 0 || u0 > 1.0) return null;
+  return (
+    <svg width={1080} height={1920} style={{ position: "absolute", overflow: "visible", mixBlendMode: "screen" }}>
+      {Array.from({ length: 34 }).map((_, i) => {
+        const d = (i % 9) * 0.035, life = 0.45 + (i % 4) * 0.08, v = (u0 - d) / life;
+        if (v < 0 || v > 1) return null;
+        const x0 = 0.6 + ((i * 0.613) % 1 - 0.5) * 0.7, z = 0.15 + v * v * 1.3;
+        const p = project(cam, [mix(x0, 0.6, v * 0.8) + 0.04 * Math.sin(T * 20 + i), 2.0 + 0.1 * v, z]);
+        const p2 = project(cam, [mix(x0, 0.6, v * 0.8), 2.0, Math.max(0.15, z - 0.08 - 0.1 * v)]);
+        return <line key={i} x1={p.x} y1={p.y} x2={p2.x} y2={p2.y} stroke={i % 3 ? "#ffb050" : "#ffe0a0"} strokeWidth={Math.max(2.5, p.ppm * 0.014)} strokeLinecap="round" opacity={0.95 * (1 - v)} />;
       })}
     </svg>
   );
@@ -273,11 +287,11 @@ const Soot: React.FC<{ cam: CamJ; T: number }> = ({ cam, T }) => {
   if (u < 0) return null;
   return (
     <svg width={1080} height={1920} style={{ position: "absolute", overflow: "visible" }}>
-      <defs><radialGradient id="sootc"><stop offset="0" stopColor="#120c0a" stopOpacity={0.75} /><stop offset="1" stopColor="#120c0a" stopOpacity={0} /></radialGradient></defs>
+      <defs><radialGradient id="sootc"><stop offset="0" stopColor="#120c0a" stopOpacity={0.5} /><stop offset="1" stopColor="#120c0a" stopOpacity={0} /></radialGradient></defs>
       {/* a cloud of soot puffing down out of the throat and spreading over the hearth */}
       {[0, 1, 2, 3, 4].map((i) => {
         const v = clamp01((u - i * 0.06) / 1.2), p = project(cam, [0.6 + 0.25 * Math.sin(i * 2.3) * v, 2.1 - 0.35 * v, 1.12 - 0.75 * v]);
-        return <circle key={i} cx={p.x} cy={p.y} r={p.ppm * (0.12 + 0.45 * v)} fill="url(#sootc)" opacity={(1 - v) * 0.85 * sm(u / 0.08)} />;
+        return <circle key={i} cx={p.x} cy={p.y} r={p.ppm * (0.12 + 0.45 * v)} fill="url(#sootc)" opacity={(1 - v) * 0.4 * sm(u / 0.15)} />;
       })}
       {/* flakes of soot and grey ash tumbling down */}
       {Array.from({ length: 46 }).map((_, i) => {
@@ -345,11 +359,13 @@ export const JDPartA: React.FC = () => {
     const F = project(cam, FIRE), Th = project(cam, [0.6, 2.15, 1.15]);
     out = sm((T - 11.25) / 0.45) * 0.85;
     const g = 1 - 0.85 * sm((T - 11.2) / 0.35) + 0.2 * sm((T - 12.0) / 0.8);    // the fire flattens, then struggles back a little
-    const lean = 1.6 * Math.exp(-((T - 11.3) ** 2) / 0.02);                     // the draught it leaves drags the flames up/back
+    // as it rushes up the flue the draught sucks the flames straight up after it, then the fire gutters
+    const upd = Math.exp(-((T - 11.22) ** 2) / 0.012), lean = 0;
+    const kk = k * (1 - 0.6 * win(T, 11.05, 11.4, 0.08));                       // its body blocks the firelight as it passes
     // push in and up toward the chimney mouth
     zoom = mix(1.0, 1.22, sm(u * 1.05)); ox = mix(F.x, Th.x, 0.6); oy = mix(F.y - 0.4 * F.ppm, Th.y, sm(u));
-    back = <><Flames x={F.x} y={F.y} s={F.ppm} t={T} k={k} g={g} lean={lean} id="f4" /></>;
-    front = <><Cradle shot="s4" a={a} k={k * (1 - 0.5 * out)} cold={0} /><Burst cam={cam} T={T} /><Soot cam={cam} T={T} /></>;
+    back = <><Flames x={F.x} y={F.y} s={F.ppm} t={T} k={kk} g={g} lean={lean} up={upd} id="f4" /><ChimneyShadow cam={cam} T={T} /></>;
+    front = <><Cradle shot="s4" a={a} k={k * (1 - 0.5 * out)} cold={0} /><Sparks cam={cam} T={T} /><Soot cam={cam} T={T} /></>;
     hazeY = 900; hazeOp = 0.14 + 0.12 * sm((T - 11.5) / 0.5);
   }
 
