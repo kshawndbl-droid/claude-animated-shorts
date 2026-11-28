@@ -7,7 +7,7 @@
 //     he knelt: his drag marks in the mud ending at the waterline, rings spreading and settling where he went under, a
 //     few last bubbles, his folded net floating, the edge clump still. Slow drift. He is gone (no gore).
 //  3) L11 "The Aztecs warned: if you hear a baby crying by the water at night, don't go to it. It isn't a baby."
-//     a) the empty bank, wide, mist, slow push toward the reed bed; b) from where he stood, the camera creeps down the
+//     a) the empty bank, wide, mist, a slow pull back from the reeds; b) from where he stood, the camera creeps down the
 //     empty mud toward the reeds ("don't go to it"); c) long lens on the edge clump: on "It isn't a baby." two glowing
 //     eyes rise out of the water in the gap and stare at the lens (the lurking pose, design panel 4); with the far cry
 //     they blink and sink, and the picture fades to black by the last frame.
@@ -31,7 +31,7 @@ const OFF = AHZ_PARTD_OFF;
 export const AHZ_PARTD_FRAMES = 418;
 // cuts (part frames): scare | black->lake (L10) | wide bank | creeping down the bank | the reeds (eyes)
 const CUT_BLACK = 45, CUT_WIDE = 142, CUT_OTS = 191, CUT_REEDS = 305;
-const T_EYES = 42.2, T_BLINK = 43.85, T_SINK = 44.45, T_FADE = 44.85, T_END = 45.45;
+const T_EYES = 42.2, T_BLINK = 43.85, T_SINK = 44.45, T_FADE = 44.85, T_END = 45.55;
 const WORDS = (wordsJson as Word[]).filter((w) => w.s >= 32.6);
 const SUB = defaultStyle("serious", { key: "#3DF0FF", pop: 0.45, y: 0.8, keyWords: ["water", "quiet", "aztecs", "crying", "night", "baby"] });
 
@@ -435,17 +435,17 @@ export const AhzPartD: React.FC = () => {
     const pulses: [number, number][] = [[33.0, 1.2], [33.25, 1.0], [33.55, 0.9], [33.95, 0.7], [34.5, 0.5], [35.1, 0.3]];
     const shine = <g><defs><radialGradient id="mudshine"><stop offset="0" stopColor="#0c0f16" stopOpacity={0.75} /><stop offset="0.6" stopColor="#0c0f16" stopOpacity={0.5} /><stop offset="1" stopColor="#0c0f16" stopOpacity={0} /></radialGradient></defs>
       <ellipse cx={290} cy={1295} rx={190} ry={80} fill="url(#mudshine)" /></g>;
-    shot = <Shot name="lakeD" T={T} calm={0.6} under={shine} mv={{ z: lerp(1.16, 1.06, sm(k)), ax: a.x, ay: a.y, px: lerp(24, -24, k), py: lerp(-10, 10, k) }} clumpBlur={1} mist={0.9}>
+    shot = <Shot name="lakeD" T={T} calm={0.6} under={shine} mv={{ z: lerp(1.16, 1.06, 0.4 * k + 0.6 * sm(k)), ax: a.x, ay: a.y, px: lerp(24, -24, k), py: lerp(-10, 10, k) }} clumpBlur={1} mist={0.9}>
       <Rings c={CAMS.lakeD} T={T} at={UNDER} pulses={pulses} />
       <Rings c={CAMS.lakeD} T={T} at={netPos(T)} pulses={[[33.1, 0.5], [34.3, 0.3], [35.6, 0.2]]} speed={0.25} decay={1.1} />
       <Bubbles c={CAMS.lakeD} T={T} />
     </Shot>;
-    dark = 1 - sm((f - CUT_BLACK) / 16) + 0.06;   // fade up from black over half a second
+    dark = 1 - 0.94 * sm((f - CUT_BLACK) / 16);   // fade up from black over half a second
   } else if (f < CUT_OTS) {
-    // L11 a: the empty bank, wide, mist on the water; slow push toward the reed bed
+    // L11 a: the empty bank, wide, mist on the water; a slow pull back from the reed bed (nobody there any more)
     const k = (f - CUT_WIDE) / (CUT_OTS - CUT_WIDE);
     const a = proj(CAMS.wide2, [2.0, 1.6, 0.6]);
-    shot = <Shot name="wide2" T={T} mv={{ z: lerp(1.03, 1.14, 0.6 * k + 0.4 * sm(k)), ax: a.x, ay: a.y, px: lerp(0, -16, k), py: 0 }} mist={1.35} fg={[[-40, 5, 1.1, 60], [1150, 4, 0.9, -80]]} fgBlur={9}>
+    shot = <Shot name="wide2" T={T} mv={{ z: lerp(1.15, 1.04, 0.6 * k + 0.4 * sm(k)), ax: a.x, ay: a.y, px: lerp(0, -16, k), py: 0 }} mist={1.35} fg={[[-40, 5, 1.1, 60], [1150, 4, 0.9, -80]]} fgBlur={9}>
       <Rings c={CAMS.wide2} T={T} at={netPos(T)} pulses={[[36.0, 0.3], [37.4, 0.25]]} speed={0.25} decay={1.1} />
     </Shot>;
     dark = 0.08 * (1 - sm(k * 3));
@@ -462,7 +462,7 @@ export const AhzPartD: React.FC = () => {
     // L11 c: long lens on the edge clump; on "It isn't a baby." the eyes rise in the gap and stare; the far cry: they
     // blink, sink, and the picture fades to black
     const k = (f - CUT_REEDS) / (AHZ_PARTD_FRAMES - CUT_REEDS);
-    const a = proj(CAMS.reedsD, WATCH), kk = sm(k * 1.15);
+    const a = proj(CAMS.reedsD, WATCH), kk = 0.35 * k + 0.65 * sm(k * 1.1);
     shot = <Shot name="reedsD" T={T} mv={{ z: lerp(1.03, 1.22, kk), ax: a.x, ay: a.y, px: lerp(30, 0, kk), py: lerp(-10, -110, kk) }} clumpBlur={0} mist={0.9} edge edgeAt={WATCH}>
       <Rings c={CAMS.reedsD} T={T} at={[WATCH[0], WATCH[1], WATER_Z]} pulses={[[T_EYES, 0.8], [T_EYES + 0.3, 0.6], [T_SINK + 0.1, 0.8], [T_SINK + 0.4, 0.5]]} speed={0.3} decay={1.0} />
       <Watcher c={CAMS.reedsD} T={T} at={WATCH} />
@@ -476,7 +476,7 @@ export const AhzPartD: React.FC = () => {
       <AbsoluteFill style={{ backgroundColor: "#000", opacity: Math.min(1, dark) }} />
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.6) 100%)" }} />
       <AbsoluteFill style={{ backgroundColor: "#dfe8ff", opacity: flash }} />
-      {subs && <Subtitles words={WORDS} style={SUB} offset={-OFF} />}
+      {subs && f >= 50 && <Subtitles words={WORDS} style={SUB} offset={-OFF} />}
     </AbsoluteFill>
   );
 };
