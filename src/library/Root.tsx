@@ -4,6 +4,7 @@ import React from "react";
 import { Composition } from "remotion";
 import { LibWalkTest, LibStandTest, H_WALK_FRAMES, H_STAND_FRAMES } from "../../library/tests/RigRegression";
 import { HWalkTest, HStandTest } from "../../templates/hidebehind/CharTest";
+import { DaylightTest, DAYLIGHT_FRAMES } from "../../library/tests/DaylightTest";
 import { CatWardrobe, CatFaces, CatMotions, CatBodies } from "../../library/catalog/CharacterSheet";
 
 const V = { fps: 30, width: 1080, height: 1920 } as const;
@@ -17,5 +18,6 @@ export const LibraryRoot: React.FC = () => (
     <Composition id="CatFaces" component={CatFaces} durationInFrames={1} {...V} />
     <Composition id="CatMotions" component={CatMotions} durationInFrames={1} {...V} />
     <Composition id="CatBodies" component={CatBodies} durationInFrames={1} {...V} />
+    <Composition id="DaylightTest" component={DaylightTest} durationInFrames={DAYLIGHT_FRAMES} {...V} />
   </>
 );

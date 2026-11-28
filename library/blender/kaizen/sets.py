@@ -175,7 +175,7 @@ def interior(sc, kind="cottage", seed=5, lit_fire=True, window="left"):
     if kind in ("cottage", "parlor", "tavern"):
         _, fl = PR.fireplace((1.6, 5.2, 0), 0.0, lit=lit_fire)
         marks["lights"].append(fl)
-        marks["fire"] = (1.6, 4.9, 0.4)
+        marks["fire"] = (1.6, 5.2, 0.08)   # flame base on the logs (draw fx Flames here)
     PR.table((-1.2, 3.4, 0), 0.0)
     PR.chair((-1.9, 3.4, 0), math.radians(90))
     PR.chair((-0.5, 3.6, 0), math.radians(-90))

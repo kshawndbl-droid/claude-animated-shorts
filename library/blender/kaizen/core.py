@@ -264,12 +264,15 @@ def render_foreground(sc, path, cam, near=4.0):
     cp = cam.matrix_world.translation
     changed = []
     for o in sc.objects:
-        if o.type != "MESH" or o.get("kind") == "ground":
+        if o.type != "MESH" or o.get("kind") in ("ground", "grass", "backdrop"):
+            # ground, scattered grass (one mesh spread over the whole set) and backdrops never go in the near layer:
+            # they would be drawn over the characters far away
             if o.type == "MESH":
                 changed.append((o, o.is_holdout))
                 o.is_holdout = True
             continue
-        d = (o.matrix_world.translation - cp).length
+        bb = [o.matrix_world @ Vector(c) for c in o.bound_box]
+        d = (sum(bb, Vector()) / 8 - cp).length          # bounding-box centre, not the origin (parented props, rows)
         if d > near:
             changed.append((o, o.is_holdout))
             o.is_holdout = True

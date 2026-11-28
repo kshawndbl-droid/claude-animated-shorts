@@ -1,0 +1,59 @@
+{
+ "set": "interior",
+ "args": [
+  "--set",
+  "interior",
+  "--kind",
+  "cottage",
+  "--light",
+  "candle",
+  "--cam",
+  "medium",
+  "--quality",
+  "final",
+  "--layers",
+  "flicker,depth",
+  "--out",
+  "public/library/test/cottage/"
+ ],
+ "light": "candle",
+ "quality": {
+  "res": 1080,
+  "samples": 24,
+  "vsamples": 64,
+  "vtile": 8,
+  "shadow": 1.0
+ },
+ "stage": [
+  0,
+  2.4,
+  0
+ ],
+ "cam": {
+  "loc": [
+   0.0,
+   -1.4,
+   1.35
+  ],
+  "look": [
+   0,
+   2.4,
+   0.95
+  ],
+  "lens": 35
+ },
+ "marks": {
+  "stage": [
+   0,
+   2.4,
+   0
+  ],
+  "heading": 0.0,
+  "fire": [
+   1.6,
+   5.2,
+   0.08
+  ]
+ },
+ "seconds": 116.1
+}

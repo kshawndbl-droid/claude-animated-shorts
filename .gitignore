@@ -29,3 +29,5 @@ stories/hidebehind/final/voice.wav
 public/tsavo/*.wav
 public/tsavo/*.mp4
 public/tsavo3d/
+public/library/**/*.png
+public/library/**/*.wav

@@ -91,13 +91,17 @@ def chair(loc, rot=0.0, name="chair"):
     return _at(objs, loc, rot)
 
 
-def fireplace(loc, rot=0.0, lit=True, name="hearth", energy=220.0):
+def fireplace(loc, rot=0.0, lit=True, name="hearth", energy=150.0):
     st = M.stone("hearth_stone")
     objs = [core.box(name + "_l", (-0.75, 0, 0.6), (0.4, 0.5, 1.2), st), core.box(name + "_r", (0.75, 0, 0.6), (0.4, 0.5, 1.2), st),
             core.box(name + "_top", (0, 0, 1.35), (1.9, 0.6, 0.3), st), core.box(name + "_back", (0, 0.2, 0.6), (1.1, 0.1, 1.2), M.flat("soot", (0.02, 0.018, 0.016))),
             core.box(name + "_chim", (0, 0.05, 2.2), (1.3, 0.5, 1.5), st)]
-    fire = M.flat("fire", (1.0, 0.45, 0.12), emit=6.0 if lit else 0.0)
-    objs.append(core.box(name + "_fire", (0, 0, 0.18), (0.6, 0.3, 0.2), fire))
+    # logs on a low ember bed: the flames themselves are drawn in 2D (fx Flames) so they move; a big emissive box
+    # here blows out to a white block in the plate
+    logm = M.bark(name + "_log", (0.05, 0.035, 0.02), (0.15, 0.1, 0.06))
+    for i, (x0, x1) in enumerate(((-0.3, 0.25), (0.28, -0.2), (-0.1, 0.12))):
+        objs.append(core.cyl(name + f"_log{i}", (x0, -0.08 + 0.08 * i, 0.06), (x1, 0.05 - 0.05 * i, 0.12 + 0.04 * i), 0.055, logm, segs=6))
+    objs.append(core.box(name + "_fire", (0, 0, 0.04), (0.6, 0.3, 0.05), M.flat("embers", (1.0, 0.32, 0.06), emit=2.5 if lit else 0.0), bevel=0.02))
     _at(objs, loc, rot)
     p = Matrix.Translation(Vector(loc)) @ Matrix.Rotation(rot, 4, "Z") @ Vector((0, -0.3, 0.45))
     light = L.point(name + "_light", tuple(p), energy if lit else 0.0, (1.0, 0.5, 0.2), 0.25, cutoff=12.0)
