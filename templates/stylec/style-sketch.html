@@ -1,0 +1,105 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#111}svg{display:block}</style></head><body>
+<svg id="s" xmlns="http://www.w3.org/2000/svg" width="1200" height="1100" viewBox="0 0 1200 1100"></svg>
+<script>
+const INK="#2a2230",SKIN="#f1d3b2",SKSH="#d8b28c",SHIRT="#c9b27a",SHIRT_D="#a8925c",PANTS="#3f5b3d",PANTS_D="#2f452e",HAT="#8b6a3e",HAT_D="#6b4f2c",BOOT="#3a2a20",HAIR="#5a3b26";
+const f=n=>n.toFixed(1);
+const q=(a,c,b)=>`M${f(a[0])},${f(a[1])} Q${f(c[0])},${f(c[1])} ${f(b[0])},${f(b[1])}`;
+function hose(a,c,b,w,col,ink=6){return `<path d="${q(a,c,b)}" fill="none" stroke="${INK}" stroke-width="${w+ink*2}" stroke-linecap="round"/><path d="${q(a,c,b)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`}
+function seg2(a,e,b,w1,col){ // two segment tapered limb via polyline strokes
+ return `<path d="M${f(a[0])},${f(a[1])} L${f(e[0])},${f(e[1])} L${f(b[0])},${f(b[1])}" fill="none" stroke="${INK}" stroke-width="${w1+12}" stroke-linecap="round" stroke-linejoin="round"/><path d="M${f(a[0])},${f(a[1])} L${f(e[0])},${f(e[1])} L${f(b[0])},${f(b[1])}" fill="none" stroke="${col}" stroke-width="${w1}" stroke-linecap="round" stroke-linejoin="round"/>`}
+function mitt(x,y,deg,r=17,col=SKIN,glove=false){const c=glove?"#fbf8f0":col;return `<g transform="translate(${f(x)},${f(y)}) rotate(${f(deg)})"><ellipse cx="0" cy="0" rx="${r}" ry="${r*1.1}" fill="${c}" stroke="${INK}" stroke-width="5"/><ellipse cx="${r*0.85}" cy="${-r*0.35}" rx="${r*0.38}" ry="${r*0.62}" transform="rotate(-30 ${r*0.85} ${-r*0.35})" fill="${c}" stroke="${INK}" stroke-width="4.5"/>${glove?`<path d="M${-r*0.5},${-r*0.2} v${r*0.7} M0,${-r*0.25} v${r*0.75}" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`:''}</g>`}
+function boot(x,y,dir=1,s=1,col=BOOT){return `<path d="M${f(x-14*s*dir)},${f(y)} Q${f(x-16*s*dir)},${f(y-26*s)} ${f(x+2*dir)},${f(y-26*s)} Q${f(x+30*s*dir)},${f(y-22*s)} ${f(x+34*s*dir)},${f(y)} Z" fill="${col}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><path d="M${f(x-14*s*dir)},${f(y-3)} L${f(x+34*s*dir)},${f(y-3)}" stroke="#1c140f" stroke-width="5"/>`}
+// ---------- face (shared idea, sized by r) ----------
+function face(cx,cy,r,ex,flat){
+ const eY=cy+r*0.02, eX=r*0.34, out=[];
+ if(ex==="shock"){[-1,1].forEach(s=>{out.push(`<ellipse cx="${cx+s*eX}" cy="${eY}" rx="${r*0.16}" ry="${r*0.2}" fill="#fff" stroke="${INK}" stroke-width="4.5"/><circle cx="${cx+s*eX}" cy="${eY+2}" r="${r*0.05}" fill="${INK}"/>`);
+   out.push(`<path d="M${cx+s*eX-s*r*0.18},${eY-r*0.32} Q${cx+s*eX},${eY-r*0.46} ${cx+s*eX+s*r*0.16},${eY-r*0.36}" fill="none" stroke="${HAIR}" stroke-width="${r*0.08}" stroke-linecap="round"/>`)});
+   out.push(`<ellipse cx="${cx}" cy="${cy+r*0.56}" rx="${r*0.15}" ry="${r*0.2}" fill="#5b1f2a" stroke="${INK}" stroke-width="4.5"/>`);}
+ else{[-1,1].forEach(s=>{out.push(flat?`<ellipse cx="${cx+s*eX}" cy="${eY}" rx="${r*0.07}" ry="${r*0.1}" fill="${INK}"/>`:`<ellipse cx="${cx+s*eX}" cy="${eY}" rx="${r*0.08}" ry="${r*0.11}" fill="${INK}"/><circle cx="${cx+s*eX+r*0.025}" cy="${eY-r*0.04}" r="${r*0.028}" fill="#fff"/>`);
+   out.push(`<path d="M${cx+s*eX-s*r*0.15},${eY-r*0.22} Q${cx+s*eX},${eY-r*0.3} ${cx+s*eX+s*r*0.15},${eY-r*0.2}" fill="none" stroke="${HAIR}" stroke-width="${r*0.08}" stroke-linecap="round"/>`)});
+   out.push(`<path d="M${cx-r*0.2},${cy+r*0.5} Q${cx},${cy+r*0.68} ${cx+r*0.22},${cy+r*0.47}" fill="none" stroke="${INK}" stroke-width="${r*0.055}" stroke-linecap="round"/>`);
+   if(!flat)[-1,1].forEach(s=>out.push(`<ellipse cx="${cx+s*r*0.55}" cy="${cy+r*0.3}" rx="${r*0.15}" ry="${r*0.08}" fill="rgba(236,128,118,0.32)"/>`));}
+ out.push(`<path d="M${cx-r*0.06},${cy+r*0.22} Q${cx},${cy+r*0.28} ${cx+r*0.07},${cy+r*0.2}" fill="none" stroke="${SKSH}" stroke-width="${r*0.045}" stroke-linecap="round"/>`);
+ // mustache: Roy-ish neat
+ out.push(`<path d="M${cx-r*0.25},${cy+r*0.36} Q${cx-r*0.1},${cy+r*0.24} ${cx},${cy+r*0.31} Q${cx+r*0.1},${cy+r*0.24} ${cx+r*0.25},${cy+r*0.36} Q${cx},${cy+r*0.33} ${cx-r*0.25},${cy+r*0.36} Z" fill="${HAIR}" stroke="${INK}" stroke-width="2.5"/>`);
+ return out.join("");}
+function rangerHat(cx,cy,r,lift=0){const by=cy-r*0.4, top=cy-r*1.3, cw=r*0.95;
+ return `<g>
+ <path d="M${cx-cw},${by+4} Q${cx-r*0.98},${cy-r*0.95} ${cx-r*0.55},${top+r*0.12} L${cx-r*0.16},${top} L${cx},${top+r*0.16} L${cx+r*0.16},${top} L${cx+r*0.55},${top+r*0.12} Q${cx+r*0.98},${cy-r*0.95} ${cx+cw},${by+4} Z" fill="${HAT}" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+ <path d="M${cx},${top+r*0.16} L${cx+r*0.04},${by-r*0.3}" stroke="${HAT_D}" stroke-width="5" stroke-linecap="round"/>
+ <path d="M${cx-cw+2},${by-r*0.17} Q${cx},${by-r*0.27} ${cx+cw-2},${by-r*0.17} L${cx+cw},${by} Q${cx},${by-r*0.1} ${cx-cw},${by} Z" fill="${HAT_D}"/>
+ <path d="M${cx-r*0.45},${top+r*0.3} Q${cx-r*0.3},${top+r*0.15} ${cx-r*0.12},${top+r*0.18}" stroke="rgba(255,255,255,0.3)" stroke-width="6" fill="none" stroke-linecap="round"/>
+ <path d="M${cx-r*1.4},${by+r*0.08} Q${cx-r*1.45},${by-r*0.1} ${cx-r*1.15},${by-r*0.08} Q${cx},${by+r*0.06} ${cx+r*1.15},${by-r*0.08} Q${cx+r*1.45},${by-r*0.1} ${cx+r*1.4},${by+r*0.08} Q${cx},${by+r*0.34} ${cx-r*1.4},${by+r*0.08} Z" fill="${HAT}" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>
+ <path d="M${cx-r*1.2},${by+r*0.1} Q${cx},${by+r*0.28} ${cx+r*1.2},${by+r*0.1}" stroke="${HAT_D}" stroke-width="5" fill="none" stroke-linecap="round"/>
+ </g>`}
+ function brimShadow(cx,cy,r){return `<clipPath id="hc${Math.round(cx)}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath><path clip-path="url(#hc${Math.round(cx)})" d="M${cx-r},${cy-r*0.3} Q${cx},${cy-r*0.05} ${cx+r},${cy-r*0.3} L${cx+r},${cy-r*0.5} L${cx-r},${cy-r*0.5} Z" fill="rgba(90,50,30,0.22)"/>`}
+function headRound(cx,cy,r,ex,grad,spiky){let s="";
+ [-1,1].forEach(k=>s+=`<ellipse cx="${cx+k*r*0.97}" cy="${cy+r*0.08}" rx="${r*0.17}" ry="${r*0.21}" fill="${SKIN}" stroke="${INK}" stroke-width="5.5"/>`);
+ s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${grad?'url(#sk)':SKIN}" stroke="${INK}" stroke-width="6.5"/>`;
+ if(!grad) s+=`<path d="M${cx+r*0.55},${cy-r*0.8} A${r},${r} 0 0 1 ${cx+r*0.55},${cy+r*0.8} A${r*1.3},${r*1.3} 0 0 0 ${cx+r*0.55},${cy-r*0.8} Z" fill="${SKSH}" opacity="0.7"/>`;
+ [-1,1].forEach(k=>s+=`<path d="M${cx+k*r*0.72},${cy-r*0.62} Q${cx+k*r*0.98},${cy-r*0.25} ${cx+k*r*0.92},${cy+r*0.15} Q${cx+k*r*0.8},${cy-r*0.25} ${cx+k*r*0.58},${cy-r*0.55} Z" fill="${HAIR}" stroke="${INK}" stroke-width="3.5"/>`);
+ if(spiky){s+=`<path d="M${cx-r*0.8},${cy-r*0.55} L${cx-r*0.95},${cy-r*1.25} L${cx-r*0.55},${cy-r*0.85} L${cx-r*0.45},${cy-r*1.5} L${cx-r*0.15},${cy-r*0.95} L${cx+r*0.1},${cy-r*1.6} L${cx+r*0.3},${cy-r*0.95} L${cx+r*0.6},${cy-r*1.45} L${cx+r*0.62},${cy-r*0.85} L${cx+r*1.0},${cy-r*1.2} L${cx+r*0.82},${cy-r*0.55} Z" fill="${HAIR}" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/>`;
+  [[-0.6,-1.6],[0.1,-1.9],[0.7,-1.7]].forEach(([a,b],i)=>s+=`<path d="M${cx+r*a},${cy+r*b} q${12},-25 0,-50 q-12,-25 0,-50" fill="none" stroke="rgba(120,120,130,0.55)" stroke-width="10" stroke-linecap="round"/>`);}
+ s+=face(cx,cy,r,ex,!grad);return s;}
+// ---------- torso shapes ----------
+function torsoBean(cx,top,bot,wT,wB,lean=0){return `M${cx-wT+lean},${top+18} Q${cx-wT+lean},${top} ${cx-wT+22+lean},${top} L${cx+wT-22+lean},${top} Q${cx+wT+lean},${top} ${cx+wT+lean},${top+18} Q${cx+wB+8},${(top+bot)/2+10} ${cx+wB},${bot-14} Q${cx+wB},${bot} ${cx+wB-20},${bot} L${cx-wB+20},${bot} Q${cx-wB},${bot} ${cx-wB},${bot-14} Q${cx-wB-8},${(top+bot)/2+10} ${cx-wT+lean},${top+18} Z`}
+function shirtDetail(cx,top,bot,w,flat){return `<path d="M${cx-30},${top} L${cx},${top+34} L${cx+30},${top} Z" fill="${SKIN}" stroke="${INK}" stroke-width="4"/><path d="M${cx-34},${top-2} L${cx-6},${top+30} L${cx-20},${top+40} L${cx-44},${top+8} Z M${cx+34},${top-2} L${cx+6},${top+30} L${cx+20},${top+40} L${cx+44},${top+8} Z" fill="${SHIRT_D}" stroke="${INK}" stroke-width="4" stroke-linejoin="round"/><path d="M${cx},${top+34} L${cx},${bot-24}" stroke="${SHIRT_D}" stroke-width="4"/>${[0,1,2].map(i=>`<circle cx="${cx+7}" cy="${top+50+i*((bot-top-80)/3)}" r="4" fill="${INK}"/>`).join("")}<path d="M${cx-w*0.62},${top+48} l22,0 l0,22 l-11,6 l-11,-6 Z" fill="#e6c25a" stroke="${INK}" stroke-width="3.5"/><rect x="${cx-w-10}" y="${bot-24}" width="${2*w+20}" height="16" fill="#4a3424" stroke="${INK}" stroke-width="4"/><rect x="${cx-11}" y="${bot-27}" width="22" height="22" rx="3" fill="#d8b04a" stroke="${INK}" stroke-width="3.5"/>${flat?'':`<path d="M${cx+w*0.55},${top+20} Q${cx+w*0.85},${(top+bot)/2} ${cx+w*0.6},${bot-30}" stroke="${SHIRT_D}" stroke-width="10" fill="none" opacity="0.6"/>`}`}
+function bolt(x,y,s){return `<path d="M${x},${y} l${-40*s},${120*s} l${40*s},${-10*s} l${-50*s},${140*s} l${110*s},${-170*s} l${-45*s},${10*s} l${40*s},${-90*s} Z" fill="#fff6a8" stroke="#ffd23a" stroke-width="8" stroke-linejoin="round"/>`}
+// ---------- A: clean noodle (rubber-hose done properly) ----------
+function A(cx,gy,shock){let s="";const top=gy-250,bot=gy-120,hy=gy-340,r=92;
+ const sh=[[cx-44,top+22],[cx+44,top+22]], hip=[[cx-22,bot-6],[cx+22,bot-6]];
+ if(!shock){
+  s+=hose(hip[0],[cx-34,gy-60],[cx-30,gy-24],20,PANTS_D)+boot(cx-30,gy,-1,1.05);
+  s+=hose(hip[1],[cx+28,gy-60],[cx+34,gy-24],20,PANTS)+boot(cx+34,gy,1,1.05);
+  s+=hose(sh[0],[cx-84,top+80],[cx-70,top+140],16,SHIRT_D)+mitt(cx-70,top+150,10,17);
+  s+=`<path d="${torsoBean(cx,top,bot,52,58)}" fill="${SHIRT}" stroke="${INK}" stroke-width="6"/>`+shirtDetail(cx,top,bot,56,false);
+  s+=hose(sh[1],[cx+110,top+40],[cx+118,top-40],16,SHIRT)+mitt(cx+120,top-58,-10,17,SKIN);
+  s+=headRound(cx,hy,r,"smile",true)+rangerHat(cx,hy,r);}
+ else{
+  s+=hose(hip[0],[cx-80,gy-80],[cx-70,gy-40],20,PANTS_D)+boot(cx-70,gy-16,-1,1.05);
+  s+=hose(hip[1],[cx+90,gy-60],[cx+60,gy-30],20,PANTS)+boot(cx+60,gy-6,1,1.05);
+  s+=`<path d="${torsoBean(cx,top-30,bot-30,52,58)}" fill="${SHIRT}" stroke="${INK}" stroke-width="6"/>`+shirtDetail(cx,top-30,bot-30,56,false);
+  s+=hose([cx-44,top-8],[cx-150,top-40],[cx-120,top-150],16,SHIRT_D)+mitt(cx-118,top-170,-20,17);
+  s+=hose([cx+44,top-8],[cx+150,top-10],[cx+150,top-150],16,SHIRT)+mitt(cx+150,top-170,10,17);
+  s+=headRound(cx,hy-30,r,"shock",true,true)+`<g transform="translate(${cx+60},${hy-200}) rotate(25)">${rangerHat(0,0,r*0.9)}</g>`;}
+ return s;}
+// ---------- B: chunky chibi ----------
+function B(cx,gy,shock){let s="";const r=118,hy=gy-275,top=gy-160,bot=gy-50;
+ const lim=(a,b,col,w=34)=>`<path d="M${a[0]},${a[1]} L${b[0]},${b[1]}" stroke="${INK}" stroke-width="${w+12}" stroke-linecap="round"/><path d="M${a[0]},${a[1]} L${b[0]},${b[1]}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+ if(!shock){
+  s+=lim([cx-22,bot-10],[cx-26,gy-18],PANTS_D)+boot(cx-28,gy,-1,1.2)+lim([cx+22,bot-10],[cx+26,gy-18],PANTS)+boot(cx+26,gy,1,1.2);
+  s+=lim([cx-52,top+20],[cx-78,top+70],SHIRT_D)+mitt(cx-82,top+86,10,21);
+  s+=`<path d="${torsoBean(cx,top,bot,56,66)}" fill="${SHIRT}" stroke="${INK}" stroke-width="6"/>`;
+  s+=`<path d="M${cx-24},${top} L${cx},${top+24} L${cx+24},${top} Z" fill="${SKIN}" stroke="${INK}" stroke-width="4"/><path d="M${cx-46},${top+40} l20,0 l0,20 l-10,6 l-10,-6 Z" fill="#e6c25a" stroke="${INK}" stroke-width="3.5"/><rect x="${cx-70}" y="${bot-22}" width="140" height="14" fill="#4a3424" stroke="${INK}" stroke-width="4"/>`;
+  s+=lim([cx+52,top+20],[cx+92,top-24],SHIRT)+mitt(cx+98,top-44,-10,21);
+  s+=headRound(cx,hy,r,"smile",true)+rangerHat(cx,hy,r);}
+ else{
+  s+=lim([cx-22,bot-40],[cx-60,gy-50],PANTS_D)+boot(cx-64,gy-30,-1,1.2)+lim([cx+22,bot-40],[cx+56,gy-40],PANTS)+boot(cx+58,gy-20,1,1.2);
+  s+=`<path d="${torsoBean(cx,top-30,bot-30,56,66)}" fill="${SHIRT}" stroke="${INK}" stroke-width="6"/><path d="M${cx-24},${top-30} L${cx},${top-6} L${cx+24},${top-30} Z" fill="${SKIN}" stroke="${INK}" stroke-width="4"/><rect x="${cx-70}" y="${bot-52}" width="140" height="14" fill="#4a3424" stroke="${INK}" stroke-width="4"/>`;
+  s+=lim([cx-52,top-10],[cx-110,top-80],SHIRT_D)+mitt(cx-118,top-98,-30,21)+lim([cx+52,top-10],[cx+110,top-80],SHIRT)+mitt(cx+118,top-98,30,21);
+  s+=headRound(cx,hy-30,r,"shock",true,true)+`<g transform="translate(${cx+70},${hy-230}) rotate(25)">${rangerHat(0,0,r*0.9)}</g>`;}
+ return s;}
+// ---------- C: flat bold (taller, jointed limbs, no gradients) ----------
+function C(cx,gy,shock){let s="";const r=72,hy=gy-410,top=gy-325,bot=gy-170;
+ if(!shock){
+  s+=seg2([cx-24,bot-4],[cx-28,gy-85],[cx-28,gy-22],26,PANTS_D)+boot(cx-28,gy,-1,1)+seg2([cx+24,bot-4],[cx+30,gy-85],[cx+30,gy-22],26,PANTS)+boot(cx+30,gy,1,1);
+  s+=seg2([cx-50,top+20],[cx-66,top+95],[cx-56,top+160],22,SHIRT_D)+mitt(cx-55,top+176,5,15);
+  s+=`<path d="M${cx-52},${top} L${cx+52},${top} L${cx+46},${bot} L${cx-46},${bot} Z" fill="${SHIRT}" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/><path d="M${cx+10},${top} L${cx+52},${top} L${cx+46},${bot} L${cx+20},${bot} Z" fill="${SHIRT_D}" opacity="0.55"/>`+shirtDetail(cx,top,bot,50,true);
+  s+=seg2([cx+50,top+20],[cx+96,top+80],[cx+70,top+130],22,SHIRT)+mitt(cx+62,top+142,40,15);
+  s+=headRound(cx,hy,r,"smile",false)+brimShadow(cx,hy,r)+rangerHat(cx,hy,r);}
+ else{
+  s+=seg2([cx-24,bot-34],[cx-90,gy-110],[cx-70,gy-46],26,PANTS_D)+boot(cx-70,gy-24,-1,1)+seg2([cx+24,bot-34],[cx+80,gy-130],[cx+70,gy-50],26,PANTS)+boot(cx+70,gy-28,1,1);
+  s+=`<path d="M${cx-52},${top-30} L${cx+52},${top-30} L${cx+46},${bot-30} L${cx-46},${bot-30} Z" fill="${SHIRT}" stroke="${INK}" stroke-width="6" stroke-linejoin="round"/>`+shirtDetail(cx,top-30,bot-30,50,true);
+  s+=seg2([cx-50,top-10],[cx-120,top-60],[cx-130,top-150],22,SHIRT_D)+mitt(cx-130,top-166,-5,15)+seg2([cx+50,top-10],[cx+120,top-60],[cx+130,top-150],22,SHIRT)+mitt(cx+130,top-166,5,15);
+  s+=headRound(cx,hy-30,r,"shock",false,true)+`<g transform="translate(${cx+60},${hy-170}) rotate(25)">${rangerHat(0,0,r*0.9)}</g>`;}
+ return s;}
+// ---------- page ----------
+let out=`<defs><radialGradient id="sk" cx="0.38" cy="0.32" r="0.75"><stop offset="0" stop-color="#fbecd8"/><stop offset="0.6" stop-color="${SKIN}"/><stop offset="1" stop-color="${SKSH}"/></radialGradient>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b4a6b"/><stop offset="1" stop-color="#9aa9b8"/></linearGradient></defs>`;
+out+=`<rect x="0" y="0" width="1200" height="1100" fill="url(#sky)"/><rect x="0" y="930" width="1200" height="170" fill="#5d7a4a"/><path d="M0,930 h1200" stroke="#3f5a33" stroke-width="6"/>`;
+out+=`<ellipse cx="200" cy="935" rx="70" ry="10" fill="rgba(0,0,0,0.3)"/><ellipse cx="520" cy="935" rx="70" ry="10" fill="rgba(0,0,0,0.3)"/>`;
+out+=`<g>${C(200,935,false)}</g>${bolt(550,0,1.6)}<g>${C(520,935,true)}</g>`;
+out+=`<g transform="translate(960,480) scale(2.2) translate(-960,-480)">${headRound(960,480,72,"smile",false)}${brimShadow(960,480,72)}${rangerHat(960,480,72)}</g>`;
+out+=`<rect x="0" y="1010" width="1200" height="90" fill="rgba(0,0,0,0.55)"/><text x="600" y="1068" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="40" fill="#fff">C  Flat bold, hat fixed</text>`;
+document.getElementById("s").innerHTML=out;
+</script></body></html>

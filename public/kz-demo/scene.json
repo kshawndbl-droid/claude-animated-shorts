@@ -1,0 +1,793 @@
+{
+ "slug": "kz-demo",
+ "genre": "true",
+ "grade": "true",
+ "audio": "kz-demo/mix.wav",
+ "cast": {
+  "ezra": {
+   "look": "frontiersman",
+   "over": {
+    "hair": "#5a3a22"
+   }
+  },
+  "maud": {
+   "look": "colonialWoman",
+   "over": {
+    "skin": "#e0b493",
+    "hair": "#7a3a1e"
+   }
+  },
+  "kit": {
+   "look": "streetUrchin"
+  },
+  "bobby": {
+   "look": "police"
+  },
+  "sgt": {
+   "look": "civilWarSoldier"
+  },
+  "pvt": {
+   "look": "civilWarSoldier",
+   "over": {
+    "top": "#6a6a6e",
+    "topDark": "#46464a",
+    "hatCol": "#5a5a5e"
+   }
+  },
+  "nell": {
+   "look": "victorianLady"
+  }
+ },
+ "shots": [
+  {
+   "id": "s1",
+   "t0": 0.0,
+   "t1": 3.0,
+   "template": "intro",
+   "grade": "horror",
+   "note": "hook",
+   "set": {
+    "set": "forest",
+    "light": "night_moon",
+    "cam": "low",
+    "stage": [
+     0,
+     2
+    ]
+   },
+   "actors": [
+    {
+     "who": "ezra",
+     "at": [
+      0,
+      2.0
+     ],
+     "face": "right",
+     "hold": "lantern",
+     "pose": {
+      "lit": 1
+     },
+     "do": [
+      [
+       0,
+       "idle",
+       {
+        "expr": "worried"
+       }
+      ],
+      [
+       1.2,
+       "lookAround",
+       {
+        "side": -1,
+        "expr": "scared"
+       }
+      ]
+     ]
+    }
+   ],
+   "fx": [
+    [
+     "fog",
+     {
+      "op": 0.3
+     }
+    ]
+   ],
+   "title": {
+    "text": "KAIZEN CLIPS",
+    "sub": "template demo",
+    "at": 0.4,
+    "d": 2.0
+   }
+  },
+  {
+   "id": "s2",
+   "t0": 3.0,
+   "t1": 6.0,
+   "template": "establishing",
+   "grade": "history",
+   "transition": "dip",
+   "set": {
+    "set": "village",
+    "period": "1800s",
+    "light": "golden",
+    "cam": "establishing",
+    "stage": [
+     2,
+     0
+    ]
+   },
+   "fx": [
+    [
+     "birds"
+    ],
+    [
+     "crowd",
+     {
+      "area": [
+       4,
+       18,
+       -1.8,
+       1.8
+      ],
+      "n": 10,
+      "looks": [
+       "farmer",
+       "colonialWoman",
+       "colonist1700s",
+       "medievalPeasant"
+      ]
+     }
+    ]
+   ]
+  },
+  {
+   "id": "s3",
+   "t0": 6.0,
+   "t1": 9.5,
+   "template": "walkTalk",
+   "grade": "history",
+   "layers": [
+    "fg"
+   ],
+   "set": {
+    "set": "village",
+    "period": "1800s",
+    "light": "golden",
+    "cam": "wide",
+    "stage": [
+     3,
+     0
+    ],
+    "dist": 4.6,
+    "height": 1.1,
+    "lens": 24,
+    "aim": 2.3
+   },
+   "actors": [
+    {
+     "who": "ezra",
+     "path": [
+      [
+       9.5,
+       0.7
+      ],
+      [
+       3,
+       0.7
+      ]
+     ],
+     "go": [
+      {
+       "t0": 6.0,
+       "t1": 9.5,
+       "speed": "stroll"
+      }
+     ],
+     "do": [
+      [
+       6.0,
+       "talk",
+       {
+        "level": 0.6,
+        "expr": "smile"
+       }
+      ],
+      [
+       7.6,
+       "idle",
+       {
+        "expr": "smile",
+        "lookX": 0.8
+       }
+      ]
+     ]
+    },
+    {
+     "who": "maud",
+     "path": [
+      [
+       9.0,
+       -0.5
+      ],
+      [
+       3,
+       -0.5
+      ]
+     ],
+     "go": [
+      {
+       "t0": 6.0,
+       "t1": 9.5,
+       "speed": "stroll"
+      }
+     ],
+     "do": [
+      [
+       6.0,
+       "idle",
+       {
+        "expr": "smile",
+        "lookX": 0.8
+       }
+      ],
+      [
+       7.6,
+       "laugh"
+      ]
+     ]
+    }
+   ],
+   "sound": {
+    "steps": "dirt"
+   }
+  },
+  {
+   "id": "s4",
+   "t0": 9.5,
+   "t1": 12.5,
+   "template": "conversation",
+   "grade": "history",
+   "set": {
+    "set": "village",
+    "period": "1800s",
+    "light": "golden",
+    "cam": "medium",
+    "stage": [
+     2,
+     0
+    ]
+   },
+   "move": {
+    "focus": "maud"
+   },
+   "actors": [
+    {
+     "who": "ezra",
+     "at": [
+      2.5,
+      0.75
+     ],
+     "face": [
+      0,
+      -1
+     ],
+     "do": [
+      [
+       9.5,
+       "talk",
+       {
+        "level": 0.5
+       }
+      ],
+      [
+       10.9,
+       "pose",
+       {
+        "expr": "surprised"
+       }
+      ],
+      [
+       11.6,
+       "shrug"
+      ]
+     ]
+    },
+    {
+     "who": "maud",
+     "at": [
+      2.3,
+      -0.75
+     ],
+     "face": [
+      0,
+      1
+     ],
+     "do": [
+      [
+       9.5,
+       "idle",
+       {
+        "expr": "neutral"
+       }
+      ],
+      [
+       10.8,
+       "talk",
+       {
+        "level": 0.8,
+        "expr": "angry"
+       }
+      ],
+      [
+       11.8,
+       "point",
+       {
+        "height": 0.2,
+        "expr": "angry"
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s5",
+   "t0": 12.5,
+   "t1": 15.5,
+   "template": "chase",
+   "grade": "comedy",
+   "transition": "whip",
+   "set": {
+    "set": "street",
+    "period": "victorian",
+    "light": "dusk",
+    "cam": "wide",
+    "stage": [
+     0,
+     7
+    ],
+    "aim": 2.0,
+    "height": 1.0
+   },
+   "actors": [
+    {
+     "who": "kit",
+     "path": [
+      [
+       0.6,
+       13
+      ],
+      [
+       0.6,
+       2.5
+      ]
+     ],
+     "go": [
+      {
+       "t0": 12.5,
+       "t1": 15.5,
+       "speed": "fit",
+       "run": true
+      }
+     ],
+     "do": [
+      [
+       12.5,
+       "pose",
+       {
+        "expr": "laugh"
+       }
+      ]
+     ]
+    },
+    {
+     "who": "bobby",
+     "path": [
+      [
+       -0.7,
+       17
+      ],
+      [
+       -0.7,
+       4
+      ]
+     ],
+     "go": [
+      {
+       "t0": 12.7,
+       "t1": 15.5,
+       "speed": "fit",
+       "run": true
+      }
+     ],
+     "do": [
+      [
+       12.5,
+       "pose",
+       {
+        "expr": "angry"
+       }
+      ]
+     ]
+    }
+   ],
+   "sound": {
+    "steps": "stone"
+   }
+  },
+  {
+   "id": "s6",
+   "t0": 15.5,
+   "t1": 19.0,
+   "template": "discovery",
+   "grade": "mystery",
+   "transition": "dip",
+   "set": {
+    "set": "forest",
+    "light": "morning",
+    "cam": "wide",
+    "stage": [
+     0,
+     2
+    ]
+   },
+   "move": {
+    "focus": "nell"
+   },
+   "actors": [
+    {
+     "who": "nell",
+     "path": [
+      [
+       -5,
+       1.4
+      ],
+      [
+       0.2,
+       2.0
+      ]
+     ],
+     "go": [
+      {
+       "t0": 15.5,
+       "t1": 17.3,
+       "speed": "fit"
+      }
+     ],
+     "do": [
+      [
+       15.5,
+       "idle",
+       {
+        "expr": "neutral"
+       }
+      ],
+      [
+       17.3,
+       "crouch",
+       {
+        "amount": 0.5,
+        "expr": "surprised"
+       }
+      ],
+      [
+       18.0,
+       "point",
+       {
+        "height": -0.8,
+        "expr": "surprised"
+       }
+      ]
+     ]
+    }
+   ],
+   "fx": [
+    [
+     "godrays",
+     {
+      "x": 300,
+      "y": 0,
+      "angle": 20,
+      "op": 0.18
+     }
+    ]
+   ]
+  },
+  {
+   "id": "s7",
+   "t0": 19.0,
+   "t1": 22.0,
+   "template": "action",
+   "grade": "epic",
+   "set": {
+    "set": "field",
+    "kind": "battlefield",
+    "light": "overcast",
+    "cam": "medium",
+    "stage": [
+     0,
+     0
+    ]
+   },
+   "actors": [
+    {
+     "who": "sgt",
+     "at": [
+      -0.45,
+      0
+     ],
+     "face": "right",
+     "do": [
+      [
+       19.0,
+       "pose",
+       {
+        "expr": "angry",
+        "armNear": [
+         40,
+         70
+        ],
+        "handNear": "fist"
+       }
+      ],
+      [
+       19.9,
+       "punch"
+      ]
+     ]
+    },
+    {
+     "who": "pvt",
+     "at": [
+      0.5,
+      0
+     ],
+     "face": "left",
+     "do": [
+      [
+       19.0,
+       "pose",
+       {
+        "expr": "worried"
+       }
+      ],
+      [
+       20.08,
+       "fall",
+       {
+        "dir": -1
+       }
+      ]
+     ]
+    }
+   ],
+   "fx": [
+    [
+     "smoke",
+     {
+      "at": [
+       -6,
+       12,
+       0
+      ],
+      "size": 2,
+      "op": 0.6
+     }
+    ]
+   ]
+  },
+  {
+   "id": "s8",
+   "t0": 22.0,
+   "t1": 25.5,
+   "template": "recreation",
+   "transition": "fade",
+   "set": {
+    "set": "field",
+    "kind": "battlefield",
+    "light": "overcast",
+    "cam": "wide",
+    "stage": [
+     0,
+     0
+    ],
+    "heading": 20
+   },
+   "fx": [
+    [
+     "crowd",
+     {
+      "area": [
+       -2,
+       6,
+       2,
+       9
+      ],
+      "n": 12,
+      "looks": [
+       "civilWarSoldier"
+      ],
+      "face": [
+       1,
+       0.4
+      ],
+      "react": {
+       "at": 23.2,
+       "expr": "angry",
+       "arms": true
+      }
+     }
+    ],
+    [
+     "puff",
+     {
+      "at": [
+       6,
+       14,
+       0.5
+      ],
+      "t0": 22.6,
+      "size": 2.5
+     }
+    ],
+    [
+     "puff",
+     {
+      "at": [
+       -4,
+       16,
+       0.5
+      ],
+      "t0": 23.9,
+      "size": 2
+     }
+    ]
+   ],
+   "title": {
+    "text": "Somewhere, 1863",
+    "at": 0.3,
+    "d": 2.6
+   },
+   "sound": {
+    "hits": [
+     [
+      "cannon",
+      22.6
+     ],
+     [
+      "cannon",
+      23.9
+     ],
+     [
+      "cheer",
+      23.2
+     ]
+    ]
+   }
+  },
+  {
+   "id": "s9",
+   "t0": 25.5,
+   "t1": 28.5,
+   "template": "reveal",
+   "grade": "golden",
+   "set": {
+    "set": "shore",
+    "light": "golden",
+    "cam": "wide",
+    "stage": [
+     0,
+     0
+    ]
+   },
+   "move": {
+    "focus": "ezra"
+   },
+   "actors": [
+    {
+     "who": "ezra",
+     "at": [
+      0.3,
+      0.5
+     ],
+     "face": "right",
+     "do": [
+      [
+       25.5,
+       "lookUp",
+       {
+        "amount": 0.6,
+        "expr": "surprised"
+       }
+      ],
+      [
+       27.2,
+       "wave",
+       {
+        "expr": "smile"
+       }
+      ]
+     ]
+    }
+   ],
+   "fx": [
+    [
+     "birds",
+     {
+      "y": 500,
+      "t0": 25.5
+     }
+    ]
+   ]
+  },
+  {
+   "id": "s10",
+   "t0": 28.5,
+   "t1": 31.5,
+   "template": "reaction",
+   "grade": "mystery",
+   "transition": "dip",
+   "layers": [
+    "flicker"
+   ],
+   "set": {
+    "set": "interior",
+    "kind": "cottage",
+    "light": "candle",
+    "cam": "close",
+    "stage": [
+     0,
+     2.4
+    ],
+    "dist": 2.8,
+    "height": 1.1,
+    "aim": 0.75
+   },
+   "actors": [
+    {
+     "who": "maud",
+     "at": [
+      0,
+      2.4
+     ],
+     "face": "right",
+     "do": [
+      [
+       28.5,
+       "idle",
+       {
+        "expr": "neutral",
+        "lookX": 0.5
+       }
+      ],
+      [
+       29.9,
+       "startle",
+       {
+        "expr": "scared"
+       }
+      ],
+      [
+       30.6,
+       "lookAround",
+       {
+        "side": -1,
+        "expr": "scared"
+       }
+      ]
+     ]
+    }
+   ],
+   "sound": {
+    "hits": [
+     [
+      "door_slam",
+      29.85
+     ]
+    ]
+   }
+  }
+ ]
+}

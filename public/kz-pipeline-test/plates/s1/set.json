@@ -1,0 +1,70 @@
+{
+ "set": "field",
+ "args": [
+  "--set",
+  "field",
+  "--kind",
+  "farm",
+  "--light",
+  "golden",
+  "--cam",
+  "low",
+  "--stage",
+  "0,0",
+  "--quality",
+  "final",
+  "--layers",
+  "depth",
+  "--out",
+  "/mnt/project-files/cache/plates/9fb18d6fbaa33ecf/"
+ ],
+ "light": "golden",
+ "quality": {
+  "res": 1080,
+  "samples": 24,
+  "vsamples": 64,
+  "vtile": 8,
+  "shadow": 1.0
+ },
+ "stage": [
+  0.0,
+  0.0,
+  0.0
+ ],
+ "cam": {
+  "loc": [
+   0.0,
+   -3.2,
+   0.35
+  ],
+  "look": [
+   0.0,
+   0.0,
+   1.25
+  ],
+  "lens": 22
+ },
+ "marks": {
+  "stage": [
+   0,
+   0,
+   0
+  ],
+  "path": [
+   [
+    -60,
+    0.5
+   ],
+   [
+    0,
+    0.0
+   ],
+   [
+    60,
+    -0.8
+   ]
+  ],
+  "heading": 0.0
+ },
+ "seconds": 29.4
+}

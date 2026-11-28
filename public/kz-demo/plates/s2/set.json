@@ -1,0 +1,78 @@
+{
+ "set": "village",
+ "args": [
+  "--set",
+  "village",
+  "--period",
+  "1800s",
+  "--light",
+  "golden",
+  "--cam",
+  "establishing",
+  "--stage",
+  "2,0",
+  "--quality",
+  "preview",
+  "--layers",
+  "depth",
+  "--out",
+  "/mnt/project-files/cache/plates/e7038b964e12940d/"
+ ],
+ "light": "golden",
+ "quality": {
+  "res": 540,
+  "samples": 6,
+  "vsamples": 24,
+  "vtile": 16,
+  "shadow": 0.5
+ },
+ "stage": [
+  2.0,
+  0.0,
+  0.0
+ ],
+ "cam": {
+  "loc": [
+   -13.756924048195328,
+   -2.7783708426708866,
+   4.5
+  ],
+  "look": [
+   2.0,
+   0.0,
+   1.0
+  ],
+  "lens": 20
+ },
+ "marks": {
+  "stage": [
+   0,
+   0,
+   0
+  ],
+  "path": [
+   [
+    -60,
+    -1.0
+   ],
+   [
+    -20,
+    0.3
+   ],
+   [
+    0,
+    0.0
+   ],
+   [
+    20,
+    -0.4
+   ],
+   [
+    60,
+    1.2
+   ]
+  ],
+  "heading": 80.0
+ },
+ "seconds": 32.3
+}

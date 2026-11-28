@@ -1,0 +1,4 @@
+# Where bootstrap.sh unpacks a Short's asset tars (from /mnt/project-files/shorts/<slug>/assets/).
+# Tars made with paths (public/..., stories/...) need no line here: they unpack into the repo root.
+# <slug> <tar glob> <destination folder in the repo>
+hidebehind dEnd-*.tar public/hidebehind/dEnd

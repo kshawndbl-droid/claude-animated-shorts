@@ -1,0 +1,131 @@
+{
+ "genre": "true",
+ "duration": 32.5,
+ "voice": null,
+ "words": null,
+ "ambience": [
+  {
+   "kind": "forest_night",
+   "from": 0.0,
+   "to": 3.0
+  },
+  {
+   "kind": "village_day",
+   "from": 3.0,
+   "to": 12.5
+  },
+  {
+   "kind": "street_1800s",
+   "from": 12.5,
+   "to": 15.5
+  },
+  {
+   "kind": "forest_day",
+   "from": 15.5,
+   "to": 19.0
+  },
+  {
+   "kind": "battlefield",
+   "from": 19.0,
+   "to": 25.5
+  },
+  {
+   "kind": "shore",
+   "from": 25.5,
+   "to": 28.5
+  },
+  {
+   "kind": "fireside",
+   "from": 28.5,
+   "to": 31.5
+  }
+ ],
+ "music": {
+  "genre": "true"
+ },
+ "hits": [
+  {
+   "kind": "boom",
+   "at": 0.0
+  },
+  {
+   "kind": "whoosh",
+   "at": 12.5
+  },
+  {
+   "kind": "sting",
+   "at": 17.425
+  },
+  {
+   "kind": "impact",
+   "at": 20.08
+  },
+  {
+   "kind": "door_slam",
+   "at": 20.529999999999998,
+   "gain": 0.5
+  },
+  {
+   "kind": "cannon",
+   "at": 22.6
+  },
+  {
+   "kind": "cannon",
+   "at": 23.9
+  },
+  {
+   "kind": "cheer",
+   "at": 23.2
+  },
+  {
+   "kind": "sting",
+   "at": 25.74
+  },
+  {
+   "kind": "door_slam",
+   "at": 29.85
+  }
+ ],
+ "steps": [
+  {
+   "surface": "dirt",
+   "from": 6.2,
+   "to": 9.4,
+   "rate": 1.8,
+   "gain": 0.6
+  },
+  {
+   "surface": "dirt",
+   "from": 6.2,
+   "to": 9.4,
+   "rate": 1.8,
+   "gain": 0.6
+  },
+  {
+   "surface": "stone",
+   "from": 12.7,
+   "to": 15.4,
+   "rate": 3.0,
+   "gain": 0.8
+  },
+  {
+   "surface": "stone",
+   "from": 12.899999999999999,
+   "to": 15.4,
+   "rate": 3.0,
+   "gain": 0.8
+  },
+  {
+   "surface": "dirt",
+   "from": 15.7,
+   "to": 17.2,
+   "rate": 1.8,
+   "gain": 0.6
+  }
+ ],
+ "gains": {
+  "ambience": 0.14,
+  "music": 0.1
+ },
+ "out": "mix.wav"
+}

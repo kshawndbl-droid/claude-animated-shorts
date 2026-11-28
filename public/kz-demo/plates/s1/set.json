@@ -1,0 +1,84 @@
+{
+ "set": "forest",
+ "args": [
+  "--set",
+  "forest",
+  "--light",
+  "night_moon",
+  "--cam",
+  "low",
+  "--stage",
+  "0,2",
+  "--quality",
+  "preview",
+  "--layers",
+  "depth",
+  "--out",
+  "/mnt/project-files/cache/plates/4d7fe68f68a91213/"
+ ],
+ "light": "night_moon",
+ "quality": {
+  "res": 540,
+  "samples": 6,
+  "vsamples": 24,
+  "vtile": 16,
+  "shadow": 0.5
+ },
+ "stage": [
+  0.0,
+  2.0,
+  0.0
+ ],
+ "cam": {
+  "loc": [
+   0.0,
+   -1.2000000000000002,
+   0.35
+  ],
+  "look": [
+   0.0,
+   2.0,
+   1.25
+  ],
+  "lens": 22
+ },
+ "marks": {
+  "stage": [
+   0,
+   2.0,
+   0
+  ],
+  "path": [
+   [
+    -40,
+    -4
+   ],
+   [
+    -12,
+    1.0
+   ],
+   [
+    0,
+    2.0
+   ],
+   [
+    8,
+    4.0
+   ],
+   [
+    14,
+    10.0
+   ],
+   [
+    16,
+    30
+   ],
+   [
+    13,
+    70
+   ]
+  ],
+  "heading": 0.0
+ },
+ "seconds": 7.6
+}

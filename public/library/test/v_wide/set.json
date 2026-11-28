@@ -1,0 +1,88 @@
+{
+ "set": "village",
+ "args": [
+  "--set",
+  "village",
+  "--period",
+  "1800s",
+  "--light",
+  "golden",
+  "--cam",
+  "wide",
+  "--stage",
+  "3,0",
+  "--dist",
+  "4.6",
+  "--height",
+  "1.1",
+  "--lens",
+  "24",
+  "--aim",
+  "2.3",
+  "--quality",
+  "final",
+  "--layers",
+  "depth,fg",
+  "--near",
+  "5",
+  "--out",
+  "public/library/test/v_wide/"
+ ],
+ "light": "golden",
+ "quality": {
+  "res": 1080,
+  "samples": 24,
+  "vsamples": 64,
+  "vtile": 8,
+  "shadow": 1.0
+ },
+ "stage": [
+  3.0,
+  0.0,
+  0.0
+ ],
+ "cam": {
+  "loc": [
+   -1.5301156638561562,
+   -0.7987816172678799,
+   1.1
+  ],
+  "look": [
+   3.0,
+   0.0,
+   2.3
+  ],
+  "lens": 24.0
+ },
+ "marks": {
+  "stage": [
+   0,
+   0,
+   0
+  ],
+  "path": [
+   [
+    -60,
+    -1.0
+   ],
+   [
+    -20,
+    0.3
+   ],
+   [
+    0,
+    0.0
+   ],
+   [
+    20,
+    -0.4
+   ],
+   [
+    60,
+    1.2
+   ]
+  ],
+  "heading": 80.0
+ },
+ "seconds": 81.4
+}

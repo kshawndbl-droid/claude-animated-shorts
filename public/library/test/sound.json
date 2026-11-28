@@ -1,0 +1,6 @@
+{"genre": "true", "duration": 12.0, "out": "mix.wav",
+ "ambience": [{"kind": "village_day", "from": 0, "to": 8.5}, {"kind": "fireside", "from": 8.5}],
+ "music": {"genre": "true", "from": 0, "to": 8.5},
+ "gains": {"ambience": 0.2, "music": 0.12},
+ "hits": [{"kind": "door_slam", "at": 10.05, "gain": 1.4}, {"kind": "sting", "at": 10.15, "gain": 0.8}],
+ "steps": [{"surface": "dirt", "from": 0.35, "to": 3.9, "rate": 2.6}]}

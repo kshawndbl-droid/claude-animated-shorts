@@ -1,0 +1,67 @@
+{
+ "set": "interior",
+ "args": [
+  "--set",
+  "interior",
+  "--kind",
+  "cottage",
+  "--light",
+  "candle",
+  "--cam",
+  "close",
+  "--stage",
+  "0,2.4",
+  "--dist",
+  "2.8",
+  "--height",
+  "1.1",
+  "--aim",
+  "0.75",
+  "--quality",
+  "preview",
+  "--layers",
+  "depth,flicker",
+  "--out",
+  "/mnt/project-files/cache/plates/d1a91a6eb9e027aa/"
+ ],
+ "light": "candle",
+ "quality": {
+  "res": 540,
+  "samples": 6,
+  "vsamples": 24,
+  "vtile": 16,
+  "shadow": 0.5
+ },
+ "stage": [
+  0.0,
+  2.4,
+  0.0
+ ],
+ "cam": {
+  "loc": [
+   0.0,
+   -0.3999999999999999,
+   1.1
+  ],
+  "look": [
+   0.0,
+   2.4,
+   0.75
+  ],
+  "lens": 50
+ },
+ "marks": {
+  "stage": [
+   0,
+   2.4,
+   0
+  ],
+  "heading": 0.0,
+  "fire": [
+   1.6,
+   5.2,
+   0.08
+  ]
+ },
+ "seconds": 15.5
+}

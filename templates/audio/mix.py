@@ -14,8 +14,11 @@ from dsp import (SR, ns, st, dbg, read_wav, write_wav, integrated, momentary, mo
 import timeline as T
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(HERE)
-CACHE = os.path.join(HERE, "_cache")
+# ROOT holds voice/voice.wav + voice/words.json; OUT gets the mix, stems, cue sheet and render cache.
+# Both default to the original layout (~/bridge-short/{audio,voice}); override with BRIDGE_ROOT / BRIDGE_AUDIO_OUT.
+ROOT = os.environ.get("BRIDGE_ROOT", os.path.dirname(HERE))
+OUT = os.environ.get("BRIDGE_AUDIO_OUT", HERE)
+CACHE = os.path.join(OUT, "_cache")
 N = ns(T.DUR)                    # 3,240,000 samples = 67.500 s
 TARGET_LUFS = -15.0
 CEIL_DBTP = -1.2                 # limiter ceiling (spec: true peak <= -1 dBTP)
@@ -256,10 +259,10 @@ def main():
     y = fades(y, 0.0, 0.03)
     assert y.shape == (2, N)
     gv, gm, gs = v * dbg(G), m * dbg(G), s_st * dbg(G)
-    write_wav(os.path.join(HERE, "mix.wav"), y)
-    write_wav(os.path.join(HERE, "stem_voice.wav"), gv)
-    write_wav(os.path.join(HERE, "stem_music.wav"), gm)
-    write_wav(os.path.join(HERE, "stem_sfx.wav"), gs)
+    write_wav(os.path.join(OUT, "mix.wav"), y)
+    write_wav(os.path.join(OUT, "stem_voice.wav"), gv)
+    write_wav(os.path.join(OUT, "stem_music.wav"), gm)
+    write_wav(os.path.join(OUT, "stem_sfx.wav"), gs)
     log("wrote mix + stems")
 
     # ---------------- measure
@@ -269,7 +272,7 @@ def main():
     gr_stats = dict(max=float(grdb.max()), pct_over_0_5=float((grdb > 0.5).mean() * 100), pct_over_0_1=float((grdb > 0.1).mean() * 100))
     peaks = {k: 20 * np.log10(np.abs(x).max() + 1e-12) for k, x in (("voice", gv), ("music", gm), ("sfx", gs))}
     rows = section_table(gv, gm, gs, words)
-    eb = ffmpeg_ebur(os.path.join(HERE, "mix.wav"))
+    eb = ffmpeg_ebur(os.path.join(OUT, "mix.wav"))
     stats = dict(I=I, TP=TP, LRA=LRA, Mmax=Mmax, Smax=Smax, G=G, gr=gr_stats, peaks=peaks, v_ref=v_ref,
                  voice_I=lufs(gv), music_I=lufs(gm), sfx_I=lufs(gs), sec_gains=sec_gains)
     log(json.dumps({k: (round(v_, 2) if isinstance(v_, float) else v_) for k, v_ in stats.items() if k not in ("gr", "peaks", "sec_gains")}))
@@ -347,7 +350,7 @@ def write_cues(C, b, st_, rows, eb, v_ref, G):
         meas = c.measured if c.measured is not None else c.applied
         w(f"| {i + 1} | {c.t:.3f} | {c.t * T.FPS:.1f} | {c.name}{kind} | {c.desc} | {c.naive:+.0f} | {c.applied:+.1f} | {vI + meas:.1f} | {c.p:+.2f} |")
     w("")
-    open(os.path.join(HERE, "cues.md"), "w", encoding="utf-8").write("\n".join(L))
+    open(os.path.join(OUT, "cues.md"), "w", encoding="utf-8").write("\n".join(L))
 
 
 if __name__ == "__main__":
