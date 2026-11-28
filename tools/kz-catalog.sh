@@ -13,13 +13,14 @@ T0=$(date +%s)
 node tools/kz-still.mjs src/library/index.ts "$OUT/sheets" CatWardrobe:0 CatFaces:0 CatMotions:0 CatBodies:0
 
 # 2. environments: every set recipe in a light that suits it (preview quality, cached)
+# (core.arg reads the FIRST occurrence of a flag, so per-set extras come before the default --cam wide)
 PY=.venv-bpy/bin/python
 while read -r name light extra; do
   [ -z "$name" ] && continue
-  d="$OUT/sets/$name-$light"
+  d="$OUT/sets/${name/:/-}-$light"   # no ":" in folder names (Windows)
   if [ ! -f "$d/plate.png" ]; then
     # shellcheck disable=SC2086
-    $PY tools/kz-set.py -- --set "${name%%:*}" --light "$light" --cam wide --quality preview $extra --out "$d/" 2>&1 | grep -E "^done|Error" || true
+    $PY tools/kz-set.py -- --set "${name%%:*}" --light "$light" --quality preview $extra --cam wide --out "$d/" 2>&1 | grep -E "^done|Error" || true
   fi
 done <<'SETS'
 village golden --period 1800s
@@ -30,8 +31,8 @@ forest morning
 forest:night night_moon
 field noon --kind farm
 field:battle overcast --kind battlefield
-interior candle --kind cottage
-interior:office interior_day --kind office
+interior candle --kind cottage --cam medium
+interior:office interior_day --kind office --cam medium
 shore golden
 desert noon
 SETS
