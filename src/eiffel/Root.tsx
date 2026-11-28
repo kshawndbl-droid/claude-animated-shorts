@@ -25,6 +25,7 @@ import { AhzCreatureSheet } from "../../templates/ahuizotl/CreatureSheet";
 import { AhzWalkTest, AhzStandTest, AHZ_WALK_FRAMES, AHZ_STAND_FRAMES } from "../../templates/ahuizotl/CharTest";
 import { AhzStylePreview, AhzStylePreviewV2, AHZ_PREVIEW_FRAMES } from "../../templates/ahuizotl/StylePreview";
 import { AhzPartA, AHZ_PART_A_FRAMES } from "../../templates/ahuizotl/PartA";
+import { AhzPartC, AHZ_PARTC_FRAMES } from "../../templates/ahuizotl/PartC";
 
 export const EiffelRoot: React.FC = () => (
   <>
@@ -63,5 +64,6 @@ export const EiffelRoot: React.FC = () => (
     <Composition id="AhzStylePreview" component={AhzStylePreview} durationInFrames={AHZ_PREVIEW_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="AhzStylePreviewV2" component={AhzStylePreviewV2} durationInFrames={AHZ_PREVIEW_FRAMES} fps={30} width={1080} height={1920} />
     <Composition id="AhzPartA" component={AhzPartA} durationInFrames={AHZ_PART_A_FRAMES} fps={30} width={1080} height={1920} />
+    <Composition id="AhzPartC" component={AhzPartC} durationInFrames={AHZ_PARTC_FRAMES} fps={30} width={1080} height={1920} />
   </>
 );
